@@ -363,17 +363,15 @@ function NoteCard({
       />
       <div className="mb-3.5 text-[13px] text-[#94a0ae]">
         {formatNoteTimestamp(note.updatedAt)}
+        {fieldName ? (
+          <span className="ml-1 font-bold text-[#c7d0db]">@{fieldName}</span>
+        ) : null}
       </div>
       <p
         className="overflow-hidden whitespace-pre-wrap pr-7 text-base font-medium leading-7 text-[#e3e8ee]"
         ref={contentRef}
         style={expanded ? undefined : { maxHeight: "5.25rem" }}
       >
-        {fieldName ? (
-          <span className="mr-2 font-semibold text-[#8fd3ff]">
-            @{fieldName}
-          </span>
-        ) : null}
         {note.tags.map((tag) => (
           <span
             className="mr-1.5 inline-flex h-[25px] items-center rounded-[7px] bg-[#8fd3ff]/20 px-2 text-[13px] font-semibold text-[#8fd3ff]"
