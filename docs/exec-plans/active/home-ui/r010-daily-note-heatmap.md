@@ -80,3 +80,4 @@
 - 2026-05-21：已运行 `npm run test -- src/api/notes.client.test.ts`、`npm run test -- src/pages/home/HomePage.test.tsx`、`npm run test` 和 `npm run build`，全部通过。用户已肉眼验证热力图可用。
 - 2026-05-21：根据用户反馈调整热力图布局为每列 5 天，30 天数据按列填充为 6 列；该调整只改变网格排列，不改变接口、热力等级和刷新逻辑。
 - 2026-05-21：根据 review comment 继续调整热力图空间利用，移除格子的固定宽度，让 6 个日期列均分侧栏宽度，避免右侧留下大面积空白。
+- 2026-05-21：调查发现热力图与 Fields 之间的异常空白不是嵌套 padding，而是热力图 `mb-7` 与 `SidebarSection` 默认 `mt-6` 叠加造成。已移除热力图底部 margin，并将 Fields 首段顶部间距收敛为 `mt-4`，Tags 仍保留默认 section 间距。

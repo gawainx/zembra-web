@@ -218,7 +218,7 @@ export function HomePage() {
           </div>
 
           <div className="hidden min-h-0 flex-1 overflow-y-auto pb-44 pr-1 lg:block">
-            <SidebarSection title={t("sidebar.fields")}>
+            <SidebarSection className="mt-4" title={t("sidebar.fields")}>
               <NavItem
                 active={selectedField === undefined}
                 count={fields.length}
@@ -358,7 +358,7 @@ function DailyNotesHeatmap({
     return (
       <section
         aria-label={t("heatmap.ariaLabel")}
-        className="mb-7 hidden w-[300px] rounded-[12px] border border-dashed border-[var(--color-border)] px-3 py-3 text-sm text-[var(--color-text-muted)] lg:block"
+        className="hidden w-[300px] rounded-[12px] border border-dashed border-[var(--color-border)] px-3 py-3 text-sm text-[var(--color-text-muted)] lg:block"
       >
         {t("heatmap.empty")}
       </section>
@@ -368,7 +368,7 @@ function DailyNotesHeatmap({
   return (
     <section
       aria-label={t("heatmap.ariaLabel")}
-      className="mb-7 hidden w-[300px] lg:block"
+      className="hidden w-[300px] lg:block"
     >
       <div className="mb-2 flex items-center justify-between gap-3 text-[13px] text-[var(--color-text-muted)]">
         <span className="inline-flex min-w-0 items-center gap-1.5">
@@ -713,13 +713,15 @@ function StatBlock({ label, value }: { label: string; value: string }) {
 /** Renders a titled sidebar navigation section. */
 function SidebarSection({
   children,
+  className = "mt-6",
   title,
 }: {
   children: React.ReactNode;
+  className?: string;
   title: string;
 }) {
   return (
-    <section className="mt-6">
+    <section className={className}>
       <h2 className="mb-3 text-xs font-normal tracking-[0.02em] text-[var(--color-warm)]">
         {title}
       </h2>
