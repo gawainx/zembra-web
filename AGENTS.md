@@ -72,6 +72,10 @@
 5. 用户验证后，将开发计划移动到 docs/exec-plans/completed/，并更新`docs/PROGRESS.md`文件。在未经用户允许，禁止擅自归档
 6. 所有项目文档默认使用 markdown 格式撰写，语言为简体中文；关键术语、函数接口、代码标识符和第三方工具名可保留英文。除非用户明确指定其他语言，新增或更新 docs/、AGENTS.md、ARCHITECTURE.md 等文档时必须使用简体中文。
 
+### 发布分支
+
+`deploy` 是供 Vercel 构建的稳定分支。禁止在 `deploy` 分支进行日常开发、调试或临时修改；只有用户明确要求修改 `deploy` 时，才允许切换到该分支并提交变更。常规开发在功能分支完成验证和提交后，再由用户明确指示将已验证提交同步到 `deploy`。
+
 ### 共享数据库契约
 - 本项目群的数据表契约来自 `vendor/zembra-schema` submodule，远程仓库为 `https://github.com/gawainx/zembra-schema.git`。
 - 数据表说明、SQLite DDL、JSON Schema 和 migration 以 `vendor/zembra-schema` 为准，本仓库禁止复制维护数据表设计正文。
