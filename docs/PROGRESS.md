@@ -23,3 +23,4 @@
 - R023 `721d9a0` 完成首页 note 输入框实时 Markdown 富文本化：使用 Tiptap 现成编辑能力在文本内部渲染 Markdown 和 tag chip，输入 `#query` 后展示匹配或创建项，tag 创建改为随 note 提交隐式完成；同时修复普通换行展示、列表输入高度跳变和空输入框高度基线问题。
 - R024 `7870c07` 修复首页 composer 发送成功后可见内容未清空的问题：明确采用“发送成功事件驱动清空编辑器”的技术决策，而不是继续绕到 `value` 同步逻辑里修补；保留 `draft` 状态清空，同时通过 `NoteEditor` 暴露显式 `clear()` 命令，让 `LiveMarkdownEditor` 直接清空 Tiptap 文档、可见 DOM 文本和镜像 Markdown 值，并补充回归测试覆盖发送后输入框显示为空。
 - R025 `57797c8` 完成 Bonofix 启发的全局主题迁移：以 IBM Plex Sans、暖白/炭灰明暗色板和强调蓝统一首页、设置与弹窗，展示态和编辑态 tag 均使用蓝底白字圆角胶囊，圆形任务框及 Markdown 内容样式同步更新；不改变数据、API 与 Markdown 存储契约，并将版本升级为 0.1.1。
+- R027 `8f401b8` 完成 Supabase 登录 workspace 选择改造：部署通过 `VITE_SUPABASE_WORKSPACES` 声明 workspace UUID、显示名和绑定邮箱；登录页先选名称，再自动填充只读邮箱，Magic Link 回跳在 sessionStorage 恢复所选 scope，不在首页切换 workspace，并通过完整测试与生产构建验证。

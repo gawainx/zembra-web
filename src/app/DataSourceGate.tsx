@@ -12,7 +12,10 @@ import {
   getSupabaseBrowserClient,
   getSupabasePublicConfig,
   SupabaseConfigurationError,
+  type SupabaseWorkspaceConfig,
 } from "../api/supabase.client";
+
+const supabaseWorkspaceStorageKey = "zembra.supabaseWorkspaceId";
 
 interface DataSourceGateProps {
   /** Application content rendered after one source and workspace are confirmed. */
@@ -59,33 +62,51 @@ interface SupabaseEntryProps {
   children: ReactNode;
 }
 
-/** Handles Magic Link authentication for the deployment-configured Supabase workspace. */
+/** Handles workspace selection and Magic Link authentication for Supabase. */
 function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProps) {
   const { t } = useTranslation("common");
-  const [email, setEmail] = useState("");
+  const [workspaces, setWorkspaces] = useState<SupabaseWorkspaceConfig[]>([]);
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
   const [message, setMessage] = useState<string>();
   const [error, setError] = useState<string>();
+
+  const selectedWorkspace = workspaces.find(
+    (workspace) => workspace.id === selectedWorkspaceId,
+  );
 
   useEffect(() => {
     void loadSession();
   }, []);
 
-  /** Restores an existing Supabase session and activates its configured workspace. */
+  /** Restores a session and resumes a workspace that was selected before Magic Link navigation. */
   async function loadSession() {
     setIsLoading(true);
     setError(undefined);
     try {
+      const config = getSupabasePublicConfig();
+      setWorkspaces(config.workspaces);
       const client = getSupabaseBrowserClient();
       const { data, error: sessionError } = await client.auth.getSession();
       if (sessionError) {
         throw sessionError;
       }
       if (data.session) {
-        activateConfiguredSupabaseDataSource(client);
-        setIsReady(true);
+        setHasSession(true);
+        const storedWorkspaceId = window.sessionStorage.getItem(
+          supabaseWorkspaceStorageKey,
+        );
+        const storedWorkspace = config.workspaces.find(
+          (workspace) => workspace.id === storedWorkspaceId,
+        );
+        if (storedWorkspace) {
+          setSelectedWorkspaceId(storedWorkspace.id);
+          activateSupabaseDataSource(client, storedWorkspace);
+          setIsReady(true);
+        }
       }
     } catch (caught) {
       setError(caught instanceof SupabaseConfigurationError ? t("dataSource.configured") : t("dataSource.sessionUnavailable"));
@@ -94,16 +115,29 @@ function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProps) {
     }
   }
 
-  /** Sends a passwordless login email that returns the user to the current Vercel origin. */
-  async function handleMagicLink(event: FormEvent<HTMLFormElement>) {
+  /** Enters an existing session or sends its selected workspace's bound Magic Link. */
+  async function handleSupabaseEntry(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!selectedWorkspace) {
+      return;
+    }
+
     setIsSending(true);
     setError(undefined);
     setMessage(undefined);
     try {
       const client = getSupabaseBrowserClient();
+      window.sessionStorage.setItem(
+        supabaseWorkspaceStorageKey,
+        selectedWorkspace.id,
+      );
+      if (hasSession) {
+        activateSupabaseDataSource(client, selectedWorkspace);
+        setIsReady(true);
+        return;
+      }
       const { error: signInError } = await client.auth.signInWithOtp({
-        email: email.trim(),
+        email: selectedWorkspace.email,
         options: { emailRedirectTo: window.location.origin },
       });
       if (signInError) {
@@ -119,15 +153,15 @@ function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProps) {
     }
   }
 
-  /** Activates Supabase business clients for the workspace fixed in public deployment config. */
-  function activateConfiguredSupabaseDataSource(
+  /** Activates Supabase business clients for one deployment-authorized workspace. */
+  function activateSupabaseDataSource(
     client: ReturnType<typeof getSupabaseBrowserClient>,
+    workspace: SupabaseWorkspaceConfig,
   ) {
-    const { workspaceId } = getSupabasePublicConfig();
     activateDataSource({
-      ...createSupabaseDataSourceClients(client, workspaceId),
+      ...createSupabaseDataSourceClients(client, workspace.id),
       mode: "supabase",
-      workspaceId,
+      workspaceId: workspace.id,
     });
   }
 
@@ -142,13 +176,31 @@ function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProps) {
           <div className="mb-3 text-2xl font-bold">Zembra</div>
           <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">{t("dataSource.supabase")}</p>
         </div>
-        <form className="space-y-4" onSubmit={handleMagicLink}>
+        <form className="space-y-4" onSubmit={handleSupabaseEntry}>
           {dataSourceControl}
           <label className="block text-sm font-medium text-[var(--color-text-primary)]">
-            <span>{t("dataSource.emailLabel")}</span>
-            <input aria-label={t("dataSource.emailLabel")} className="mt-2 h-11 w-full rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)]" disabled={isLoading || isSending} placeholder={t("dataSource.emailPlaceholder")} required type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+            <span>{t("dataSource.workspaceLabel")}</span>
+            <select
+              aria-label={t("dataSource.workspaceLabel")}
+              className="mt-2 h-11 w-full rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-border-strong)]"
+              disabled={isLoading || isSending || workspaces.length === 0}
+              required
+              value={selectedWorkspaceId}
+              onChange={(event) => setSelectedWorkspaceId(event.target.value)}
+            >
+              <option value="">{t("dataSource.workspacePlaceholder")}</option>
+              {workspaces.map((workspace) => (
+                <option key={workspace.id} value={workspace.id}>
+                  {workspace.name}
+                </option>
+              ))}
+            </select>
           </label>
-          <button className="h-11 w-full rounded-[8px] bg-[var(--color-accent)] px-4 text-sm font-semibold text-[var(--color-accent-contrast)] disabled:cursor-not-allowed disabled:opacity-60" disabled={isLoading || isSending} type="submit">{t("dataSource.sendMagicLink")}</button>
+          <label className="block text-sm font-medium text-[var(--color-text-primary)]">
+            <span>{t("dataSource.emailLabel")}</span>
+            <input aria-label={t("dataSource.emailLabel")} className="mt-2 h-11 w-full rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)]" disabled={!selectedWorkspace || isLoading || isSending} placeholder={t("dataSource.emailPlaceholder")} readOnly type="email" value={selectedWorkspace?.email ?? ""} />
+          </label>
+          <button className="h-11 w-full rounded-[8px] bg-[var(--color-accent)] px-4 text-sm font-semibold text-[var(--color-accent-contrast)] disabled:cursor-not-allowed disabled:opacity-60" disabled={!selectedWorkspace || isLoading || isSending} type="submit">{hasSession ? t("dataSource.enter") : t("dataSource.sendMagicLink")}</button>
         </form>
         {message ? <p className="mt-3 text-sm text-[var(--color-text-secondary)]" role="status">{message}</p> : null}
         {error ? <p className="mt-3 rounded-[8px] border border-[var(--color-error-border)] bg-[var(--color-error-soft)] px-3 py-2 text-sm text-[var(--color-error)]" role="alert">{error}</p> : null}

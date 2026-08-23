@@ -8,24 +8,31 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-/** Verifies the public configuration includes the workspace fixed by a deployment. */
-test("reads the deployment-configured Supabase workspace", () => {
+/** Verifies the public configuration includes all deployment-authorized workspace bindings. */
+test("reads the deployment-configured Supabase workspaces", () => {
   vi.stubEnv("VITE_SUPABASE_URL", "https://project.supabase.co");
   vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY", "publishable-key");
-  vi.stubEnv("VITE_SUPABASE_WORKSPACE_ID", "workspace-uuid");
+  vi.stubEnv(
+    "VITE_SUPABASE_WORKSPACES",
+    JSON.stringify([
+      { id: "workspace-uuid", name: "Personal notes", email: "me@example.com" },
+    ]),
+  );
 
   expect(getSupabasePublicConfig()).toEqual({
     publishableKey: "publishable-key",
     url: "https://project.supabase.co",
-    workspaceId: "workspace-uuid",
+    workspaces: [
+      { id: "workspace-uuid", name: "Personal notes", email: "me@example.com" },
+    ],
   });
 });
 
-/** Verifies a deployment cannot enter Supabase mode without a fixed workspace. */
-test("rejects Supabase configuration without a workspace", () => {
+/** Verifies a deployment cannot enter Supabase mode without workspace bindings. */
+test("rejects Supabase configuration without workspaces", () => {
   vi.stubEnv("VITE_SUPABASE_URL", "https://project.supabase.co");
   vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY", "publishable-key");
-  vi.stubEnv("VITE_SUPABASE_WORKSPACE_ID", "");
+  vi.stubEnv("VITE_SUPABASE_WORKSPACES", "");
 
   expect(() => getSupabasePublicConfig()).toThrow(SupabaseConfigurationError);
 });
