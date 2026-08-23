@@ -17,13 +17,13 @@ https://github.com/gawainx/zembra-schema.git
 当前固定版本：
 
 ```text
-v0.1.0
+v0.4.0
 ```
 
 当前 submodule commit：
 
 ```text
-a557f37c2827eb5cd8cd2ca4dd639a082764a763
+176a5a88a14403ce0698528ad29885cd93530891
 ```
 
 ## 使用规则
