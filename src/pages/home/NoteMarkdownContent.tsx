@@ -141,11 +141,7 @@ function createMarkdownComponents(
         return <code className={className}>{children}</code>;
       }
 
-      return (
-        <code className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-1 py-0.5 text-[0.92em] text-[var(--color-text-primary)]">
-          {children}
-        </code>
-      );
+      return <code>{children}</code>;
     },
     input(props) {
       return <input {...props} readOnly />;

@@ -1,42 +1,46 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap");
 @import "tailwindcss";
 
 :root {
   color-scheme: light;
-  --color-app-bg: #f6f7f9;
+  --color-app-bg: #fffdf9;
   --color-surface: #ffffff;
-  --color-surface-muted: #eef2f6;
+  --color-surface-muted: #f7f6f3;
   --color-surface-raised: rgba(255, 255, 255, 0.94);
-  --color-border: rgba(15, 23, 42, 0.1);
-  --color-border-subtle: rgba(15, 23, 42, 0.06);
-  --color-border-strong: rgba(3, 105, 161, 0.36);
-  --color-text-primary: #111827;
-  --color-text-secondary: #4b5563;
-  --color-text-muted: #7a8491;
+  --color-border: rgba(43, 41, 38, 0.14);
+  --color-border-subtle: rgba(43, 41, 38, 0.08);
+  --color-border-strong: rgba(62, 138, 220, 0.42);
+  --color-text-primary: #2b2926;
+  --color-text-secondary: #5f5b55;
+  --color-text-muted: #918c84;
   --color-text-inverse: #ffffff;
-  --color-accent: #0e7490;
-  --color-accent-hover: #155e75;
-  --color-accent-contrast: #f8fafc;
-  --color-accent-soft: rgba(14, 116, 144, 0.12);
+  --color-accent: #3e8adc;
+  --color-accent-hover: #1e79de;
+  --color-accent-contrast: #ffffff;
+  --color-accent-soft: rgba(62, 138, 220, 0.13);
   --color-warm: #a16207;
+  --color-code-bg: rgba(135, 131, 120, 0.15);
+  --color-code-text: #c95050;
+  --color-quote-border: var(--color-text-primary);
   --color-error: #b42318;
   --color-error-soft: #fff1f0;
   --color-error-border: rgba(180, 35, 24, 0.24);
   --color-warning: #92400e;
   --color-warning-soft: #fff7ed;
   --color-warning-border: rgba(146, 64, 14, 0.24);
-  --color-success-soft: #ecfeff;
-  --color-success-border: rgba(14, 116, 144, 0.24);
-  --color-help-shadow: 0 14px 34px rgba(15, 23, 42, 0.14);
-  --color-shadow-card: 0 12px 28px rgba(15, 23, 42, 0.08);
-  --color-shadow-float: 0 18px 44px rgba(15, 23, 42, 0.16);
+  --color-success-soft: #edf6ff;
+  --color-success-border: rgba(62, 138, 220, 0.25);
+  --color-help-shadow: 0 12px 30px rgba(43, 41, 38, 0.12);
+  --color-shadow-card: 0 8px 20px rgba(43, 41, 38, 0.07);
+  --color-shadow-float: 0 14px 34px rgba(43, 41, 38, 0.14);
   --color-composer-gradient: linear-gradient(
     to top,
     var(--color-app-bg) 24%,
-    rgba(246, 247, 249, 0.84) 62%,
+    rgba(255, 253, 249, 0.84) 62%,
     transparent
   );
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -46,37 +50,40 @@
 
 html[data-theme="dark"] {
   color-scheme: dark;
-  --color-app-bg: #0f1115;
-  --color-surface: #1c2027;
-  --color-surface-muted: #151922;
-  --color-surface-raised: rgba(28, 32, 39, 0.95);
-  --color-border: rgba(255, 255, 255, 0.04);
-  --color-border-subtle: rgba(255, 255, 255, 0.025);
-  --color-border-strong: rgba(143, 211, 255, 0.45);
-  --color-text-primary: #e8edf3;
-  --color-text-secondary: #c9d0d8;
-  --color-text-muted: #94a0ae;
-  --color-text-inverse: #11212d;
-  --color-accent: #8fd3ff;
-  --color-accent-hover: #b8e4ff;
-  --color-accent-contrast: #11212d;
-  --color-accent-soft: rgba(143, 211, 255, 0.15);
-  --color-warm: #b89666;
+  --color-app-bg: #202024;
+  --color-surface: #28282c;
+  --color-surface-muted: #323235;
+  --color-surface-raised: rgba(40, 40, 44, 0.96);
+  --color-border: rgba(255, 255, 255, 0.11);
+  --color-border-subtle: rgba(255, 255, 255, 0.065);
+  --color-border-strong: rgba(108, 188, 250, 0.48);
+  --color-text-primary: #cecece;
+  --color-text-secondary: #bbbbbb;
+  --color-text-muted: #929297;
+  --color-text-inverse: #202024;
+  --color-accent: #6cbcfa;
+  --color-accent-hover: #afd6ff;
+  --color-accent-contrast: #202024;
+  --color-accent-soft: rgba(108, 188, 250, 0.18);
+  --color-warm: #d1af72;
+  --color-code-bg: rgba(135, 131, 120, 0.15);
+  --color-code-text: #eb8080;
+  --color-quote-border: var(--color-text-primary);
   --color-error: #ffb3b3;
   --color-error-soft: #351f26;
   --color-error-border: rgba(255, 159, 159, 0.25);
   --color-warning: #f6c783;
   --color-warning-soft: #332819;
   --color-warning-border: rgba(246, 199, 131, 0.24);
-  --color-success-soft: #132936;
-  --color-success-border: rgba(143, 211, 255, 0.25);
-  --color-help-shadow: 0 14px 34px rgba(0, 0, 0, 0.36);
-  --color-shadow-card: 0 10px 24px rgba(0, 0, 0, 0.36);
-  --color-shadow-float: 0 18px 46px rgba(0, 0, 0, 0.44);
+  --color-success-soft: #1f3040;
+  --color-success-border: rgba(108, 188, 250, 0.3);
+  --color-help-shadow: 0 12px 30px rgba(0, 0, 0, 0.34);
+  --color-shadow-card: 0 8px 20px rgba(0, 0, 0, 0.28);
+  --color-shadow-float: 0 14px 36px rgba(0, 0, 0, 0.42);
   --color-composer-gradient: linear-gradient(
     to top,
     var(--color-app-bg) 24%,
-    rgba(15, 17, 21, 0.8) 62%,
+    rgba(32, 32, 36, 0.84) 62%,
     transparent
   );
 }
@@ -155,7 +162,7 @@ button[data-active="true"] {
 
 .note-markdown blockquote {
   margin: 0.5rem 0;
-  border-left: 3px solid var(--color-border-strong);
+  border-left: 3px solid var(--color-quote-border);
   padding-left: 0.75rem;
   color: var(--color-text-secondary);
 }
@@ -167,6 +174,15 @@ button[data-active="true"] {
   border-radius: 8px;
   background: var(--color-surface-muted);
   padding: 0.65rem 0.75rem;
+}
+
+.note-markdown :not(pre) > code {
+  border-radius: 3px;
+  background: var(--color-code-bg);
+  padding: 0.1rem 0.35rem;
+  color: var(--color-code-text);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.85em;
 }
 
 .note-markdown pre code {
@@ -201,7 +217,19 @@ button[data-active="true"] {
 }
 
 .note-markdown input[type="checkbox"] {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--color-accent);
+  border-radius: 999px;
+  background: transparent;
   margin-right: 0.35rem;
+  vertical-align: -0.1em;
+}
+
+.note-markdown input[type="checkbox"]:checked {
+  background: var(--color-accent);
+  box-shadow: inset 0 0 0 3px var(--color-surface);
 }
 
 .live-markdown-editor-content {
@@ -262,7 +290,7 @@ button[data-active="true"] {
 }
 
 .live-markdown-editor-content blockquote {
-  border-left: 3px solid var(--color-border-strong);
+  border-left: 3px solid var(--color-quote-border);
   padding-left: 0.75rem;
   color: var(--color-text-secondary);
 }
@@ -273,6 +301,15 @@ button[data-active="true"] {
   border-radius: 8px;
   background: var(--color-surface-muted);
   padding: 0.65rem 0.75rem;
+}
+
+.live-markdown-editor-content :not(pre) > code {
+  border-radius: 3px;
+  background: var(--color-code-bg);
+  padding: 0.1rem 0.35rem;
+  color: var(--color-code-text);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.85em;
 }
 
 .live-markdown-editor-content table {
@@ -288,9 +325,9 @@ button[data-active="true"] {
 }
 
 .live-markdown-editor-content .editor-tag-chip {
-  border-radius: 7px;
-  background: var(--color-accent-soft);
-  padding: 0.05rem 0.35rem;
-  color: var(--color-accent);
+  border-radius: 999px;
+  background: var(--color-accent);
+  padding: 0.05rem 0.45rem;
+  color: var(--color-text-inverse);
   font-weight: 700;
 }
