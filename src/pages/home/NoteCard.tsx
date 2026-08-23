@@ -67,7 +67,6 @@ export function NoteCard({
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isFieldMenuOpen, setIsFieldMenuOpen] = useState(false);
   const [isFieldUpdating, setIsFieldUpdating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const displayRole = note.role || t("sidebar.unknownRole");
   const displayContent = useMemo(
     () =>
@@ -98,15 +97,10 @@ export function NoteCard({
     return () => window.removeEventListener("resize", measureOverflow);
   }, [measureOverflow]);
 
-  /** Deletes this note through the notes client and closes the action menu. */
-  async function handleDeleteClick() {
-    setIsDeleting(true);
-    try {
-      await onDelete(note.id);
-      setIsActionsOpen(false);
-    } finally {
-      setIsDeleting(false);
-    }
+  /** Starts deletion immediately and lets the store restore the note on failure. */
+  function handleDeleteClick() {
+    void onDelete(note.id).catch(() => undefined);
+    setIsActionsOpen(false);
   }
 
   /** Inserts this note as a valid mention into the active note draft. */
@@ -223,11 +217,10 @@ export function NoteCard({
                 </button>
                 <button
                   className="block w-full px-3 py-2 text-left text-sm text-[var(--color-error)] hover:bg-[var(--color-error-soft)] disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={isDeleting}
                   onClick={handleDeleteClick}
                   type="button"
                 >
-                  {isDeleting ? t("note.deleting") : t("note.delete")}
+                  {t("note.delete")}
                 </button>
               </div>
             ) : null}

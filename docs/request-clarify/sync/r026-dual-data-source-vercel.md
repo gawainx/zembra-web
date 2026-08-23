@@ -38,6 +38,10 @@ Supabase 模式按 schema tag `v0.6.1` 的 Postgres 和 Supabase 契约实现 `w
 
 Backend 的手动同步、同步状态、`/sync/*` 设置和 Secret key 管理没有 Supabase 直连等价物。这些入口只在 Backend 模式显示；Supabase 模式不显示同步按钮、同步反馈和 Sync 设置分类。首页持续显示当前数据源标识，避免用户误判正在操作的数据位置。
 
+## 创建与删除反馈
+
+创建笔记和删除笔记采用乐观更新：提交后立即清空编辑器并把临时笔记加入列表，删除后立即从列表移除笔记。远端请求完成后，右下角显示低视觉侵入的单条通知：成功显示 3 秒，失败显示 10 秒并回滚对应的乐观结果。通知覆盖 Backend 与 Supabase 两种数据源，避免同一界面在不同模式出现不同等待体验。
+
 ## Vercel 范围
 
 保留现有 `vercel.json` SPA rewrite。Vercel 使用 `npm run build` 构建 `dist`，并在 Preview 和 Production 环境配置 Supabase URL 与 publishable key。Backend 模式允许用户在浏览器输入服务根地址；能否从 Vercel 页面访问该 Backend 取决于 Backend 对相应 Vercel 源站的 CORS 配置，该配置不在本仓库修改范围内。
@@ -55,6 +59,7 @@ Backend 的手动同步、同步状态、`/sync/*` 设置和 Secret key 管理�
 | Supabase 未登录 | 显示邮箱输入和发送 Magic Link 动作。 |
 | Supabase 已登录 | 读取 RLS 可见的 workspace，选择后进入首页。 |
 | Supabase 数据访问 | 笔记、领域、层级标签、双链、每日统计和编辑操作直接使用 Supabase Client。 |
+| 创建与删除反馈 | 创建、删除不等待远端请求才更新列表；成功通知显示 3 秒，失败回滚并显示 10 秒通知。 |
 | 模式切换 | 不展示或使用另一模式的缓存数据。 |
 | 同步功能 | 仅 Backend 模式显示手动同步和 Sync 设置。 |
 | Vercel | Production 与 Preview 可构建，Magic Link 能返回允许的 WebUI URL。 |

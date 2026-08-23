@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { notifyMutationCompleted } from "../../app/mutationToast";
 import { getNotesClient, getTaxonomyClient } from "../../api/client";
 import type {
   CreateNoteInput,
@@ -106,27 +107,48 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     set({ dailyNoteCounts });
   },
   createNote: async (input) => {
-    const note = await getNotesClient().createNote(input);
+    const temporaryNote = createTemporaryNote(input, get().fields);
+    const createRequest = getNotesClient().createNote(input);
     set((state) => ({
       notes:
-        state.selectedRole === undefined || state.selectedRole === note.role
-          ? [note, ...state.notes.filter((item) => item.id !== note.id)].slice(
-              0,
-              50,
-            )
+        state.selectedRole === undefined || state.selectedRole === temporaryNote.role
+          ? [temporaryNote, ...state.notes].slice(0, 50)
           : state.notes,
-      roleNavigationNotes: [
-        note,
-        ...state.roleNavigationNotes.filter((item) => item.id !== note.id),
-      ].slice(0, 50),
+      roleNavigationNotes: [temporaryNote, ...state.roleNavigationNotes].slice(0, 50),
     }));
 
-    const [fields, tags, dailyNoteCounts] = await Promise.all([
-      getTaxonomyClient().listFields(),
-      getTaxonomyClient().listTags(),
-      getNotesClient().listDailyNoteCounts(),
-    ]);
-    set({ dailyNoteCounts, fields, tags });
+    try {
+      const note = await createRequest;
+      set((state) => ({
+        notes: replaceNote(state.notes, temporaryNote.id, note),
+        roleNavigationNotes: replaceNote(
+          state.roleNavigationNotes,
+          temporaryNote.id,
+          note,
+        ),
+      }));
+      console.info("[zembra] Created note", { noteId: note.id });
+      notifyMutationCompleted({
+        duration: 3000,
+        message: "noteCreated",
+        tone: "success",
+      });
+      void refreshNoteMetadata(set);
+    } catch (error) {
+      set((state) => ({
+        notes: state.notes.filter((note) => note.id !== temporaryNote.id),
+        roleNavigationNotes: state.roleNavigationNotes.filter(
+          (note) => note.id !== temporaryNote.id,
+        ),
+      }));
+      console.warn("[zembra] Failed to create note", { error });
+      notifyMutationCompleted({
+        duration: 10000,
+        message: "noteCreateFailed",
+        tone: "error",
+      });
+      throw error;
+    }
   },
   updateNote: async (noteRef, input) => {
     const note = await getNotesClient().updateNote(noteRef, input);
@@ -152,13 +174,52 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     set({ dailyNoteCounts, fields, tags });
   },
   deleteNote: async (noteRef) => {
-    await getNotesClient().deleteNote(noteRef);
+    const current = get();
+    const noteIndex = current.notes.findIndex((note) => note.id === noteRef);
+    const roleNavigationNoteIndex = current.roleNavigationNotes.findIndex(
+      (note) => note.id === noteRef,
+    );
+    const note = current.notes[noteIndex];
+    const roleNavigationNote = current.roleNavigationNotes[roleNavigationNoteIndex];
+    const preview = current.notePreviewById[noteRef];
+
     set((state) => ({
       notes: state.notes.filter((note) => note.id !== noteRef),
       roleNavigationNotes: state.roleNavigationNotes.filter(
         (note) => note.id !== noteRef,
       ),
+      notePreviewById: omitNotePreview(state.notePreviewById, noteRef),
     }));
+
+    try {
+      await getNotesClient().deleteNote(noteRef);
+      console.info("[zembra] Deleted note", { noteId: noteRef });
+      notifyMutationCompleted({
+        duration: 3000,
+        message: "noteDeleted",
+        tone: "success",
+      });
+      void refreshNoteMetadata(set);
+    } catch (error) {
+      set((state) => ({
+        notes: restoreNote(state.notes, note, noteIndex),
+        roleNavigationNotes: restoreNote(
+          state.roleNavigationNotes,
+          roleNavigationNote,
+          roleNavigationNoteIndex,
+        ),
+        notePreviewById: preview
+          ? { ...state.notePreviewById, [noteRef]: preview }
+          : state.notePreviewById,
+      }));
+      console.warn("[zembra] Failed to delete note", { error, noteId: noteRef });
+      notifyMutationCompleted({
+        duration: 10000,
+        message: "noteDeleteFailed",
+        tone: "error",
+      });
+      throw error;
+    }
   },
   deleteField: async (fieldId) => {
     await getTaxonomyClient().deleteField(fieldId);
@@ -214,3 +275,62 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     set({ tags });
   },
 }));
+
+/** Creates an in-memory note used until the remote create request resolves. */
+function createTemporaryNote(input: CreateNoteInput, fields: FieldDto[]): NoteDto {
+  const timestamp = Math.floor(Date.now() / 1000);
+
+  return {
+    content: input.content,
+    createdAt: timestamp,
+    fieldId: fields.find((field) => field.name === input.field)?.id,
+    id: `pending-${crypto.randomUUID()}`,
+    role: input.role ?? "Human",
+    tags: input.tags ?? [],
+    updatedAt: timestamp,
+  };
+}
+
+/** Replaces a temporary note with its persisted form while preserving list order. */
+function replaceNote(notes: NoteDto[], temporaryId: string, note: NoteDto): NoteDto[] {
+  return notes.map((item) => (item.id === temporaryId ? note : item));
+}
+
+/** Restores a removed note at its original index when a delete request fails. */
+function restoreNote(
+  notes: NoteDto[],
+  note: NoteDto | undefined,
+  index: number,
+): NoteDto[] {
+  if (!note || index < 0) {
+    return notes;
+  }
+
+  return [...notes.slice(0, index), note, ...notes.slice(index)].slice(0, 50);
+}
+
+/** Removes one cached note preview without mutating the existing cache object. */
+function omitNotePreview(
+  notePreviewById: Record<string, NoteDto>,
+  noteId: string,
+): Record<string, NoteDto> {
+  const { [noteId]: _removed, ...remainingPreviews } = notePreviewById;
+
+  return remainingPreviews;
+}
+
+/** Refreshes navigation metadata after a confirmed remote note mutation. */
+async function refreshNoteMetadata(
+  set: (partial: Pick<NotesState, "dailyNoteCounts" | "fields" | "tags">) => void,
+): Promise<void> {
+  try {
+    const [fields, tags, dailyNoteCounts] = await Promise.all([
+      getTaxonomyClient().listFields(),
+      getTaxonomyClient().listTags(),
+      getNotesClient().listDailyNoteCounts(),
+    ]);
+    set({ dailyNoteCounts, fields, tags });
+  } catch (error) {
+    console.warn("[zembra] Failed to refresh note metadata", { error });
+  }
+}

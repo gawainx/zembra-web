@@ -9,6 +9,11 @@ import { HomePage } from "../pages/home/HomePage";
 import { BackendConnectionToast } from "./BackendStatusToast";
 import { subscribeBackendConnectionFailed } from "./backendConnectionToast";
 import { DataSourceGate } from "./DataSourceGate";
+import { MutationStatusToast } from "./MutationStatusToast";
+import {
+  subscribeMutationToast,
+  type MutationToastNotification,
+} from "./mutationToast";
 import { ThemeProvider } from "./ThemeProvider";
 
 const rootRoute = createRootRoute();
@@ -34,6 +39,8 @@ export function App() {
   const [showsBackendConnectionToast, setShowsBackendConnectionToast] =
     useState(false);
   const hideToastTimeoutRef = useRef<number | undefined>(undefined);
+  const [mutationToast, setMutationToast] = useState<MutationToastNotification>();
+  const hideMutationToastTimeoutRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     const unsubscribe = subscribeBackendConnectionFailed(() => {
@@ -58,12 +65,36 @@ export function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const unsubscribe = subscribeMutationToast((notification) => {
+      setMutationToast(notification);
+
+      if (hideMutationToastTimeoutRef.current !== undefined) {
+        window.clearTimeout(hideMutationToastTimeoutRef.current);
+      }
+
+      hideMutationToastTimeoutRef.current = window.setTimeout(() => {
+        setMutationToast(undefined);
+        hideMutationToastTimeoutRef.current = undefined;
+      }, notification.duration);
+    });
+
+    return () => {
+      unsubscribe();
+
+      if (hideMutationToastTimeoutRef.current !== undefined) {
+        window.clearTimeout(hideMutationToastTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <ThemeProvider>
       <DataSourceGate>
         <RouterProvider router={router} />
       </DataSourceGate>
       {showsBackendConnectionToast ? <BackendConnectionToast /> : null}
+      {mutationToast ? <MutationStatusToast notification={mutationToast} /> : null}
     </ThemeProvider>
   );
 }

@@ -45,6 +45,12 @@ export const common = {
         "Workspaces could not be loaded. Check the backend and try again.",
     },
   },
+  mutation: {
+    noteCreated: "Saved",
+    noteCreateFailed: "Could not save. Please try again.",
+    noteDeleted: "Deleted",
+    noteDeleteFailed: "Could not delete. The note was restored.",
+  },
   language: {
     label: "Language",
     title: "Change language",

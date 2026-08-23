@@ -40,6 +40,12 @@ export const common = {
       workspacesUnavailable: "无法加载 workspace，请确认 backend 状态后重试。",
     },
   },
+  mutation: {
+    noteCreated: "已保存",
+    noteCreateFailed: "未能保存，请重试",
+    noteDeleted: "已删除",
+    noteDeleteFailed: "未能删除，已恢复笔记",
+  },
   language: {
     label: "语言",
     title: "切换语言",

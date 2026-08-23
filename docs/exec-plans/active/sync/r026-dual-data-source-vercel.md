@@ -110,6 +110,20 @@
 
 验证：`npm run test`、`npm run build`、Vercel Preview、Vercel Production、Magic Link 回调、两种模式各完成一次笔记创建。
 
+## Stage 5：乐观创建、删除与低干扰通知
+
+### Task 5.1：实现乐观笔记操作和全局 toast
+
+状态：Finished
+
+文件：Modify `src/features/notes/noteStore.ts`; Modify `src/pages/home/HomePage.tsx`; Modify `src/pages/home/NoteCard.tsx`; Modify `src/app/App.tsx`; Modify/Create global toast files; Modify common locale files; Modify related tests
+
+功能：创建和删除立即反映在页面；远端操作完成后在右下角显示成功或失败通知。
+
+实现要点：创建使用临时 DTO，成功时替换、失败时移除；删除保留原列表位置用于失败回滚。成功通知持续 3 秒，失败通知持续 10 秒；通知使用现有语义 token，不遮挡主要编辑与阅读区域。远端请求继续经既有业务 Client 发起，不在组件中增加 Supabase 查询。
+
+验证：覆盖创建和删除的立即可见更新、失败回滚、成功 3 秒与失败 10 秒通知；`npm run test` 通过 18 个测试文件、121 个测试，`npm run build` 通过。
+
 ## 依赖与提交节奏
 
 Stage 1 完成后提交数据源基础设施，Stage 2 完成后提交登录入口，Stage 3 完成后提交 Supabase Client，Stage 4 完成后提交模式感知 UI 与部署配置。每个 Stage 的代码修改在验证通过后独立提交；执行计划保留在 `active`，直到用户完成验收后才移动到 `completed`。

@@ -7,6 +7,7 @@ import {
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { App } from "./App";
 import { notifyBackendConnectionFailed } from "./backendConnectionToast";
+import { notifyMutationCompleted } from "./mutationToast";
 import { i18next } from "../i18n";
 import {
   backendBaseUrlStorageKey,
@@ -306,4 +307,48 @@ test("shows backend connection toast for five seconds", async () => {
   });
 
   expect(screen.queryByRole("status")).toBeNull();
+});
+
+/** Verifies completed note mutations use their requested success and failure durations. */
+test("shows mutation toasts for three or ten seconds", () => {
+  vi.useFakeTimers();
+  render(<App />);
+
+  act(() => {
+    notifyMutationCompleted({
+      duration: 3000,
+      message: "noteCreated",
+      tone: "success",
+    });
+  });
+
+  expect(screen.getByRole("status").textContent).toBe("已保存");
+
+  act(() => {
+    vi.advanceTimersByTime(3000);
+  });
+
+  expect(screen.queryByRole("status")).toBeNull();
+
+  act(() => {
+    notifyMutationCompleted({
+      duration: 10000,
+      message: "noteDeleteFailed",
+      tone: "error",
+    });
+  });
+
+  expect(screen.getByRole("alert").textContent).toBe("未能删除，已恢复笔记");
+
+  act(() => {
+    vi.advanceTimersByTime(9999);
+  });
+
+  expect(screen.getByRole("alert")).not.toBeNull();
+
+  act(() => {
+    vi.advanceTimersByTime(1);
+  });
+
+  expect(screen.queryByRole("alert")).toBeNull();
 });

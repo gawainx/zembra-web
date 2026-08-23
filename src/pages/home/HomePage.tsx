@@ -54,7 +54,6 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
   const { i18n, t } = useTranslation("home");
   const composerRef = useRef<NoteEditorHandle>(null);
   const [draft, setDraft] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<string>();
   const [editDraft, setEditDraft] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
@@ -175,20 +174,15 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
     const tags = parseTagNames(content);
     const links = parseNoteLinks(content);
 
-    setIsSubmitting(true);
-    try {
-      await createNote({
-        content,
-        field,
-        links,
-        role: "Human",
-        tags,
-      });
-      setDraft("");
-      composerRef.current?.clear();
-    } finally {
-      setIsSubmitting(false);
-    }
+    void createNote({
+      content,
+      field,
+      links,
+      role: "Human",
+      tags,
+    }).catch(() => undefined);
+    setDraft("");
+    composerRef.current?.clear();
   }
 
   /** Toggles one root tag branch in the sidebar tree. */
@@ -591,7 +585,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
             <NoteEditor
               ref={composerRef}
               draft={draft}
-              isSubmitting={isSubmitting}
+              isSubmitting={false}
               meta={t("composer.saveTo", {
                 field:
                   fields.find((field) => field.id === selectedField)?.name ??

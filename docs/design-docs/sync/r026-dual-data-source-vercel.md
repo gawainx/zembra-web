@@ -58,6 +58,12 @@ Supabase Notes Client 以 `workspace_id` 过滤每次 `notes`、`note_tags`、`n
 
 首页品牌区展示 `Backend` 或 `Supabase` 数据源标识。手动同步按钮、同步结果提示与 `SettingsModule` 只在 Backend 模式挂载；Supabase 模式不创建 `SyncClient`，也不渲染 Sync 设置。主题、语言、编辑器、笔记卡片、筛选和 workspace 主页结构在两种模式完全共用。
 
+## 乐观写入与全局通知
+
+`noteStore` 在调用既有 `NotesClient` 前生成临时笔记并更新 feed；收到远端创建结果后以正式 DTO 替换临时笔记，失败则移除临时笔记。删除操作先从 feed、角色导航和预览缓存移除目标笔记，失败时按原位置恢复。创建、删除完成后由 store 发出全局业务通知事件，`App` 复用既有全局通知订阅方式在右下角渲染单条 toast。成功 toast 显示 3 秒，失败 toast 显示 10 秒；新通知替换当前通知。toast 使用现有语义颜色和低对比边框，不使用遮罩、模态层或强动画。
+
+新增全局通知事件是必要的最小抽象：创建和删除在 Zustand store 内异步完成，页面不能可靠地等待它们后再反馈，且两种操作需要共用同一套全局展示和计时。它只承载已定义的通知类型、语义等级和时长，不引入通用消息队列、第三方 UI 库或页面级 Supabase 分支。
+
 ## Vercel 与认证配置
 
 `vercel.json` 保持 SPA rewrite。Vercel 环境变量分 Production 和 Preview 设置 `VITE_SUPABASE_URL`、`VITE_SUPABASE_PUBLISHABLE_KEY`；这些值可进入前端包，service role 和 secret key 不得出现。Supabase Dashboard 的 `Site URL` 配置正式 Vercel 域名，并允许本地开发与 Vercel Preview 回调 URL。Backend 模式的 CORS 配置是外部服务前提，不在前端默认追加路径或改写请求。

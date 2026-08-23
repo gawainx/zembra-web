@@ -40,6 +40,12 @@ export const common = {
       workspacesUnavailable: "無法載入 workspace，請確認 backend 狀態後重試。",
     },
   },
+  mutation: {
+    noteCreated: "已儲存",
+    noteCreateFailed: "無法儲存，請重試",
+    noteDeleted: "已刪除",
+    noteDeleteFailed: "無法刪除，筆記已還原",
+  },
   language: {
     label: "語言",
     title: "切換語言",
