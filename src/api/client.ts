@@ -19,6 +19,12 @@ import {
   createSyncHttpClient,
   type SyncClient,
 } from "./sync.client";
+import {
+  getActiveNotesClient,
+  getActiveSyncClient,
+  getActiveTaxonomyClient,
+  hasActiveDataSource,
+} from "./data-source-client";
 import { requestJson } from "./http";
 import type { ListWorkspacesResponse } from "./types";
 
@@ -92,3 +98,18 @@ export const taxonomyClient = createDefaultTaxonomyClient();
 
 /** Default sync client shared by settings pages. */
 export const syncClient = createDefaultSyncClient();
+
+/** Returns the active notes client, falling back to the existing Backend client before entry completes. */
+export function getNotesClient(): NotesClient {
+  return hasActiveDataSource() ? getActiveNotesClient() : notesClient;
+}
+
+/** Returns the active taxonomy client, falling back to the existing Backend client before entry completes. */
+export function getTaxonomyClient(): TaxonomyClient {
+  return hasActiveDataSource() ? getActiveTaxonomyClient() : taxonomyClient;
+}
+
+/** Returns the active sync client, when the selected data source supports Backend synchronization. */
+export function getSyncClient(): SyncClient | undefined {
+  return hasActiveDataSource() ? getActiveSyncClient() : syncClient;
+}

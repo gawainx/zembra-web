@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { notesClient, taxonomyClient } from "../../api/client";
+import { getNotesClient, getTaxonomyClient } from "../../api/client";
 import type {
   CreateNoteInput,
   DailyNoteCount,
@@ -75,7 +75,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   setSelectedField: (selectedField) => set({ selectedField }),
   setSelectedRole: async (selectedRole) => {
     set({ selectedRole });
-    const notes = await notesClient.listRecentNotes({
+    const notes = await getNotesClient().listRecentNotes({
       limit: 50,
       role: selectedRole,
     });
@@ -89,7 +89,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   },
   loadRecentNotes: async () => {
     const selectedRole = get().selectedRole;
-    const notes = await notesClient.listRecentNotes({
+    const notes = await getNotesClient().listRecentNotes({
       limit: 50,
       role: selectedRole,
     });
@@ -102,11 +102,11 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     }));
   },
   loadDailyNoteCounts: async () => {
-    const dailyNoteCounts = await notesClient.listDailyNoteCounts();
+    const dailyNoteCounts = await getNotesClient().listDailyNoteCounts();
     set({ dailyNoteCounts });
   },
   createNote: async (input) => {
-    const note = await notesClient.createNote(input);
+    const note = await getNotesClient().createNote(input);
     set((state) => ({
       notes:
         state.selectedRole === undefined || state.selectedRole === note.role
@@ -122,14 +122,14 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     }));
 
     const [fields, tags, dailyNoteCounts] = await Promise.all([
-      taxonomyClient.listFields(),
-      taxonomyClient.listTags(),
-      notesClient.listDailyNoteCounts(),
+      getTaxonomyClient().listFields(),
+      getTaxonomyClient().listTags(),
+      getNotesClient().listDailyNoteCounts(),
     ]);
     set({ dailyNoteCounts, fields, tags });
   },
   updateNote: async (noteRef, input) => {
-    const note = await notesClient.updateNote(noteRef, input);
+    const note = await getNotesClient().updateNote(noteRef, input);
     set((state) => ({
       notes:
         state.selectedRole === undefined || state.selectedRole === note.role
@@ -145,14 +145,14 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     }));
 
     const [fields, tags, dailyNoteCounts] = await Promise.all([
-      taxonomyClient.listFields(),
-      taxonomyClient.listTags(),
-      notesClient.listDailyNoteCounts(),
+      getTaxonomyClient().listFields(),
+      getTaxonomyClient().listTags(),
+      getNotesClient().listDailyNoteCounts(),
     ]);
     set({ dailyNoteCounts, fields, tags });
   },
   deleteNote: async (noteRef) => {
-    await notesClient.deleteNote(noteRef);
+    await getNotesClient().deleteNote(noteRef);
     set((state) => ({
       notes: state.notes.filter((note) => note.id !== noteRef),
       roleNavigationNotes: state.roleNavigationNotes.filter(
@@ -161,8 +161,8 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     }));
   },
   deleteField: async (fieldId) => {
-    await taxonomyClient.deleteField(fieldId);
-    const fields = await taxonomyClient.listFields();
+    await getTaxonomyClient().deleteField(fieldId);
+    const fields = await getTaxonomyClient().listFields();
 
     set((state) => ({
       fields,
@@ -184,7 +184,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       return cachedNote;
     }
 
-    const note = await notesClient.getNote(noteRef);
+    const note = await getNotesClient().getNote(noteRef);
     set((current) => ({
       notePreviewById: {
         ...current.notePreviewById,
@@ -200,7 +200,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       return;
     }
 
-    const fields = await taxonomyClient.listFields();
+    const fields = await getTaxonomyClient().listFields();
     set({ fields });
   },
   loadTags: async () => {
@@ -210,7 +210,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       return;
     }
 
-    const tags = await taxonomyClient.listTags();
+    const tags = await getTaxonomyClient().listTags();
     set({ tags });
   },
 }));

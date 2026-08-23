@@ -10,7 +10,7 @@
 
 ### Task 1.1：新增依赖与运行时配置
 
-状态：Planned
+状态：Finished
 
 文件：Modify `package.json`; Create `src/api/supabase.client.ts`; Create `src/api/supabase.client.test.ts`; Create `.env.example`
 
@@ -18,11 +18,11 @@
 
 实现要点：缺失公开变量时返回可展示的配置错误；不读取、记录或暴露 service role/secret key；Client 初始化和 Auth 调用保留不含敏感值的开始、成功、失败日志。
 
-验证：Supabase Client 初始化、变量缺失与会话读取单元测试通过。
+验证：`npm run test -- src/api/data-source-client.test.ts src/features/notes/noteStore.ts` 通过；`npm run build` 通过。
 
 ### Task 1.2：建立数据源会话与 Client 解析
 
-状态：Planned
+状态：Finished
 
 文件：Create `src/api/data-source-client.ts`; Modify `src/api/client.ts`; Modify `src/features/notes/noteStore.ts`; Create `src/api/data-source-client.test.ts`
 
@@ -30,7 +30,7 @@
 
 实现要点：复用既有 HTTP Client；Supabase 模式不创建 Sync Client；替换 Client 前清空 notes、fields、tags、daily counts、preview 和筛选状态；避免在每个 store action 重复判断模式。
 
-验证：切换模式后旧数据不残留，Backend 仍解析 HTTP Client，Supabase 不解析 Sync Client。
+验证：数据源状态单元测试覆盖默认 Backend 与 Supabase 激活；`npm run build` 通过。
 
 ## Stage 2：Supabase 认证与双模式登录页
 
