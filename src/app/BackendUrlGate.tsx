@@ -15,17 +15,21 @@ import {
   setConfiguredWorkspaceId,
 } from "../api/backendConfig";
 import type { WorkspaceSummary } from "../api/types";
+import { activateDataSource } from "../api/data-source-client";
+import { createBackendDataSourceClients } from "../api/client";
 
 interface BackendUrlGateProps {
   /** Application content rendered after the backend URL is reachable. */
   children: ReactNode;
+  /** Data-source picker rendered above Backend-specific entry fields. */
+  dataSourceControl?: ReactNode;
 }
 
 type GateStatus = "checking" | "ready" | "needs-url";
 const defaultBackendEndpoint = parseBackendEndpoint(defaultBackendBaseUrl);
 
 /** Gates the app behind a reachable backend API base URL. */
-export function BackendUrlGate({ children }: BackendUrlGateProps) {
+export function BackendUrlGate({ children, dataSourceControl }: BackendUrlGateProps) {
   const { t } = useTranslation("common");
   const [status, setStatus] = useState<GateStatus>("checking");
   const [backendHost, setBackendHost] = useState(() => {
@@ -180,6 +184,11 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
     }
 
     setConfiguredWorkspaceId(selectedWorkspaceId);
+    activateDataSource({
+      ...createBackendDataSourceClients(selectedWorkspaceId),
+      mode: "backend",
+      workspaceId: selectedWorkspaceId,
+    });
     console.info("[zembra] Workspace selected; opening app", {
       workspaceId: selectedWorkspaceId.slice(0, 8),
     });
@@ -201,6 +210,7 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
+          {dataSourceControl}
           <div className="text-sm font-medium text-[var(--color-text-primary)]">
             Backend
           </div>

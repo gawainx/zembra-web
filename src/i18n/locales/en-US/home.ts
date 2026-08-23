@@ -5,6 +5,7 @@ export const home = {
   },
   badge: {
     local: "LOCAL",
+    supabase: "SUPABASE",
   },
   composer: {
     help: "Help",

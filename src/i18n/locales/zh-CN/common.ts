@@ -1,4 +1,19 @@
 export const common = {
+  dataSource: {
+    backend: "Backend",
+    configured: "此部署尚未配置 Supabase。",
+    emailLabel: "邮箱地址",
+    emailPlaceholder: "you@example.com",
+    enterAction: "进入 Zembra",
+    magicLinkSent: "请在邮箱中打开登录链接。",
+    noWorkspaces: "当前账号没有可用的 Supabase workspace。",
+    selectorLabel: "数据源",
+    sendMagicLink: "发送 Magic Link",
+    supabase: "Supabase",
+    workspaceLabel: "Workspace",
+    workspacePlaceholder: "请选择 workspace",
+    workspacesUnavailable: "无法加载 Supabase workspace。",
+  },
   backend: {
     connectionFailed: "无法连接到 backend，请确认服务已启动",
     login: {

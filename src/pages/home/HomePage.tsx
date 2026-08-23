@@ -13,7 +13,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "../../app/ThemeToggle";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { syncClient as defaultSyncClient } from "../../api/client";
+import { getDataSourceMode, syncClient as defaultSyncClient } from "../../api/client";
 import { ApiError } from "../../api/http";
 import type { SyncClient } from "../../api/sync.client";
 import { useNotesStore } from "../../features/notes/noteStore";
@@ -131,6 +131,8 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
   const [expandedTagRoots, setExpandedTagRoots] = useState<Set<string>>(
     () => new Set(),
   );
+  const dataSourceMode = getDataSourceMode();
+  const supportsSync = dataSourceMode === "backend";
 
   useEffect(() => {
     void loadDailyNoteCounts();
@@ -324,6 +326,9 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
 
   /** Triggers a manual synchronization cycle from the home workspace. */
   async function handleManualSync() {
+    if (!supportsSync) {
+      return;
+    }
     setIsSyncing(true);
     setSyncFeedback(undefined);
     setSyncError(undefined);
@@ -352,7 +357,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
               <div className="flex min-w-0 items-center gap-2 text-lg font-bold">
                 <span>Zembra</span>
                 <span className="rounded-[5px] border border-[var(--color-text-primary)]/70 px-1.5 py-0.5 text-[10px] leading-tight">
-                  {t("badge.local")}
+                  {supportsSync ? t("badge.local") : t("badge.supabase")}
                 </span>
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -367,7 +372,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
                     aria-hidden="true"
                   />
                 </button>
-                <button
+                {supportsSync ? <button
                   className="flex size-[34px] shrink-0 items-center justify-center rounded-[9px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
                   type="button"
                   aria-label={t("actions.sync")}
@@ -386,13 +391,13 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
                       aria-hidden="true"
                     />
                   )}
-                </button>
+                </button> : null}
                 <ThemeToggle />
-                <SettingsModule client={syncClient} />
+                {supportsSync ? <SettingsModule client={syncClient} /> : null}
               </div>
             </div>
 
-            {syncFeedback || syncError ? (
+            {supportsSync && (syncFeedback || syncError) ? (
               <p
                 className="mb-3 rounded-[10px] border px-3 py-2 text-sm data-[tone=error]:border-[var(--color-error-border)] data-[tone=error]:bg-[var(--color-error-soft)] data-[tone=error]:text-[var(--color-error)] data-[tone=success]:border-[var(--color-success-border)] data-[tone=success]:bg-[var(--color-success-soft)] data-[tone=success]:text-[var(--color-accent)]"
                 data-tone={syncError ? "error" : "success"}

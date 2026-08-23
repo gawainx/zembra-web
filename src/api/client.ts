@@ -25,6 +25,11 @@ import {
   getActiveTaxonomyClient,
   hasActiveDataSource,
 } from "./data-source-client";
+import { getActiveDataSource, type DataSourceMode } from "./data-source-client";
+import { createSupabaseNotesClient } from "./supabase-notes.client";
+import { createSupabaseTaxonomyClient } from "./supabase-taxonomy.client";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { DataSourceClients } from "./data-source-client";
 import { requestJson } from "./http";
 import type { ListWorkspacesResponse } from "./types";
 
@@ -99,6 +104,27 @@ export const taxonomyClient = createDefaultTaxonomyClient();
 /** Default sync client shared by settings pages. */
 export const syncClient = createDefaultSyncClient();
 
+/** Creates Backend clients scoped to the workspace confirmed by the Backend entry flow. */
+export function createBackendDataSourceClients(workspaceId: string): DataSourceClients {
+  if (import.meta.env.MODE === "test") {
+    return { notes: createMockNotesClient(), sync: createMockSyncClient(), taxonomy: createMockTaxonomyClient() };
+  }
+
+  return {
+    notes: createNotesHttpClient({ baseUrl: resolveDefaultApiBaseUrl, workspaceId }),
+    sync: createSyncHttpClient({ baseUrl: resolveDefaultApiBaseUrl }),
+    taxonomy: createTaxonomyHttpClient({ baseUrl: resolveDefaultApiBaseUrl, workspaceId }),
+  };
+}
+
+/** Creates Supabase clients scoped to the workspace confirmed by the Supabase entry flow. */
+export function createSupabaseDataSourceClients(client: SupabaseClient, workspaceId: string): DataSourceClients {
+  return {
+    notes: createSupabaseNotesClient(client, workspaceId),
+    taxonomy: createSupabaseTaxonomyClient(client, workspaceId),
+  };
+}
+
 /** Returns the active notes client, falling back to the existing Backend client before entry completes. */
 export function getNotesClient(): NotesClient {
   return hasActiveDataSource() ? getActiveNotesClient() : notesClient;
@@ -112,4 +138,9 @@ export function getTaxonomyClient(): TaxonomyClient {
 /** Returns the active sync client, when the selected data source supports Backend synchronization. */
 export function getSyncClient(): SyncClient | undefined {
   return hasActiveDataSource() ? getActiveSyncClient() : syncClient;
+}
+
+/** Returns the selected source mode, defaulting to Backend before the entry flow completes. */
+export function getDataSourceMode(): DataSourceMode {
+  return hasActiveDataSource() ? getActiveDataSource().mode : "backend";
 }

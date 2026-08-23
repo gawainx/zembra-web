@@ -1,4 +1,19 @@
 export const common = {
+  dataSource: {
+    backend: "Backend",
+    configured: "Supabase is not configured for this deployment.",
+    emailLabel: "Email address",
+    emailPlaceholder: "you@example.com",
+    enterAction: "Enter Zembra",
+    magicLinkSent: "Check your email for the sign-in link.",
+    noWorkspaces: "No Supabase workspace is available for this account.",
+    selectorLabel: "Data source",
+    sendMagicLink: "Send Magic Link",
+    supabase: "Supabase",
+    workspaceLabel: "Workspace",
+    workspacePlaceholder: "Select a workspace",
+    workspacesUnavailable: "Supabase workspaces could not be loaded.",
+  },
   backend: {
     connectionFailed: "Cannot connect to the backend. Confirm the service is running.",
     login: {

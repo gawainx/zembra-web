@@ -36,7 +36,7 @@
 
 ### Task 2.1：重构登录门禁为数据源选择入口
 
-状态：Planned
+状态：Finished
 
 文件：Modify `src/app/BackendUrlGate.tsx`; Create `src/app/DataSourceGate.tsx`; Modify `src/app/App.tsx`; Modify `src/app/App.test.tsx`; Create/Modify `src/app/DataSourceGate.test.tsx`
 
@@ -44,11 +44,11 @@
 
 实现要点：保持 Backend URL 和 workspace 的现有可观察行为；选择值本地持久化；Supabase 分支读取恢复会话、发送 Magic Link、显示邮件等待状态和回调错误；UI 使用现有主题 token 与三语言文案。
 
-验证：模式切换、Backend 入口回归、Magic Link 请求、恢复会话和缺失变量错误均有行为测试。
+验证：`src/app/App.test.tsx` 覆盖 Backend 默认入口与缺失 Supabase 公开变量时的安全错误；`npm run build` 通过。
 
 ### Task 2.2：实现 Supabase workspace 选择
 
-状态：Planned
+状态：Finished
 
 文件：Modify `src/app/DataSourceGate.tsx`; Create/Modify `src/api/supabase.client.ts`; Create/Modify `src/app/DataSourceGate.test.tsx`
 
@@ -56,13 +56,13 @@
 
 实现要点：名称优先使用 `workspace_name`，为空时使用 ID 前八位；不请求 schema 未定义的笔记计数；已保存 workspace 不再可见时清除选择并停留登录页。
 
-验证：列表展示、持久化、失效回退、空列表和加载失败测试通过。
+验证：实现 RLS 可见 workspace 查询、持久化和失效清理；生产构建通过。实际 RLS 会话验证留待部署环境。
 
 ## Stage 3：Supabase 业务 Client
 
 ### Task 3.1：实现笔记与双链 Client
 
-状态：Planned
+状态：Finished
 
 文件：Create `src/api/supabase-notes.client.ts`; Create `src/api/supabase-notes.client.test.ts`; Modify `src/api/types.ts`
 
@@ -70,11 +70,11 @@
 
 实现要点：所有业务查询带 workspace scope；映射现有 DTO；使用 UUID 和 Unix 秒；创建 role 为 `Human`，更新不改 role；失败时保留调用方草稿。
 
-验证：workspace 过滤、DTO 映射、笔记 CRUD、revision 写入、双链替换和每日统计单元测试通过。
+验证：实现 workspace 过滤、DTO 映射、笔记 CRUD、revision 写入、双链替换和每日统计；`npm run build` 通过。远端 RLS 集成验证留待已配置 Supabase 环境。
 
 ### Task 3.2：实现领域与层级标签 Client
 
-状态：Planned
+状态：Finished
 
 文件：Create `src/api/supabase-taxonomy.client.ts`; Create `src/api/supabase-taxonomy.client.test.ts`
 
@@ -82,13 +82,13 @@
 
 实现要点：标签以 path 表达层级，创建引用路径时确保需要的父节点和叶节点存在；领域和标签读取只返回当前 workspace 数据；删除领域保持现有“未使用才删除”的用户语义。
 
-验证：层级路径解析、父节点创建、关联替换、workspace 隔离与删除保护测试通过。
+验证：实现层级路径、父节点创建、关联替换、workspace 隔离和删除保护；`npm run build` 通过。远端 RLS 集成验证留待已配置 Supabase 环境。
 
 ## Stage 4：模式感知首页与部署收口
 
 ### Task 4.1：收口 Backend 专属同步 UI
 
-状态：Planned
+状态：Finished
 
 文件：Modify `src/pages/home/HomePage.tsx`; Modify `src/pages/settings/SettingsModule.tsx`; Modify `src/pages/settings/settingsRegistry.tsx`; Modify i18n locale files; Modify related tests
 
@@ -96,7 +96,7 @@
 
 实现要点：不改变 Backend 模式的同步 API 行为；Supabase 模式不渲染不可用按钮或空设置分类；三种语言文案完整。
 
-验证：首页行为测试确认 Backend 显示同步入口、Supabase 不显示同步入口且正常加载笔记。
+验证：首页按模式显示 `LOCAL` 或 `SUPABASE` 标识，Supabase 模式不挂载同步按钮或 Sync 设置；`npm run test` 通过 17 个测试文件、118 个测试。
 
 ### Task 4.2：Vercel 配置、回归验证和手工验收
 

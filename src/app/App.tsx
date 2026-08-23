@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { HomePage } from "../pages/home/HomePage";
 import { BackendConnectionToast } from "./BackendStatusToast";
 import { subscribeBackendConnectionFailed } from "./backendConnectionToast";
-import { BackendUrlGate } from "./BackendUrlGate";
+import { DataSourceGate } from "./DataSourceGate";
 import { ThemeProvider } from "./ThemeProvider";
 
 const rootRoute = createRootRoute();
@@ -60,9 +60,9 @@ export function App() {
 
   return (
     <ThemeProvider>
-      <BackendUrlGate>
+      <DataSourceGate>
         <RouterProvider router={router} />
-      </BackendUrlGate>
+      </DataSourceGate>
       {showsBackendConnectionToast ? <BackendConnectionToast /> : null}
     </ThemeProvider>
   );
