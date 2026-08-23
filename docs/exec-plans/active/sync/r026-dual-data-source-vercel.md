@@ -124,6 +124,18 @@
 
 验证：覆盖创建和删除的立即可见更新、失败回滚、成功 3 秒与失败 10 秒通知；`npm run test` 通过 18 个测试文件、121 个测试，`npm run build` 通过。
 
+### Task 5.2：应用 Field 红色语义
+
+状态：Finished
+
+文件：Modify `src/styles/main.css`; Modify `src/pages/home/HomeSidebar.tsx`; Modify `src/pages/home/HomePage.tsx`; Modify `src/pages/home/NoteCard.tsx`
+
+功能：使用 Bonofix 红色系区分 Field 与蓝色 Tag。
+
+实现要点：只使用新增的 field 语义 token；覆盖明暗主题、侧栏 Field 行和笔记卡片 Field 选择器，不改变交互或标签样式。
+
+验证：`npm run build` 通过。
+
 ## 依赖与提交节奏
 
 Stage 1 完成后提交数据源基础设施，Stage 2 完成后提交登录入口，Stage 3 完成后提交 Supabase Client，Stage 4 完成后提交模式感知 UI 与部署配置。每个 Stage 的代码修改在验证通过后独立提交；执行计划保留在 `active`，直到用户完成验收后才移动到 `completed`。

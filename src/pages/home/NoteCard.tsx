@@ -145,7 +145,7 @@ export function NoteCard({
               <button
                 aria-expanded={isFieldMenuOpen}
                 aria-label={t("note.fieldMenu.switch", { field: fieldName })}
-                className="inline-flex items-center gap-0.5 rounded-[6px] font-bold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center gap-0.5 rounded-[6px] font-bold text-[var(--color-field)] hover:bg-[var(--color-field-soft)] disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={isEditing || fields.length === 0 || isFieldUpdating}
                 onClick={() => setIsFieldMenuOpen((current) => !current)}
                 type="button"
@@ -173,7 +173,7 @@ export function NoteCard({
                       >
                         <span>@{field.name}</span>
                         {selected ? (
-                          <Check className="size-4 text-[var(--color-accent)]" aria-hidden="true" />
+                          <Check className="size-4 text-[var(--color-field)]" aria-hidden="true" />
                         ) : null}
                       </button>
                     );

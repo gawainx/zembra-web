@@ -19,6 +19,9 @@
   --color-accent-contrast: #ffffff;
   --color-accent-soft: rgba(62, 138, 220, 0.13);
   --color-warm: #a16207;
+  --color-field: #c95050;
+  --color-field-soft: rgba(201, 80, 80, 0.12);
+  --color-field-border: rgba(201, 80, 80, 0.28);
   --color-code-bg: rgba(135, 131, 120, 0.15);
   --color-code-text: #c95050;
   --color-quote-border: var(--color-text-primary);
@@ -66,6 +69,9 @@ html[data-theme="dark"] {
   --color-accent-contrast: #202024;
   --color-accent-soft: rgba(108, 188, 250, 0.18);
   --color-warm: #d1af72;
+  --color-field: #eb8080;
+  --color-field-soft: rgba(235, 128, 128, 0.16);
+  --color-field-border: rgba(235, 128, 128, 0.3);
   --color-code-bg: rgba(135, 131, 120, 0.15);
   --color-code-text: #eb8080;
   --color-quote-border: var(--color-text-primary);

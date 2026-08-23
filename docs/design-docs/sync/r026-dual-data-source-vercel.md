@@ -58,6 +58,8 @@ Supabase Notes Client 以 `workspace_id` 过滤每次 `notes`、`note_tags`、`n
 
 首页品牌区展示 `Backend` 或 `Supabase` 数据源标识。手动同步按钮、同步结果提示与 `SettingsModule` 只在 Backend 模式挂载；Supabase 模式不创建 `SyncClient`，也不渲染 Sync 设置。主题、语言、编辑器、笔记卡片、筛选和 workspace 主页结构在两种模式完全共用。
 
+Field 使用 Bonofix 风格的低饱和红色语义 token 展示，覆盖侧栏 `@field` 和笔记卡片的 field 选择器；标签继续使用强调蓝色体系。明暗主题分别定义对应 token，组件不写入颜色字面量。
+
 ## 乐观写入与全局通知
 
 `noteStore` 在调用既有 `NotesClient` 前生成临时笔记并更新 feed；收到远端创建结果后以正式 DTO 替换临时笔记，失败则移除临时笔记。删除操作先从 feed、角色导航和预览缓存移除目标笔记，失败时按原位置恢复。创建、删除完成后由 store 发出全局业务通知事件，`App` 复用既有全局通知订阅方式在右下角渲染单条 toast。成功 toast 显示 3 秒，失败 toast 显示 10 秒；新通知替换当前通知。toast 使用现有语义颜色和低对比边框，不使用遮罩、模态层或强动画。

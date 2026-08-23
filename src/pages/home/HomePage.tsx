@@ -447,6 +447,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
                 count={notes.length}
                 label={t("sidebar.all")}
                 prefix="@"
+                tone="field"
                 onClick={() => setSelectedField(undefined)}
               />
               {fields.map((field) => (
@@ -462,6 +463,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
                   key={field.id}
                   label={field.name}
                   prefix="@"
+                  tone="field"
                   onDelete={
                     (fieldUsage.get(field.id) ?? 0) === 0
                       ? () => handleFieldDeleteRequest(field)
