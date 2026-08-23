@@ -20,6 +20,7 @@ beforeEach(async () => {
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
   window.localStorage.clear();
 });
 
@@ -49,6 +50,8 @@ test("renders the backend URL gate before the workspace", async () => {
 /** Verifies that selecting Supabase exposes a safe configuration error without a browser secret. */
 test("shows a Supabase configuration error when public deployment variables are absent", async () => {
   vi.spyOn(console, "info").mockImplementation(() => undefined);
+  vi.stubEnv("VITE_SUPABASE_URL", "");
+  vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY", "");
   render(<App />);
 
   fireEvent.change(await screen.findByLabelText("数据源"), {

@@ -52,9 +52,9 @@
 
 文件：Modify `src/app/DataSourceGate.tsx`; Create/Modify `src/api/supabase.client.ts`; Create/Modify `src/app/DataSourceGate.test.tsx`
 
-功能：查询当前会话在 RLS 下可见的 `workspaces`，选择、持久化并校验 Supabase workspace。
+功能：查询当前会话通过 `workspace_members` 在 RLS 下可见的 `workspaces`，选择、持久化并校验 Supabase workspace。
 
-实现要点：名称优先使用 `workspace_name`，为空时使用 ID 前八位；不请求 schema 未定义的笔记计数；已保存 workspace 不再可见时清除选择并停留登录页。
+实现要点：名称优先使用 `workspace_name`，为空时使用 ID 前八位；不请求 schema 未定义的笔记计数；已保存 workspace 不再可见时清除选择并停留登录页。共享 schema 已升级至 tag `v0.6.1`，其 `workspace_members` 和 RLS 迁移是本流程的远程数据访问前提。
 
 验证：实现 RLS 可见 workspace 查询、持久化和失效清理；生产构建通过。实际 RLS 会话验证留待部署环境。
 

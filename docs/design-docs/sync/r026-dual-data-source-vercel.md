@@ -6,7 +6,7 @@
 
 ## 设计目标
 
-在不让页面组件感知数据库提供方的前提下，为现有 WebUI 增加可切换的 Backend 与 Supabase 数据源。Backend 客户端和行为保持可用；Supabase 使用 `@supabase/supabase-js` 直连远程项目。数据结构和业务语义以 `vendor/zembra-schema` 的 Git tag `v0.5.1` 为准，远端表定义读取该 tag 的 `postgres/` 契约。
+在不让页面组件感知数据库提供方的前提下，为现有 WebUI 增加可切换的 Backend 与 Supabase 数据源。Backend 客户端和行为保持可用；Supabase 使用 `@supabase/supabase-js` 直连远程项目。数据结构和业务语义以 `vendor/zembra-schema` 的 Git tag `v0.6.1` 为准，远端业务表和 Supabase Auth/RLS 契约均由该 tag 定义。
 
 ## 模块结构
 
@@ -48,7 +48,7 @@ Backend 分支复用 `BackendUrlGate` 已有的地址输入、`GET /health`、`G
 
 Supabase Client 由构建时 `VITE_SUPABASE_URL` 与 `VITE_SUPABASE_PUBLISHABLE_KEY` 创建。缺少任一变量时，Supabase 选项在登录页展示明确配置错误，不能进入应用。Client 仅出现在 `api` 模块，页面组件通过门禁状态和业务 Client 使用它。
 
-未恢复会话时，登录页提供邮箱输入和发送 Magic Link 动作；成功后显示“请在邮箱中完成登录”。回调回到 Vercel 页面时重新读取会话，随后查询当前 RLS 可见的 `workspaces`。workspace 展示规则与 Backend 一致：优先 `workspace_name`，为空时显示 ID 前八位；schema 未定义笔记计数时，不在 Supabase workspace 选项中显示计数。
+未恢复会话时，登录页提供邮箱输入和发送 Magic Link 动作；成功后显示“请在邮箱中完成登录”。回调回到 Vercel 页面时重新读取会话，随后查询当前用户通过 `workspace_members` 在 RLS 下可见的 `workspaces`。workspace 展示规则与 Backend 一致：优先 `workspace_name`，为空时显示 ID 前八位；schema 未定义笔记计数时，不在 Supabase workspace 选项中显示计数。
 
 Supabase Notes Client 以 `workspace_id` 过滤每次 `notes`、`note_tags`、`note_links`、`note_revisions` 与 `fields` 查询。它负责将 snake_case 行映射为既有 camelCase DTO，并在创建、编辑与删除后刷新相关标签、领域和每日统计。ID 由浏览器使用 `crypto.randomUUID()` 创建，时间用 Unix 秒。层级标签以 `path` 为界面语义；创建或引用 `a/b` 时，Client 按路径确保父节点和叶节点存在，再写入 `note_tags`。双链按 `note_links` 读写。每日统计在 Client 中按可访问笔记的 `created_at` 聚合为现有 DTO，不新增数据库对象。
 

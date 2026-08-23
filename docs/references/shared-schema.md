@@ -17,13 +17,13 @@ https://github.com/zembra-open-sources-project/zembra-schema.git
 当前固定版本：
 
 ```text
-v0.5.1
+v0.6.1
 ```
 
 当前 submodule commit：
 
 ```text
-58fea0fb684d80495fd8e9a40c7e1a81b5ee6a21
+ed999079a06b8c5cc2287d4f397a554444b3c994
 ```
 
 ## 使用规则
@@ -39,10 +39,10 @@ v0.5.1
 | 类型 | 路径 |
 | --- | --- |
 | 统一表结构说明 | `vendor/zembra-schema/note_schema.md` |
-| SQLite 初始化 DDL | `vendor/zembra-schema/sqlite/001_initial_schema.sql` |
-| Migration | `vendor/zembra-schema/migrations/001_initial_schema.sql` |
+| SQLite 初始化 DDL | `vendor/zembra-schema/migrations/sqlite/current_schema.sql` |
+| SQLite Migration | `vendor/zembra-schema/migrations/sqlite/001_initial_schema.sql` |
 | Postgres 初始化 DDL | `vendor/zembra-schema/postgres/001_initial_schema.sql` |
-| Postgres Migration | `vendor/zembra-schema/postgres/migrations/005_add_unified_schema_contract.sql` |
+| Supabase Migration | `vendor/zembra-schema/migrations/supabase/006_create_workspace_members.sql`、`vendor/zembra-schema/migrations/supabase/007_enable_workspace_rls.sql` |
 | JSON Schema | `vendor/zembra-schema/json/` |
 
 ## 初始化和升级
@@ -54,5 +54,7 @@ git submodule update --init --recursive
 ```
 
 升级共享 schema 时，在 `vendor/zembra-schema` 内切换到目标 tag 或 commit，再回到本仓库提交 submodule 指针变更。
+
+`v0.6.1` 的统一业务 schema version 为 `0.6.0`。它引入 `workspace_members` 和受成员关系约束的 Supabase RLS；WebUI 继续通过当前 Supabase 会话查询可访问的 `workspaces`，不保存或伪造 workspace 访问权限。
 
 提交前必须确认 schema 版本兼容性；如果数据结构有破坏性变化，需要同步更新本仓库的数据访问逻辑和迁移策略。
