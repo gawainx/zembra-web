@@ -266,7 +266,7 @@ export function NoteCard({
               <div className="mb-1 flex flex-wrap gap-1.5">
                 {note.tags.map((tag) => (
                   <span
-                    className="inline-flex h-[25px] items-center rounded-[7px] bg-[var(--color-accent-soft)] px-2 text-[13px] font-semibold text-[var(--color-accent)]"
+                    className="inline-flex h-[25px] items-center rounded-full bg-[var(--color-accent)] px-2 text-[13px] font-semibold text-[var(--color-text-inverse)]"
                     key={tag}
                   >
                     #{formatTagPathLabel(tag)}
