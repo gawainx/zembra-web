@@ -2,3 +2,4 @@
 
 - [数据库契约相关依赖约束澄清](./dependency-constraints.md)
 - [前端技术栈选型澄清](./frontend-tech-stack.md)
+- [双数据源与 Vercel 托管澄清](./sync/r026-dual-data-source-vercel.md)
