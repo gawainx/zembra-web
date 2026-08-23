@@ -8,9 +8,6 @@ export type DataSourceMode = "backend" | "supabase";
 /** Local storage key used to restore the selected data-source mode on the entry screen. */
 export const dataSourceModeStorageKey = "zembra.dataSourceMode";
 
-/** Local storage key used to restore the selected Supabase workspace. */
-export const supabaseWorkspaceIdStorageKey = "zembra.supabaseWorkspaceId";
-
 /** Groups business clients bound to one data source and workspace. */
 export interface DataSourceClients {
   /** Client that reads and writes note data. */
@@ -41,22 +38,6 @@ export function getStoredDataSourceMode(): DataSourceMode {
 /** Persists the data-source mode chosen in the entry screen. */
 export function setStoredDataSourceMode(mode: DataSourceMode): void {
   window.localStorage.setItem(dataSourceModeStorageKey, mode);
-}
-
-/** Reads the Supabase workspace selected for a previous session. */
-export function getStoredSupabaseWorkspaceId(): string | undefined {
-  const value = window.localStorage.getItem(supabaseWorkspaceIdStorageKey)?.trim();
-  return value || undefined;
-}
-
-/** Persists a Supabase workspace after it is confirmed to be RLS-visible. */
-export function setStoredSupabaseWorkspaceId(workspaceId: string): void {
-  window.localStorage.setItem(supabaseWorkspaceIdStorageKey, workspaceId);
-}
-
-/** Clears an unavailable Supabase workspace selection. */
-export function clearStoredSupabaseWorkspaceId(): void {
-  window.localStorage.removeItem(supabaseWorkspaceIdStorageKey);
 }
 
 /** Activates data clients after the entry flow confirms its mode and workspace. */

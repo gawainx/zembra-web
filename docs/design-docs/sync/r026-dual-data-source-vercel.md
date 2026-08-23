@@ -35,7 +35,7 @@ src/
 | Backend URL | 既有 `localStorage` 配置 | 仅 Backend 模式使用。 |
 | Backend workspace | 既有 `localStorage` 配置 | 仅 Backend 模式使用。 |
 | Supabase Auth session | Supabase Client 默认持久化存储 | 恢复 Magic Link 登录结果。 |
-| Supabase workspace | 独立 `localStorage` 键 | 仅 Supabase 模式使用，进入前重新验证仍在 RLS 可见列表内。 |
+| Supabase workspace | `VITE_SUPABASE_WORKSPACE_ID` | 仅 Supabase 模式使用，由本地或 Vercel 部署配置固定。 |
 | 首页缓存 | Zustand `noteStore` | 切换模式或 workspace 时整体重置。 |
 
 `DataSourceGate` 是唯一的模式选择与进入门禁。完成一个模式的登录和 workspace 选择后，它建立当前数据源 Client，再渲染应用路由。切换选择或 workspace 时先重置 `noteStore`，再替换当前 Client，防止旧请求结果写入新模式状态。
@@ -48,7 +48,7 @@ Backend 分支复用 `BackendUrlGate` 已有的地址输入、`GET /health`、`G
 
 Supabase Client 由构建时 `VITE_SUPABASE_URL` 与 `VITE_SUPABASE_PUBLISHABLE_KEY` 创建。缺少任一变量时，Supabase 选项在登录页展示明确配置错误，不能进入应用。Client 仅出现在 `api` 模块，页面组件通过门禁状态和业务 Client 使用它。
 
-未恢复会话时，登录页提供邮箱输入和发送 Magic Link 动作；成功后显示“请在邮箱中完成登录”。回调回到 Vercel 页面时重新读取会话，随后查询当前用户通过 `workspace_members` 在 RLS 下可见的 `workspaces`。workspace 展示规则与 Backend 一致：优先 `workspace_name`，为空时显示 ID 前八位；schema 未定义笔记计数时，不在 Supabase workspace 选项中显示计数。
+未恢复会话时，登录页提供邮箱输入和发送 Magic Link 动作；成功后显示“请在邮箱中完成登录”。回调回到 Vercel 页面时重新读取会话，随后以 `VITE_SUPABASE_WORKSPACE_ID` 激活业务 Client 并直接进入首页。Supabase 模式不查询、不展示和不持久化 workspace 选择；访问控制继续由 `workspace_members` 与 RLS 在业务请求中执行。
 
 Supabase Notes Client 以 `workspace_id` 过滤每次 `notes`、`note_tags`、`note_links`、`note_revisions` 与 `fields` 查询。它负责将 snake_case 行映射为既有 camelCase DTO，并在创建、编辑与删除后刷新相关标签、领域和每日统计。ID 由浏览器使用 `crypto.randomUUID()` 创建，时间用 Unix 秒。层级标签以 `path` 为界面语义；创建或引用 `a/b` 时，Client 按路径确保父节点和叶节点存在，再写入 `note_tags`。双链按 `note_links` 读写。每日统计在 Client 中按可访问笔记的 `created_at` 聚合为现有 DTO，不新增数据库对象。
 
@@ -68,7 +68,7 @@ Field 使用 Bonofix 风格的低饱和红色语义 token 展示，覆盖侧栏 
 
 ## Vercel 与认证配置
 
-`vercel.json` 保持 SPA rewrite。Vercel 环境变量分 Production 和 Preview 设置 `VITE_SUPABASE_URL`、`VITE_SUPABASE_PUBLISHABLE_KEY`；这些值可进入前端包，service role 和 secret key 不得出现。Supabase Dashboard 的 `Site URL` 配置正式 Vercel 域名，并允许本地开发与 Vercel Preview 回调 URL。Backend 模式的 CORS 配置是外部服务前提，不在前端默认追加路径或改写请求。
+`vercel.json` 保持 SPA rewrite。Vercel 环境变量分 Production 和 Preview 设置 `VITE_SUPABASE_URL`、`VITE_SUPABASE_PUBLISHABLE_KEY`、`VITE_SUPABASE_WORKSPACE_ID`；这些值可进入前端包，service role 和 secret key 不得出现。Supabase Dashboard 的 `Site URL` 配置正式 Vercel 域名，并允许本地开发与 Vercel Preview 回调 URL。Backend 模式的 CORS 配置是外部服务前提，不在前端默认追加路径或改写请求。
 
 ## 验证策略
 

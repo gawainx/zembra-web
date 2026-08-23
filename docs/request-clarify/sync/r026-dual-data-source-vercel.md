@@ -10,7 +10,7 @@ Supabase 数据库已经正确初始化，WebUI 不负责创建表、执行 migr
 
 ## 登录与部署结论
 
-Supabase 模式采用 Supabase Auth 的邮箱 Magic Link。Vercel 仅承载 Vite 静态 SPA；浏览器使用 `VITE_SUPABASE_URL` 和 `VITE_SUPABASE_PUBLISHABLE_KEY` 创建 Supabase Client，不能使用或暴露 service role key、secret key，也不新增 Vercel Function 或数据访问代理。
+Supabase 模式采用 Supabase Auth 的邮箱 Magic Link。Vercel 仅承载 Vite 静态 SPA；浏览器使用 `VITE_SUPABASE_URL`、`VITE_SUPABASE_PUBLISHABLE_KEY` 和 `VITE_SUPABASE_WORKSPACE_ID` 创建 Supabase Client 并固定业务 workspace，不能使用或暴露 service role key、secret key，也不新增 Vercel Function 或数据访问代理。
 
 Supabase Auth 的生产 `Site URL` 指向正式 Vercel 域名，Redirect URLs 放行本地开发地址和 Vercel Preview 域名。Magic Link 成功回到当前 WebUI URL 后由 Supabase Client 恢复会话。Backend 模式不改变已有的 Backend URL、健康检查和 workspace 选择行为。
 
@@ -22,7 +22,7 @@ Supabase Auth 的生产 `Site URL` 指向正式 Vercel 域名，Redirect URLs �
 │ 数据源 [ Backend / Supabase        ▾ ] │
 │                                      │
 │ Backend：Backend URL → workspace      │
-│ Supabase：邮箱 → Magic Link → workspace│
+│ Supabase：邮箱 → Magic Link → 直接进入  │
 │                                      │
 │ [进入 Zembra]                         │
 └──────────────────────────────────────┘
@@ -32,7 +32,7 @@ Supabase Auth 的生产 `Site URL` 指向正式 Vercel 域名，Redirect URLs �
 
 ## 数据能力与范围
 
-Supabase 模式按 schema tag `v0.6.1` 的 Postgres 和 Supabase 契约实现 `workspaces`、`notes`、`fields`、层级 `tags`、`note_tags`、`note_links`、`note_revisions` 和 `devices` 的现有 WebUI 业务能力。workspace 列表来自当前 Supabase 会话通过 `workspace_members` 在 RLS 下可读取的 `workspaces` 行，用户在登录页选择 workspace；`workspace_id` 是所有业务读写的必填范围。笔记创建角色继续是 `Human`，编辑不修改不可变的 `role`。
+Supabase 模式按 schema tag `v0.6.1` 的 Postgres 和 Supabase 契约实现 `workspaces`、`notes`、`fields`、层级 `tags`、`note_tags`、`note_links`、`note_revisions` 和 `devices` 的现有 WebUI 业务能力。`VITE_SUPABASE_WORKSPACE_ID` 固定所有业务读写的 `workspace_id` 范围，登录页不查询或展示 workspace 列表；当前 Supabase 会话仍由 `workspace_members` 和 RLS 验证访问权限。笔记创建角色继续是 `Human`，编辑不修改不可变的 `role`。
 
 现有 `NotesClient` 与 `TaxonomyClient` 继续作为 UI 和数据访问之间的业务边界。Backend 模式复用现有 HTTP 实现；Supabase 模式新增对应实现。React 页面和 Zustand store 不直接调用 Supabase 查询，也不直接依赖表字段。
 
@@ -57,7 +57,7 @@ Backend 的手动同步、同步状态、`/sync/*` 设置和 Secret key 管理�
 | 登录页 | 可选择 Backend 或 Supabase，切换后只显示该模式需要的输入和步骤。 |
 | Backend 模式 | 保留 URL 可达性校验、workspace 选择和现有首页数据访问。 |
 | Supabase 未登录 | 显示邮箱输入和发送 Magic Link 动作。 |
-| Supabase 已登录 | 读取 RLS 可见的 workspace，选择后进入首页。 |
+| Supabase 已登录 | 读取部署配置中的 workspace ID，直接进入首页。 |
 | Supabase 数据访问 | 笔记、领域、层级标签、双链、每日统计和编辑操作直接使用 Supabase Client。 |
 | 创建与删除反馈 | 创建、删除不等待远端请求才更新列表；成功通知显示 3 秒，失败回滚并显示 10 秒通知。 |
 | 模式切换 | 不展示或使用另一模式的缓存数据。 |

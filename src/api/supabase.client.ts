@@ -8,6 +8,8 @@ export interface SupabasePublicConfig {
   url: string;
   /** Publishable browser key protected by Supabase RLS. */
   publishableKey: string;
+  /** Fixed workspace scope selected by this deployment. */
+  workspaceId: string;
 }
 
 /** Error raised when the browser build lacks its public Supabase configuration. */
@@ -23,12 +25,13 @@ export class SupabaseConfigurationError extends Error {
 export function getSupabasePublicConfig(): SupabasePublicConfig {
   const url = import.meta.env.VITE_SUPABASE_URL?.trim();
   const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
+  const workspaceId = import.meta.env.VITE_SUPABASE_WORKSPACE_ID?.trim();
 
-  if (!url || !publishableKey) {
+  if (!url || !publishableKey || !workspaceId) {
     throw new SupabaseConfigurationError();
   }
 
-  return { publishableKey, url };
+  return { publishableKey, url, workspaceId };
 }
 
 /** Creates a browser Supabase client from public deployment configuration. */

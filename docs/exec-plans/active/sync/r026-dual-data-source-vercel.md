@@ -46,15 +46,15 @@
 
 验证：`src/app/App.test.tsx` 覆盖 Backend 默认入口与缺失 Supabase 公开变量时的安全错误；`npm run build` 通过。
 
-### Task 2.2：实现 Supabase workspace 选择
+### Task 2.2：实现 Supabase 固定 workspace 配置
 
 状态：Finished
 
-文件：Modify `src/app/DataSourceGate.tsx`; Create/Modify `src/api/supabase.client.ts`; Create/Modify `src/app/DataSourceGate.test.tsx`
+文件：Modify `src/app/DataSourceGate.tsx`; Create/Modify `src/api/supabase.client.ts`; Modify `.env.example`; Create/Modify related tests
 
-功能：查询当前会话通过 `workspace_members` 在 RLS 下可见的 `workspaces`，选择、持久化并校验 Supabase workspace。
+功能：从 `VITE_SUPABASE_WORKSPACE_ID` 读取固定 Supabase workspace，登录后直接激活业务 Client。
 
-实现要点：名称优先使用 `workspace_name`，为空时使用 ID 前八位；不请求 schema 未定义的笔记计数；已保存 workspace 不再可见时清除选择并停留登录页。共享 schema 已升级至 tag `v0.6.1`，其 `workspace_members` 和 RLS 迁移是本流程的远程数据访问前提。
+实现要点：不查询、展示或持久化 Supabase workspace 选择；缺少公开 workspace 配置时显示现有部署配置错误。共享 schema 已升级至 tag `v0.6.1`，其 `workspace_members` 和 RLS 迁移是本流程的远程数据访问前提。
 
 验证：实现 RLS 可见 workspace 查询、持久化和失效清理；生产构建通过。实际 RLS 会话验证留待部署环境。
 
