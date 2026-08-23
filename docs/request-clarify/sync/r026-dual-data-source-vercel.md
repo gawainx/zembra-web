@@ -6,7 +6,7 @@
 
 WebUI 同时支持 Backend 和 Supabase 两种数据源。用户在登录页的下拉选单中选择数据源：Backend 模式继续连接用户指定的 Zembra Backend；Supabase 模式由部署在 Vercel 的静态 WebUI 直接连接远程 Supabase。两种模式共用首页、编辑器和笔记交互，数据源不得混合。
 
-Supabase 数据库已经正确初始化，WebUI 不负责创建表、执行 migration、配置 RLS、初始化数据或实现 Backend 与 Supabase 之间的同步。共享数据库契约升级到 `vendor/zembra-schema` 的 `v0.4.0`，commit 为 `176a5a88a14403ce0698528ad29885cd93530891`，是 Supabase 模式的数据语义来源。
+Supabase 数据库已经正确初始化，WebUI 不负责创建表、执行 migration、配置 RLS、初始化数据或实现 Backend 与 Supabase 之间的同步。共享数据库契约固定为 `vendor/zembra-schema` 的 Git tag `v0.5.1`，commit 为 `58fea0fb684d80495fd8e9a40c7e1a81b5ee6a21`；其统一业务 schema version 为 `0.5.0`，`postgres/` 目录是 Supabase 模式的远端数据语义来源。
 
 ## 登录与部署结论
 
@@ -32,7 +32,7 @@ Supabase Auth 的生产 `Site URL` 指向正式 Vercel 域名，Redirect URLs �
 
 ## 数据能力与范围
 
-Supabase 模式按 schema `v0.4.0` 实现 `workspaces`、`notes`、`fields`、层级 `tags`、`note_tags`、`note_links`、`note_revisions` 和 `devices` 的现有 WebUI 业务能力。workspace 列表来自当前 Supabase 会话在 RLS 下可读取的 `workspaces` 行，用户在登录页选择 workspace；`workspace_id` 是所有业务读写的必填范围。笔记创建角色继续是 `Human`，编辑不修改不可变的 `role`。
+Supabase 模式按 schema tag `v0.5.1` 的 Postgres 契约实现 `workspaces`、`notes`、`fields`、层级 `tags`、`note_tags`、`note_links`、`note_revisions` 和 `devices` 的现有 WebUI 业务能力。workspace 列表来自当前 Supabase 会话在 RLS 下可读取的 `workspaces` 行，用户在登录页选择 workspace；`workspace_id` 是所有业务读写的必填范围。笔记创建角色继续是 `Human`，编辑不修改不可变的 `role`。
 
 现有 `NotesClient` 与 `TaxonomyClient` 继续作为 UI 和数据访问之间的业务边界。Backend 模式复用现有 HTTP 实现；Supabase 模式新增对应实现。React 页面和 Zustand store 不直接调用 Supabase 查询，也不直接依赖表字段。
 

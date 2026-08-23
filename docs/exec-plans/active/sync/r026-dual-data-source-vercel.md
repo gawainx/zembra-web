@@ -66,7 +66,7 @@
 
 文件：Create `src/api/supabase-notes.client.ts`; Create `src/api/supabase-notes.client.test.ts`; Modify `src/api/types.ts`
 
-功能：按 `v0.4.0` schema 实现 NotesClient 的 recent/list/get/create/update/delete、每日统计和双链读写。
+功能：按 `v0.5.1` tag 的 Postgres schema 实现 NotesClient 的 recent/list/get/create/update/delete、每日统计和双链读写。
 
 实现要点：所有业务查询带 workspace scope；映射现有 DTO；使用 UUID 和 Unix 秒；创建 role 为 `Human`，更新不改 role；失败时保留调用方草稿。
 
@@ -78,7 +78,7 @@
 
 文件：Create `src/api/supabase-taxonomy.client.ts`; Create `src/api/supabase-taxonomy.client.test.ts`
 
-功能：按 `v0.4.0` schema 实现领域、层级标签和笔记标签关联。
+功能：按 `v0.5.1` tag 的 Postgres schema 实现领域、层级标签和笔记标签关联。
 
 实现要点：标签以 path 表达层级，创建引用路径时确保需要的父节点和叶节点存在；领域和标签读取只返回当前 workspace 数据；删除领域保持现有“未使用才删除”的用户语义。
 

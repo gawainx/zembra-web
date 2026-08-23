@@ -6,7 +6,7 @@
 
 ## 设计目标
 
-在不让页面组件感知数据库提供方的前提下，为现有 WebUI 增加可切换的 Backend 与 Supabase 数据源。Backend 客户端和行为保持可用；Supabase 使用 `@supabase/supabase-js` 直连远程项目。数据结构和业务语义以 `vendor/zembra-schema` 的 `v0.4.0` 为准。
+在不让页面组件感知数据库提供方的前提下，为现有 WebUI 增加可切换的 Backend 与 Supabase 数据源。Backend 客户端和行为保持可用；Supabase 使用 `@supabase/supabase-js` 直连远程项目。数据结构和业务语义以 `vendor/zembra-schema` 的 Git tag `v0.5.1` 为准，远端表定义读取该 tag 的 `postgres/` 契约。
 
 ## 模块结构
 

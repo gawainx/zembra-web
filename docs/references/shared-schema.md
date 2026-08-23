@@ -11,19 +11,19 @@ vendor/zembra-schema
 远程仓库：
 
 ```text
-https://github.com/gawainx/zembra-schema.git
+https://github.com/zembra-open-sources-project/zembra-schema.git
 ```
 
 当前固定版本：
 
 ```text
-v0.4.0
+v0.5.1
 ```
 
 当前 submodule commit：
 
 ```text
-176a5a88a14403ce0698528ad29885cd93530891
+58fea0fb684d80495fd8e9a40c7e1a81b5ee6a21
 ```
 
 ## 使用规则
@@ -38,9 +38,11 @@ v0.4.0
 
 | 类型 | 路径 |
 | --- | --- |
-| 表结构说明 | `vendor/zembra-schema/note_schema.md` |
+| 统一表结构说明 | `vendor/zembra-schema/note_schema.md` |
 | SQLite 初始化 DDL | `vendor/zembra-schema/sqlite/001_initial_schema.sql` |
 | Migration | `vendor/zembra-schema/migrations/001_initial_schema.sql` |
+| Postgres 初始化 DDL | `vendor/zembra-schema/postgres/001_initial_schema.sql` |
+| Postgres Migration | `vendor/zembra-schema/postgres/migrations/005_add_unified_schema_contract.sql` |
 | JSON Schema | `vendor/zembra-schema/json/` |
 
 ## 初始化和升级
