@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 import { i18next } from "../i18n";
 import { DataSourceGate } from "./DataSourceGate";
@@ -38,8 +38,11 @@ vi.mock("../api/supabase.client", () => ({
 beforeEach(async () => {
   await i18next.changeLanguage("zh-CN");
   mocks.activateDataSource.mockReset();
+  mocks.getSession.mockReset();
   mocks.getSession.mockResolvedValue({ data: { session: null }, error: null });
+  mocks.listSupabaseWorkspaces.mockReset();
   mocks.listSupabaseWorkspaces.mockResolvedValue([]);
+  mocks.signInWithOtp.mockReset();
   mocks.signInWithOtp.mockResolvedValue({ error: null });
 });
 
@@ -66,6 +69,41 @@ test("sends a Magic Link with the entered email before workspace selection", asy
     email: "me@example.com",
     options: { emailRedirectTo: window.location.origin },
   });
+});
+
+/** Verifies that Magic Link feedback remains visible while sending and after success. */
+test("shows Magic Link sending and success labels without graying out the button", async () => {
+  let resolveSignIn: (value: { error: null }) => void;
+  mocks.signInWithOtp.mockImplementation(
+    () =>
+      new Promise<{ error: null }>((resolve) => {
+        resolveSignIn = resolve;
+      }),
+  );
+  render(
+    <DataSourceGate>
+      <div>应用内容</div>
+    </DataSourceGate>,
+  );
+
+  fireEvent.change(await screen.findByLabelText("数据源"), {
+    target: { value: "supabase" },
+  });
+  fireEvent.change(await screen.findByLabelText("邮箱地址"), {
+    target: { value: "me@example.com" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "发送 Magic Link" }));
+
+  const sendingButton = screen.getByRole("button", { name: "正在发送…" });
+  expect((sendingButton as HTMLButtonElement).disabled).toBe(false);
+  fireEvent.click(sendingButton);
+  expect(mocks.signInWithOtp).toHaveBeenCalledTimes(1);
+
+  await act(async () => {
+    resolveSignIn!({ error: null });
+  });
+
+  expect(screen.getByRole("button", { name: "发送成功" })).not.toBeNull();
 });
 
 /** Verifies that an authenticated session selects from its RLS-authorized workspaces. */

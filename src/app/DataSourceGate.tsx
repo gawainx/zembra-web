@@ -1,4 +1,4 @@
-import { FormEvent, ReactNode, useEffect, useState } from "react";
+import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BackendUrlGate } from "./BackendUrlGate";
 import {
@@ -69,6 +69,7 @@ function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProps) {
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const isSendingRef = useRef(false);
   const [isReady, setIsReady] = useState(false);
   const [hasSession, setHasSession] = useState(false);
   const [message, setMessage] = useState<string>();
@@ -103,10 +104,11 @@ function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProps) {
   /** Sends a Magic Link before authentication or activates the selected authorized workspace. */
   async function handleSupabaseEntry(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (hasSession && !selectedWorkspaceId) {
+    if (isSendingRef.current || (hasSession && !selectedWorkspaceId)) {
       return;
     }
 
+    isSendingRef.current = true;
     setIsSending(true);
     setError(undefined);
     setMessage(undefined);
@@ -130,6 +132,7 @@ function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProps) {
       console.warn("[zembra] Failed to send Supabase Magic Link", { error: caught });
       setError(caught instanceof SupabaseConfigurationError ? t("dataSource.configured") : t("dataSource.sessionUnavailable"));
     } finally {
+      isSendingRef.current = false;
       setIsSending(false);
     }
   }
@@ -190,10 +193,10 @@ function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProps) {
           ) : (
             <label className="block text-sm font-medium text-[var(--color-text-primary)]">
               <span>{t("dataSource.emailLabel")}</span>
-              <input aria-label={t("dataSource.emailLabel")} className="mt-2 h-11 w-full rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)]" disabled={isLoading || isSending} placeholder={t("dataSource.emailPlaceholder")} required type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+              <input aria-label={t("dataSource.emailLabel")} className="mt-2 h-11 w-full rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)]" disabled={isLoading || isSending} placeholder={t("dataSource.emailPlaceholder")} required type="email" value={email} onChange={(event) => { setEmail(event.target.value); setMessage(undefined); }} />
             </label>
           )}
-          <button className="h-11 w-full rounded-[8px] bg-[var(--color-accent)] px-4 text-sm font-semibold text-[var(--color-accent-contrast)] disabled:cursor-not-allowed disabled:opacity-60" disabled={isLoading || isSending || (hasSession ? !selectedWorkspaceId : !email.trim())} type="submit">{hasSession ? t("dataSource.enter") : t("dataSource.sendMagicLink")}</button>
+          <button className="h-11 w-full rounded-[8px] bg-[var(--color-accent)] px-4 text-sm font-semibold text-[var(--color-accent-contrast)] disabled:cursor-not-allowed disabled:opacity-60" disabled={isLoading || (hasSession ? !selectedWorkspaceId : !email.trim())} type="submit">{hasSession ? t("dataSource.enter") : isSending ? t("dataSource.sendingMagicLink") : message ? t("dataSource.magicLinkSendSuccess") : t("dataSource.sendMagicLink")}</button>
         </form>
         {message ? <p className="mt-3 text-sm text-[var(--color-text-secondary)]" role="status">{message}</p> : null}
         {error ? <p className="mt-3 rounded-[8px] border border-[var(--color-error-border)] bg-[var(--color-error-soft)] px-3 py-2 text-sm text-[var(--color-error)]" role="alert">{error}</p> : null}
