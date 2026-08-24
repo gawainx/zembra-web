@@ -2,17 +2,21 @@ import { SendHorizontal } from "lucide-react";
 import {
   forwardRef,
   KeyboardEvent,
+  lazy,
   MouseEvent,
+  Suspense,
   useImperativeHandle,
   useRef,
 } from "react";
 import { useTranslation } from "react-i18next";
 import type { TagDto } from "../../api/types";
-import {
-  LiveMarkdownEditor,
-  type LiveMarkdownEditorHandle,
-} from "./LiveMarkdownEditor";
+import type { LiveMarkdownEditorHandle } from "./LiveMarkdownEditor";
 import type { ComposerTool } from "./homeTypes";
+
+/** Loads the Tiptap editor only when a note editor is rendered. */
+const LiveMarkdownEditor = lazy(async () => ({
+  default: (await import("./LiveMarkdownEditor")).LiveMarkdownEditor,
+}));
 
 export interface NoteEditorHandle {
   /** Clears the visible editor content after a successful submission. */
@@ -91,15 +95,27 @@ export const NoteEditor = forwardRef<
       ].join(" ")}
       onKeyDown={handleKeyDown}
     >
-      <LiveMarkdownEditor
-        disabled={isSubmitting}
-        placeholder={placeholder}
-        value={draft}
-        tags={tags}
-        variant={variant}
-        ref={editorRef}
-        onChange={onDraftChange}
-      />
+      <Suspense
+        fallback={
+          <div
+            aria-busy="true"
+            className="min-h-[70px] px-4 py-3 text-sm text-[var(--color-text-muted)]"
+            role="status"
+          >
+            {t("composer.editorLoading")}
+          </div>
+        }
+      >
+        <LiveMarkdownEditor
+          disabled={isSubmitting}
+          placeholder={placeholder}
+          value={draft}
+          tags={tags}
+          variant={variant}
+          ref={editorRef}
+          onChange={onDraftChange}
+        />
+      </Suspense>
       {warning ? (
         <div className="mx-4 mb-2 rounded-[9px] border border-[var(--color-warning-border)] bg-[var(--color-warning-soft)] px-3 py-2 text-sm text-[var(--color-warning)]">
           {warning}

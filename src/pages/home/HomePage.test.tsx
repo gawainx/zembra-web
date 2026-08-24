@@ -75,7 +75,7 @@ test("edits one note inline and warns when multiple fields are present", async (
 
   fireEvent.doubleClick(firstCard as HTMLElement);
 
-  const editor = within(firstCard as HTMLElement).getByRole("textbox");
+  const editor = await within(firstCard as HTMLElement).findByRole("textbox");
   expect(markdownValue(editor)).toContain("今天先把卡片笔记");
 
   const secondNoteText = await screen.findByText(/数据库契约来自/);

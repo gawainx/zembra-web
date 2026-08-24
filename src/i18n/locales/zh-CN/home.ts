@@ -8,6 +8,7 @@ export const home = {
     supabase: "SUPABASE",
   },
   composer: {
+    editorLoading: "正在加载编辑器",
     help: "帮助",
     placeholder: "现在的想法是...",
     saveTo: "Default field for note is @{{field}}",
