@@ -8,18 +8,14 @@ export interface SupabasePublicConfig {
   url: string;
   /** Publishable browser key protected by Supabase RLS. */
   publishableKey: string;
-  /** Workspaces this deployment may present at the Supabase entry gate. */
-  workspaces: SupabaseWorkspaceConfig[];
 }
 
-/** Defines one deployment-authorized workspace and its bound Magic Link address. */
-export interface SupabaseWorkspaceConfig {
-  /** Workspace UUID used to scope all business requests after authentication. */
+/** Represents one workspace authorized by the current Supabase session. */
+export interface SupabaseWorkspace {
+  /** Workspace UUID used to scope all business requests after selection. */
   id: string;
-  /** Human-readable workspace label displayed before sign-in. */
-  name: string;
-  /** Email address to which Supabase sends the Magic Link for this workspace. */
-  email: string;
+  /** Optional workspace name supplied by the shared schema. */
+  name: string | null;
 }
 
 /** Error raised when the browser build lacks its public Supabase configuration. */
@@ -35,66 +31,37 @@ export class SupabaseConfigurationError extends Error {
 export function getSupabasePublicConfig(): SupabasePublicConfig {
   const url = import.meta.env.VITE_SUPABASE_URL?.trim();
   const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
-  const workspaces = parseSupabaseWorkspaces(
-    import.meta.env.VITE_SUPABASE_WORKSPACES,
-  );
 
-  if (!url || !publishableKey || workspaces.length === 0) {
+  if (!url || !publishableKey) {
     throw new SupabaseConfigurationError();
   }
 
-  return { publishableKey, url, workspaces };
+  return { publishableKey, url };
 }
 
-/** Parses the public workspace-to-email bindings embedded by the deployment. */
-function parseSupabaseWorkspaces(
-  value: string | undefined,
-): SupabaseWorkspaceConfig[] {
-  if (!value?.trim()) {
-    return [];
+/** Loads the workspaces visible to the authenticated user through shared-schema RLS. */
+export async function listSupabaseWorkspaces(
+  client: SupabaseClient,
+): Promise<SupabaseWorkspace[]> {
+  console.info("[zembra] Loading Supabase workspaces for authenticated user");
+  const { data, error } = await client
+    .from("workspaces")
+    .select("id, workspace_name")
+    .order("workspace_name");
+
+  if (error) {
+    console.warn("[zembra] Failed to load Supabase workspaces", { error });
+    throw error;
   }
 
-  try {
-    const parsed: unknown = JSON.parse(value);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed.flatMap((workspace): SupabaseWorkspaceConfig[] => {
-      if (!isSupabaseWorkspaceConfig(workspace)) {
-        return [];
-      }
-
-      return [
-        {
-          email: workspace.email.trim(),
-          id: workspace.id.trim(),
-          name: workspace.name.trim(),
-        },
-      ];
-    });
-  } catch {
-    return [];
-  }
-}
-
-/** Checks whether one parsed environment value has every required workspace binding. */
-function isSupabaseWorkspaceConfig(
-  value: unknown,
-): value is SupabaseWorkspaceConfig {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const workspace = value as Record<string, unknown>;
-  return (
-    typeof workspace.id === "string" &&
-    workspace.id.trim().length > 0 &&
-    typeof workspace.name === "string" &&
-    workspace.name.trim().length > 0 &&
-    typeof workspace.email === "string" &&
-    workspace.email.trim().length > 0
-  );
+  const workspaces = (data ?? []).map((workspace) => ({
+    id: workspace.id,
+    name: workspace.workspace_name,
+  }));
+  console.info("[zembra] Loaded Supabase workspaces", {
+    workspaceCount: workspaces.length,
+  });
+  return workspaces;
 }
 
 /** Creates a browser Supabase client from public deployment configuration. */

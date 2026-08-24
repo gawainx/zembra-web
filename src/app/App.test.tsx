@@ -53,7 +53,6 @@ test("shows a Supabase configuration error when public deployment variables are 
   vi.spyOn(console, "info").mockImplementation(() => undefined);
   vi.stubEnv("VITE_SUPABASE_URL", "");
   vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY", "");
-  vi.stubEnv("VITE_SUPABASE_WORKSPACES", "");
   render(<App />);
 
   fireEvent.change(await screen.findByLabelText("数据源"), {

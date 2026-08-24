@@ -6,6 +6,7 @@ import { DataSourceGate } from "./DataSourceGate";
 const mocks = vi.hoisted(() => ({
   activateDataSource: vi.fn(),
   getSession: vi.fn(),
+  listSupabaseWorkspaces: vi.fn(),
   signInWithOtp: vi.fn(),
 }));
 
@@ -29,11 +30,8 @@ vi.mock("../api/supabase.client", () => ({
   getSupabasePublicConfig: () => ({
     publishableKey: "publishable-key",
     url: "https://project.supabase.co",
-    workspaces: [
-      { id: "workspace-a", name: "Personal notes", email: "a@example.com" },
-      { id: "workspace-b", name: "Work notes", email: "b@example.com" },
-    ],
   }),
+  listSupabaseWorkspaces: mocks.listSupabaseWorkspaces,
   SupabaseConfigurationError: class SupabaseConfigurationError extends Error {},
 }));
 
@@ -41,12 +39,42 @@ beforeEach(async () => {
   await i18next.changeLanguage("zh-CN");
   mocks.activateDataSource.mockReset();
   mocks.getSession.mockResolvedValue({ data: { session: null }, error: null });
+  mocks.listSupabaseWorkspaces.mockResolvedValue([]);
   mocks.signInWithOtp.mockResolvedValue({ error: null });
-  window.sessionStorage.clear();
 });
 
-/** Verifies that selecting a workspace exposes its bound email and sends its Magic Link. */
-test("fills the bound email after selecting a Supabase workspace", async () => {
+/** Verifies that unauthenticated Supabase entry uses a user-provided Magic Link email. */
+test("sends a Magic Link with the entered email before workspace selection", async () => {
+  render(
+    <DataSourceGate>
+      <div>应用内容</div>
+    </DataSourceGate>,
+  );
+
+  fireEvent.change(await screen.findByLabelText("数据源"), {
+    target: { value: "supabase" },
+  });
+
+  const emailInput = await screen.findByLabelText("邮箱地址");
+  const submitButton = screen.getByRole("button", { name: "发送 Magic Link" });
+  expect((submitButton as HTMLButtonElement).disabled).toBe(true);
+
+  fireEvent.change(emailInput, { target: { value: "me@example.com" } });
+  fireEvent.click(submitButton);
+
+  expect(mocks.signInWithOtp).toHaveBeenCalledWith({
+    email: "me@example.com",
+    options: { emailRedirectTo: window.location.origin },
+  });
+});
+
+/** Verifies that an authenticated session selects from its RLS-authorized workspaces. */
+test("lists authorized workspaces after Supabase login", async () => {
+  mocks.getSession.mockResolvedValue({ data: { session: {} }, error: null });
+  mocks.listSupabaseWorkspaces.mockResolvedValue([
+    { id: "workspace-a", name: "Personal notes" },
+    { id: "workspace-b", name: "Work notes" },
+  ]);
   render(
     <DataSourceGate>
       <div>应用内容</div>
@@ -58,26 +86,13 @@ test("fills the bound email after selecting a Supabase workspace", async () => {
   });
 
   const workspaceSelect = await screen.findByLabelText("Workspace");
-  const emailInput = screen.getByLabelText("邮箱地址") as HTMLInputElement;
-  const submitButton = screen.getByRole("button", { name: "发送 Magic Link" });
-
-  expect((workspaceSelect as HTMLSelectElement).value).toBe("");
-  expect(emailInput.value).toBe("");
-  expect(emailInput.readOnly).toBe(true);
-  expect((submitButton as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.getByText("Personal notes")).not.toBeNull();
+  expect(screen.getByText("Work notes")).not.toBeNull();
 
   fireEvent.change(workspaceSelect, { target: { value: "workspace-b" } });
+  fireEvent.click(screen.getByRole("button", { name: "进入 Zembra" }));
 
-  expect(emailInput.value).toBe("b@example.com");
-  expect((submitButton as HTMLButtonElement).disabled).toBe(false);
-
-  fireEvent.click(submitButton);
-
-  expect(mocks.signInWithOtp).toHaveBeenCalledWith({
-    email: "b@example.com",
-    options: { emailRedirectTo: window.location.origin },
-  });
-  expect(window.sessionStorage.getItem("zembra.supabaseWorkspaceId")).toBe(
-    "workspace-b",
+  expect(mocks.activateDataSource).toHaveBeenCalledWith(
+    expect.objectContaining({ mode: "supabase", workspaceId: "workspace-b" }),
   );
 });
