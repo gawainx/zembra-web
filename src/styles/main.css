@@ -18,8 +18,9 @@
   --color-accent-hover: #1e79de;
   --color-accent-contrast: #ffffff;
   --color-accent-soft: rgba(62, 138, 220, 0.13);
-  --color-tag-background: #7cb4f4;
-  --color-tag-text: #ffffff;
+  --color-tag-chip-pigment: #2582ec;
+  --color-tag-chip-background: color-mix(in srgb, var(--color-tag-chip-pigment) 60%, var(--color-app-bg));
+  --color-tag-chip-text: #ffffff;
   --color-warm: #a16207;
   --color-field: #c95050;
   --color-field-soft: rgba(201, 80, 80, 0.12);
@@ -70,8 +71,9 @@ html[data-theme="dark"] {
   --color-accent-hover: #afd6ff;
   --color-accent-contrast: #202024;
   --color-accent-soft: rgba(108, 188, 250, 0.18);
-  --color-tag-background: #2c71aa;
-  --color-tag-text: #ffffff;
+  --color-tag-chip-pigment: #2f82c6;
+  --color-tag-chip-background: color-mix(in srgb, var(--color-tag-chip-pigment) 83%, var(--color-app-bg));
+  --color-tag-chip-text: #ffffff;
   --color-warm: #d1af72;
   --color-field: #eb8080;
   --color-field-soft: rgba(235, 128, 128, 0.16);
@@ -139,10 +141,10 @@ button[data-active="true"] {
   display: inline-block;
   border: 0;
   border-radius: 1em;
-  background: var(--color-tag-background);
+  background: var(--color-tag-chip-background);
   margin: 2px 0;
   padding: 0 7px;
-  color: var(--color-tag-text);
+  color: var(--color-tag-chip-text);
 }
 
 .note-markdown h1,
