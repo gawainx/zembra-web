@@ -255,22 +255,21 @@ export function NoteCard({
             ref={contentRef}
             style={expanded ? undefined : { maxHeight: "5.25rem" }}
           >
-            {note.tags.length > 0 ? (
-              <div className="mb-1 flex flex-wrap gap-1.5">
-                {note.tags.map((tag) => (
-                  <span
-                    className="inline-flex h-[25px] items-center rounded-full bg-[var(--color-accent)] px-2 text-[13px] font-semibold text-[var(--color-text-inverse)]"
-                    key={tag}
-                  >
-                    #{formatTagPathLabel(tag)}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-            <NoteMarkdownContent
-              content={displayContent}
-              onLoadNotePreview={onLoadNotePreview}
-            />
+            <div>
+              {note.tags.map((tag) => (
+                <span
+                  className="mr-1.5 inline-flex h-[25px] items-center rounded-full bg-[var(--color-accent)] px-2 text-[13px] font-semibold text-[var(--color-text-inverse)]"
+                  key={tag}
+                >
+                  #{formatTagPathLabel(tag)}
+                </span>
+              ))}
+              <NoteMarkdownContent
+                content={displayContent}
+                inlineFirstParagraph={note.tags.length > 0}
+                onLoadNotePreview={onLoadNotePreview}
+              />
+            </div>
           </div>
           {hasOverflow || expanded ? (
             <button

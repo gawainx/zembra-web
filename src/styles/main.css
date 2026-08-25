@@ -130,6 +130,14 @@ button[data-active="true"] {
   margin: 0.35rem 0;
 }
 
+.note-markdown-inline-first-paragraph {
+  display: inline;
+}
+
+.note-markdown-inline-first-paragraph > p:first-child {
+  display: inline;
+}
+
 .note-markdown h1,
 .note-markdown h2,
 .note-markdown h3,

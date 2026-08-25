@@ -33,15 +33,24 @@ type MarkdownNode = MarkdownTextNode | MarkdownLinkNode | MarkdownParentNode;
 /** Renders a note body with GFM Markdown and Zembra note-link previews. */
 export function NoteMarkdownContent({
   content,
+  inlineFirstParagraph = false,
   onLoadNotePreview,
 }: {
   content: string;
+  /** Lets the first Markdown paragraph flow after inline note metadata. */
+  inlineFirstParagraph?: boolean;
   onLoadNotePreview: (noteRef: string) => Promise<NoteDto>;
 }) {
   const components = createMarkdownComponents(onLoadNotePreview);
 
   return (
-    <div className="note-markdown">
+    <div
+      className={
+        inlineFirstParagraph
+          ? "note-markdown note-markdown-inline-first-paragraph"
+          : "note-markdown"
+      }
+    >
       <ReactMarkdown
         components={components}
         remarkPlugins={[remarkGfm, remarkBreaks, remarkNoteLinks]}
