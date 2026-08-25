@@ -245,7 +245,7 @@ export function NoteCard({
       ) : (
         <>
           <div
-            className="overflow-hidden text-base leading-7 text-[var(--color-text-primary)]"
+            className="overflow-hidden text-base leading-6 text-[var(--color-text-primary)]"
             ref={contentRef}
             style={expanded ? undefined : { maxHeight: "5.25rem" }}
           >
