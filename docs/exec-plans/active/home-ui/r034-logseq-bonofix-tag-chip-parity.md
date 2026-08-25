@@ -16,3 +16,9 @@
 
 - [completed] 运行首页组件测试与生产构建。
 - [completed] 核对 diff，暂存并提交本需求改动。
+
+## Stage 3：目标版本级联修正
+
+- [completed] 按 Bonofix 目标 Logseq v0.10.7 的最终 opacity 合成色与 inline-block 控件模型替换错误链路。
+
+验证：亮色使用 `#7CB4F4`，暗色使用 `#2C71AA`，不再依赖项目表面色参与 alpha 合成。

@@ -18,7 +18,7 @@
   --color-accent-hover: #1e79de;
   --color-accent-contrast: #ffffff;
   --color-accent-soft: rgba(62, 138, 220, 0.13);
-  --color-tag-background: hsl(203 70% 38%);
+  --color-tag-background: #7cb4f4;
   --color-tag-text: #ffffff;
   --color-warm: #a16207;
   --color-field: #c95050;
@@ -70,7 +70,7 @@ html[data-theme="dark"] {
   --color-accent-hover: #afd6ff;
   --color-accent-contrast: #202024;
   --color-accent-soft: rgba(108, 188, 250, 0.18);
-  --color-tag-background: #2f82c6;
+  --color-tag-background: #2c71aa;
   --color-tag-text: #ffffff;
   --color-warm: #d1af72;
   --color-field: #eb8080;
@@ -136,18 +136,13 @@ button[data-active="true"] {
 
 .note-tag-chip,
 .live-markdown-editor-content .editor-tag-chip {
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
   border: 0;
   border-radius: 1em;
   background: var(--color-tag-background);
   margin: 2px 0;
   padding: 0 7px;
   color: var(--color-tag-text);
-  font-size: inherit;
-  line-height: inherit;
-  opacity: 1;
-  text-align: center;
 }
 
 .note-markdown h1,
