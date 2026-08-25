@@ -13,7 +13,7 @@ export function MutationStatusToast({
 
   return (
     <div
-      className={`fixed bottom-5 right-5 z-50 max-w-[calc(100vw-2.5rem)] rounded-lg border bg-[var(--color-surface-raised)] px-3 py-2 text-sm text-[var(--color-text-secondary)] shadow-[var(--color-shadow-card)] ${isFailure ? "border-[var(--color-error-border)]" : "border-[var(--color-success-border)]"}`}
+      className={`fixed bottom-[var(--space-5)] right-[var(--space-5)] z-50 max-w-[calc(100vw-2.5rem)] rounded-[var(--radius-surface)] border bg-[var(--color-surface-raised)] px-[var(--space-3)] py-[var(--space-2)] text-sm text-[var(--color-text-secondary)] shadow-[var(--color-shadow-card)] ${isFailure ? "border-[var(--color-error-border)]" : "border-[var(--color-success-border)]"}`}
       role={isFailure ? "alert" : "status"}
     >
       {t(`mutation.${notification.message}`)}

@@ -42,7 +42,7 @@ export function SettingsModal({ client, onClose }: SettingsModalProps) {
         onClick={onClose}
       />
       <div
-        className="relative grid max-h-full w-full max-w-[700px] grid-cols-1 overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[var(--color-shadow-float)] md:h-[450px] md:grid-cols-[200px_minmax(0,1fr)]"
+        className="relative grid max-h-full w-full max-w-[700px] grid-cols-1 overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[var(--color-shadow-float)] md:h-[450px] md:grid-cols-[200px_minmax(0,1fr)]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-modal-title"
@@ -50,7 +50,7 @@ export function SettingsModal({ client, onClose }: SettingsModalProps) {
         <aside className="flex min-w-0 flex-col px-3 pb-3 pt-3 md:min-h-[450px] md:px-4 md:pb-5 md:pt-5">
           <div className="flex min-h-11 items-center">
             <button
-              className="flex size-10 shrink-0 items-center justify-center rounded-[10px] text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)]"
+              className="flex size-[var(--control-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)]"
               type="button"
               aria-label={t("close")}
               onClick={onClose}
@@ -60,7 +60,7 @@ export function SettingsModal({ client, onClose }: SettingsModalProps) {
           </div>
 
           <nav
-            className="mt-2 flex min-w-0 gap-1 overflow-x-auto pb-1 md:mt-7 md:flex-col md:overflow-visible md:pb-0"
+            className="mt-[var(--space-2)] flex min-w-0 gap-[var(--space-1)] overflow-x-auto pb-[var(--space-1)] md:mt-7 md:flex-col md:overflow-visible md:pb-0"
             aria-label={t("title")}
           >
             {settingsCategories.map((category) => {
@@ -70,7 +70,7 @@ export function SettingsModal({ client, onClose }: SettingsModalProps) {
               return (
                 <button
                   key={category.id}
-                  className="flex min-h-10 shrink-0 items-center gap-3 rounded-[12px] px-3 text-left text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] md:w-full"
+                  className="flex min-h-[var(--control-height)] shrink-0 items-center gap-[var(--space-3)] rounded-[var(--radius-surface)] px-[var(--space-3)] text-left text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] md:w-full"
                   type="button"
                   aria-current={
                     category.id === activeCategory.id ? "page" : undefined
