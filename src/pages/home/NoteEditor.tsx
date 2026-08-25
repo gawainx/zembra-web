@@ -88,10 +88,10 @@ export const NoteEditor = forwardRef<
   return (
     <div
       className={[
-        "overflow-hidden rounded-[18px] border border-[var(--color-border-strong)] bg-[var(--color-surface-raised)]",
+        "flex flex-col gap-[var(--space-2)] overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-raised)]",
         variant === "floating"
           ? "shadow-[var(--color-shadow-float)] backdrop-blur"
-          : "shadow-[inset_0_0_0_1px_var(--color-border-subtle)]",
+          : "shadow-none",
       ].join(" ")}
       onKeyDown={handleKeyDown}
     >
@@ -99,7 +99,7 @@ export const NoteEditor = forwardRef<
         fallback={
           <div
             aria-busy="true"
-            className="min-h-[70px] px-4 py-3 text-sm text-[var(--color-text-muted)]"
+            className="min-h-[70px] px-[var(--space-4)] py-[var(--space-3)] text-sm text-[var(--color-text-muted)]"
             role="status"
           >
             {t("composer.editorLoading")}
@@ -117,11 +117,11 @@ export const NoteEditor = forwardRef<
         />
       </Suspense>
       {warning ? (
-        <div className="mx-4 mb-2 rounded-[9px] border border-[var(--color-warning-border)] bg-[var(--color-warning-soft)] px-3 py-2 text-sm text-[var(--color-warning)]">
+        <div className="mx-[var(--space-4)] rounded-[var(--radius-control)] border border-[var(--color-warning-border)] bg-[var(--color-warning-soft)] px-[var(--space-3)] py-[var(--space-2)] text-sm text-[var(--color-warning)]">
           {warning}
         </div>
       ) : null}
-      <div className="flex items-end justify-between gap-3 px-4 pb-3">
+      <div className="flex items-end justify-between gap-[var(--space-3)] px-[var(--space-4)] pb-[var(--space-3)]">
         <div className="min-w-0">
           <div className="flex items-center gap-4 text-[var(--color-text-secondary)]">
             {tools.map((tool) => (
@@ -154,7 +154,7 @@ export const NoteEditor = forwardRef<
             </button>
           ) : null}
           <button
-            className="flex h-[34px] min-w-12 items-center justify-center rounded-[10px] bg-[var(--color-accent)] px-3 text-[var(--color-accent-contrast)] shadow-[0_8px_18px_color-mix(in_srgb,var(--color-accent)_18%,transparent)] hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-[34px] min-w-12 items-center justify-center rounded-[10px] bg-[var(--color-accent)] px-3 text-[var(--color-accent-contrast)] shadow-[var(--color-shadow-card)] hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
             type="submit"
             aria-label={submitLabel}
             disabled={isSubmitting || draft.trim().length === 0}

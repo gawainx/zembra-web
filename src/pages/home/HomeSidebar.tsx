@@ -32,7 +32,7 @@ export function DailyNotesHeatmap({
     return (
       <section
         aria-label={t("heatmap.ariaLabel")}
-        className="hidden w-[300px] rounded-[12px] border border-dashed border-[var(--color-border)] px-3 py-3 text-sm text-[var(--color-text-muted)] lg:block"
+        className="hidden w-[300px] rounded-[var(--radius-surface)] border border-dashed border-[var(--color-border)] p-[var(--space-3)] text-sm text-[var(--color-text-muted)] lg:block"
       >
         {t("heatmap.empty")}
       </section>
@@ -44,14 +44,14 @@ export function DailyNotesHeatmap({
       aria-label={t("heatmap.ariaLabel")}
       className="hidden w-[300px] lg:block"
     >
-      <div className="mb-2 flex items-center justify-between gap-3 text-[13px] text-[var(--color-text-muted)]">
+      <div className="mb-[var(--space-2)] flex items-center justify-between gap-[var(--space-3)] text-[13px] text-[var(--color-text-muted)]">
         <span className="inline-flex min-w-0 items-center gap-1.5">
           <CalendarDays className="size-3.5 shrink-0 text-[var(--color-accent)]" aria-hidden="true" />
           <span className="truncate">{t("heatmap.title")}</span>
         </span>
         <span className="shrink-0">{t("heatmap.days", { count: days.length })}</span>
       </div>
-      <div className="grid grid-flow-col grid-rows-5 gap-[7px]">
+      <div className="grid grid-flow-col grid-rows-5 gap-[var(--space-2)]">
         {days.map((day) => {
           const level = getHeatmapLevel(day.count, maxCount);
           const label = t("heatmap.dayLabel", {
@@ -62,7 +62,7 @@ export function DailyNotesHeatmap({
           return (
             <span
               aria-label={label}
-              className="flex h-[35px] min-w-0 items-center justify-center rounded-[6px] bg-[var(--color-surface-muted)] text-[10px] font-semibold leading-none text-[var(--color-text-muted)] shadow-[inset_0_0_0_1px_var(--color-border-subtle)] data-[level='1']:bg-[color-mix(in_srgb,var(--color-accent)_18%,var(--color-surface-muted))] data-[level='2']:bg-[color-mix(in_srgb,var(--color-accent)_34%,var(--color-surface-muted))] data-[level='3']:bg-[color-mix(in_srgb,var(--color-accent)_58%,var(--color-surface-muted))] data-[level='4']:bg-[var(--color-accent)] data-[level='4']:text-[var(--color-accent-contrast)]"
+              className="flex h-9 min-w-0 items-center justify-center rounded-[var(--radius-control)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-muted)] text-[10px] font-semibold leading-none text-[var(--color-text-muted)] data-[level='1']:bg-[var(--color-heatmap-level-1)] data-[level='2']:bg-[var(--color-heatmap-level-2)] data-[level='3']:bg-[var(--color-heatmap-level-3)] data-[level='4']:border-[var(--color-accent)] data-[level='4']:bg-[var(--color-accent)] data-[level='4']:text-[var(--color-accent-contrast)]"
               data-level={level}
               key={day.date}
               title={label}
@@ -72,7 +72,7 @@ export function DailyNotesHeatmap({
           );
         })}
       </div>
-      <div className="mt-2 flex justify-between text-[12px] text-[var(--color-text-muted)]">
+      <div className="mt-[var(--space-2)] flex justify-between text-[12px] text-[var(--color-text-muted)]">
         <span>{formatHeatmapDate(days[0]?.date, locale)}</span>
         <span>{formatHeatmapDate(days.at(-1)?.date, locale)}</span>
       </div>
@@ -92,7 +92,7 @@ export function SidebarSection({
 }) {
   return (
     <section className={className}>
-      <h2 className="mb-3 text-xs font-normal tracking-[0.02em] text-[var(--color-warm)]">
+      <h2 className="mb-[var(--space-3)] text-xs font-normal tracking-[0.02em] text-[var(--color-warm)]">
         {title}
       </h2>
       <div className="flex flex-col gap-1">{children}</div>
@@ -137,12 +137,12 @@ export function NavItem({
 
   return (
     <div
-      className={`group/nav grid min-h-9 grid-cols-[24px_1fr_28px] items-center gap-2.5 rounded-[9px] px-3 py-2 text-left text-[15px] hover:bg-[var(--color-surface-muted)] data-[disabled=true]:opacity-45 data-[disabled=true]:hover:bg-transparent ${isFieldTone ? "text-[var(--color-field)] data-[active=true]:bg-[var(--color-field-soft)] data-[active=true]:shadow-[inset_0_0_0_1px_var(--color-field-border)]" : "text-[var(--color-text-secondary)] data-[active=true]:bg-[var(--color-accent-soft)] data-[active=true]:text-[var(--color-text-primary)] data-[active=true]:shadow-[inset_0_0_0_1px_var(--color-border-strong)]"}`}
+      className={`group/nav grid min-h-9 grid-cols-[24px_1fr_28px] items-center gap-[var(--space-2)] rounded-[var(--radius-control)] px-[var(--space-3)] py-[var(--space-2)] text-left text-[15px] hover:bg-[var(--color-surface-muted)] data-[disabled=true]:opacity-45 data-[disabled=true]:hover:bg-transparent ${isFieldTone ? "text-[var(--color-field)] data-[active=true]:bg-[var(--color-field-soft)]" : "text-[var(--color-text-secondary)] data-[active=true]:bg-[var(--color-accent-soft)] data-[active=true]:text-[var(--color-text-primary)]"}`}
       data-active={active}
       data-disabled={disabled}
     >
       <button
-        className="col-span-2 grid min-w-0 grid-cols-[24px_1fr] items-center gap-2.5 text-left disabled:cursor-default"
+        className="col-span-2 grid min-w-0 grid-cols-[24px_1fr] items-center gap-[var(--space-2)] text-left disabled:cursor-default"
         disabled={disabled}
         type="button"
         onClick={onClick}
@@ -215,7 +215,7 @@ export function TagTreeItem({
   return (
     <div className="flex flex-col gap-1">
       <div
-        className="group grid min-h-9 grid-cols-[24px_1fr_auto] items-center gap-2.5 rounded-[9px] px-3 py-2 text-left text-[15px] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] data-[active=true]:bg-[var(--color-accent-soft)] data-[active=true]:text-[var(--color-text-primary)] data-[active=true]:shadow-[inset_0_0_0_1px_var(--color-border-strong)]"
+        className="group grid min-h-9 grid-cols-[24px_1fr_auto] items-center gap-[var(--space-2)] rounded-[var(--radius-control)] px-[var(--space-3)] py-[var(--space-2)] text-left text-[15px] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] data-[active=true]:bg-[var(--color-accent-soft)] data-[active=true]:text-[var(--color-text-primary)]"
         data-active={activePath === node.tag.path}
       >
         <button

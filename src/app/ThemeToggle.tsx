@@ -14,7 +14,7 @@ export function ThemeToggle() {
 
   return (
     <button
-      className="inline-flex size-[34px] shrink-0 items-center justify-center rounded-[9px] bg-[var(--color-surface)] text-[var(--color-text-secondary)] shadow-[inset_0_0_0_1px_var(--color-border)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
+      className="inline-flex size-[var(--control-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
       type="button"
       aria-label={label}
       title={label}

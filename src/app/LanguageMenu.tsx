@@ -23,7 +23,7 @@ export function LanguageMenu() {
 
   return (
     <label
-      className="inline-flex h-[34px] shrink-0 items-center gap-2 rounded-[9px] bg-[var(--color-surface)] px-2 text-[var(--color-text-secondary)] shadow-[inset_0_0_0_1px_var(--color-border)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
+      className="inline-flex h-[var(--control-height)] shrink-0 items-center gap-[var(--space-2)] rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-2)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
       title={t("language.title")}
     >
       <Languages className="size-4 text-[var(--color-accent)]" aria-hidden="true" />

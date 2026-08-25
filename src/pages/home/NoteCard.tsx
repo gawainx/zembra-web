@@ -128,10 +128,10 @@ export function NoteCard({
 
   return (
     <article
-      className="relative rounded-[18px] border border-[var(--color-border-subtle)] bg-[var(--color-surface)] px-3 py-3"
+      className="relative flex flex-col gap-[var(--space-2)] rounded-[var(--radius-card)] border border-[var(--color-border-subtle)] bg-[var(--color-surface)] p-[var(--space-3)]"
       onDoubleClick={handleDoubleClick}
     >
-      <div className="mb-[3px] flex items-start justify-between gap-3 text-[13px] text-[var(--color-text-muted)]">
+      <div className="flex items-start justify-between gap-[var(--space-3)] text-[13px] text-[var(--color-text-muted)]">
         <div className="min-w-0">
           {formatNoteTimestamp(note.createdAt, locale)}
           {fieldName ? (
@@ -256,7 +256,7 @@ export function NoteCard({
           </div>
           {hasOverflow || expanded ? (
             <button
-              className="mt-3 text-sm font-semibold text-[var(--color-accent)]"
+              className="self-start text-sm font-semibold text-[var(--color-accent)]"
               type="button"
               onClick={() => setExpanded((current) => !current)}
             >

@@ -3,6 +3,17 @@
 
 :root {
   color-scheme: light;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --radius-control: 0.5rem;
+  --radius-surface: 0.75rem;
+  --radius-card: 1rem;
+  --control-height: 2.5rem;
+  --control-size: 2.5rem;
   --palette-neutral-app: #fffdf9;
   --palette-neutral-surface: #ffffff;
   --palette-neutral-muted: #f7f6f3;
@@ -54,6 +65,9 @@
   --color-accent-hover: var(--palette-blue-hover);
   --color-accent-contrast: var(--palette-neutral-inverse);
   --color-accent-soft: var(--palette-blue-soft);
+  --color-heatmap-level-1: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface-muted));
+  --color-heatmap-level-2: color-mix(in srgb, var(--color-accent) 34%, var(--color-surface-muted));
+  --color-heatmap-level-3: color-mix(in srgb, var(--color-accent) 58%, var(--color-surface-muted));
   --color-tag-chip-pigment: var(--palette-blue-tag);
   --color-tag-chip-background: color-mix(in srgb, var(--color-tag-chip-pigment) 60%, var(--color-app-bg));
   --color-tag-chip-text: var(--palette-tag-text);
@@ -147,6 +161,9 @@ html[data-theme="dark"] {
   --color-accent-hover: var(--palette-blue-hover);
   --color-accent-contrast: var(--palette-neutral-inverse);
   --color-accent-soft: var(--palette-blue-soft);
+  --color-heatmap-level-1: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface-muted));
+  --color-heatmap-level-2: color-mix(in srgb, var(--color-accent) 34%, var(--color-surface-muted));
+  --color-heatmap-level-3: color-mix(in srgb, var(--color-accent) 58%, var(--color-surface-muted));
   --color-tag-chip-pigment: var(--palette-blue-tag);
   --color-tag-chip-background: color-mix(in srgb, var(--color-tag-chip-pigment) 83%, var(--color-app-bg));
   --color-tag-chip-text: var(--palette-tag-text);
@@ -204,16 +221,12 @@ button[data-active="true"] {
   overflow-wrap: anywhere;
 }
 
-.note-markdown > :first-child {
-  margin-top: 0;
+.note-markdown > * {
+  margin: 0;
 }
 
-.note-markdown > :last-child {
-  margin-bottom: 0;
-}
-
-.note-markdown p {
-  margin: 0.35rem 0;
+.note-markdown > * + * {
+  margin-top: var(--space-2);
 }
 
 .note-tag-chip,
@@ -233,7 +246,6 @@ button[data-active="true"] {
 .note-markdown h4,
 .note-markdown h5,
 .note-markdown h6 {
-  margin: 0.75rem 0 0.35rem;
   color: var(--color-text-primary);
   font-size: 1rem;
   font-weight: 700;
@@ -242,7 +254,6 @@ button[data-active="true"] {
 
 .note-markdown ul,
 .note-markdown ol {
-  margin: 0.35rem 0;
   padding-left: 1.35rem;
 }
 
@@ -255,34 +266,35 @@ button[data-active="true"] {
 }
 
 .note-markdown li {
-  margin: 0.15rem 0;
   padding-left: 0.1rem;
 }
 
+.note-markdown li + li {
+  margin-top: var(--space-1);
+}
+
 .note-markdown li > p {
-  margin: 0.15rem 0;
+  margin: 0;
 }
 
 .note-markdown blockquote {
-  margin: 0.5rem 0;
   border-left: 3px solid var(--color-quote-border);
-  padding-left: 0.75rem;
+  padding-left: var(--space-3);
   color: var(--color-text-secondary);
 }
 
 .note-markdown pre {
-  margin: 0.5rem 0;
   overflow-x: auto;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: var(--color-surface-muted);
-  padding: 0.65rem 0.75rem;
+  padding: var(--space-3);
 }
 
 .note-markdown :not(pre) > code {
-  border-radius: 3px;
+  border-radius: var(--space-1);
   background: var(--color-code-bg);
-  padding: 0.1rem 0.35rem;
+  padding: 0.1rem var(--space-1);
   color: var(--color-code-text);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 0.85em;
@@ -304,7 +316,7 @@ button[data-active="true"] {
 .note-markdown th,
 .note-markdown td {
   border: 1px solid var(--color-border);
-  padding: 0.3rem 0.45rem;
+  padding: var(--space-1) var(--space-2);
   text-align: left;
 }
 
@@ -314,7 +326,6 @@ button[data-active="true"] {
 }
 
 .note-markdown hr {
-  margin: 0.7rem 0;
   border: 0;
   border-top: 1px solid var(--color-border);
 }
@@ -339,7 +350,7 @@ button[data-active="true"] {
   max-height: 142px;
   min-height: 70px;
   overflow-y: auto;
-  padding: 0.9rem 1.125rem 0.45rem;
+  padding: var(--space-3) var(--space-4) var(--space-2);
   color: var(--color-text-primary);
   font-size: 1rem;
   font-weight: 500;
@@ -360,7 +371,7 @@ button[data-active="true"] {
 }
 
 .live-markdown-editor-content > * + * {
-  margin-top: 0.35rem;
+  margin-top: var(--space-2);
 }
 
 .live-markdown-editor-content h1,
@@ -394,22 +405,22 @@ button[data-active="true"] {
 
 .live-markdown-editor-content blockquote {
   border-left: 3px solid var(--color-quote-border);
-  padding-left: 0.75rem;
+  padding-left: var(--space-3);
   color: var(--color-text-secondary);
 }
 
 .live-markdown-editor-content pre {
   overflow-x: auto;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: var(--color-surface-muted);
-  padding: 0.65rem 0.75rem;
+  padding: var(--space-3);
 }
 
 .live-markdown-editor-content :not(pre) > code {
-  border-radius: 3px;
+  border-radius: var(--space-1);
   background: var(--color-code-bg);
-  padding: 0.1rem 0.35rem;
+  padding: 0.1rem var(--space-1);
   color: var(--color-code-text);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 0.85em;
@@ -424,5 +435,5 @@ button[data-active="true"] {
 .live-markdown-editor-content th,
 .live-markdown-editor-content td {
   border: 1px solid var(--color-border);
-  padding: 0.3rem 0.45rem;
+  padding: var(--space-1) var(--space-2);
 }

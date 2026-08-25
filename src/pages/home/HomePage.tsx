@@ -344,10 +344,10 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
 
   return (
     <main className="h-screen overflow-hidden bg-[var(--color-app-bg)] text-[var(--color-text-primary)]">
-      <div className="mx-auto grid h-full w-full max-w-[1156px] grid-cols-1 gap-4 px-5 pt-1 lg:grid-cols-[300px_760px] lg:gap-16 lg:px-0">
+      <div className="mx-auto grid h-full w-full max-w-[1156px] grid-cols-1 gap-[var(--space-4)] px-[var(--space-5)] pt-[var(--space-1)] lg:grid-cols-[300px_760px] lg:gap-16 lg:px-0">
         <aside className="flex min-h-0 min-w-0 flex-col lg:min-h-0">
           <div className="shrink-0">
-            <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="mb-[var(--space-3)] flex items-center justify-between gap-[var(--space-3)]">
               <div className="flex min-w-0 items-center gap-2 text-lg font-bold">
                 <span>Zembra</span>
                 <span className="rounded-[5px] border border-[var(--color-text-primary)]/70 px-1.5 py-0.5 text-[10px] leading-tight">
@@ -521,7 +521,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
 
         <section className="flex min-h-0 min-w-0 flex-col">
           <header className="mb-4 flex min-h-11 shrink-0 items-center justify-end lg:mb-3">
-            <label className="flex h-[42px] w-full items-center gap-2.5 rounded-full bg-[var(--color-surface)] px-4 text-sm text-[var(--color-text-muted)] shadow-[inset_0_0_0_1px_var(--color-border)] lg:max-w-80">
+            <label className="flex h-[var(--control-height)] w-full items-center gap-[var(--space-2)] rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-4)] text-sm text-[var(--color-text-muted)] lg:max-w-80">
               <Search className="size-4" aria-hidden="true" />
               <input
                 className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-[var(--color-text-muted)]"
@@ -534,9 +534,9 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
           </header>
 
           <div className="min-h-0 flex-1 overflow-y-auto pb-44">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-[var(--space-3)]">
               {visibleNotes.length === 0 ? (
-                <article className="rounded-[18px] border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-8 text-[var(--color-text-muted)]">
+                <article className="rounded-[var(--radius-card)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-[var(--space-5)] text-[var(--color-text-muted)]">
                   {t("note.empty")}
                 </article>
               ) : null}
