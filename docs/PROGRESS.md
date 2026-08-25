@@ -25,3 +25,10 @@
 - R025 `57797c8` 完成 Bonofix 启发的全局主题迁移：以 IBM Plex Sans、暖白/炭灰明暗色板和强调蓝统一首页、设置与弹窗，展示态和编辑态 tag 均使用蓝底白字圆角胶囊，圆形任务框及 Markdown 内容样式同步更新；不改变数据、API 与 Markdown 存储契约，并将版本升级为 0.1.1。
 - R027 `8f401b8` 完成 Supabase 登录 workspace 选择改造：部署通过 `VITE_SUPABASE_WORKSPACES` 声明 workspace UUID、显示名和绑定邮箱；登录页先选名称，再自动填充只读邮箱，Magic Link 回跳在 sessionStorage 恢复所选 scope，不在首页切换 workspace，并通过完整测试与生产构建验证。
 - R028 `6d1c67f` 以前向替换废弃 Supabase workspace 环境变量：Magic Link 使用用户输入邮箱，认证回跳后通过 schema v0.6.1 的 RLS 查询可访问 workspace 名称，用户选择后才激活业务 Client；完整测试与生产构建通过。`00d28a0` 后补齐 Magic Link 发送反馈，按钮依次显示“发送”“正在发送”“发送成功”，等待期间保持强调色并阻止重复请求。用户验收通过后归档执行计划，并随 `v0.3.0` 发布。
+- R030 `2d82e22` 完成 note card 的 tag 与正文同行展示，保持 Markdown 段落结构、折叠规则和输入行为不变。
+- R031 `3c79788` 完成展示态与编辑态按原始 Markdown 位置渲染内联 tag chip，保留正文中的 tag marker 并兼容双链内容。
+- R032 `9e7d4a1` 收紧编辑器 tag decoration 触发条件，用户输入 tag 后仅在空格结束语义时渲染 chip。
+- R033 `12eb782` 统一展示态和编辑态 tag chip 的共享尺寸规则，消除额外纵向空白并保持文字流式排版。
+- R034 `aa55637` 参考 Logseq v0.10.7 与 Bonofix 的实现替换 tag chip 的错误样式链路，采用一致的 inline-block、圆角、间距和亮暗主题合成色。
+- R035 `3af7969` 将 tag chip 的 pigment、合成背景和文字颜色拆为主题 token，并写入单向 token 使用规则。
+- R036 `304d143` 完成主要色系的 palette 与语义 token 分层，覆盖表面、边框、正文灰阶、强调、状态和浮层颜色；组件仅消费语义 token，为主题化建立稳定边界。用户验收通过后归档关联执行计划，并随 `v0.3.1` 发布。
