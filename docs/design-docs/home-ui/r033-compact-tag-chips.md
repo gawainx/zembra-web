@@ -6,15 +6,16 @@
 
 ## 方案
 
-将 `.note-tag-chip` 与 `.live-markdown-editor-content .editor-tag-chip` 的视觉属性合并到 `src/styles/main.css` 的一条共享规则。该规则显式定义字号、行高和内边距，取消纵向 padding，避免从各自容器继承出过高的垂直盒子。
+将 `.note-tag-chip` 与 `.live-markdown-editor-content .editor-tag-chip` 的视觉属性合并到 `src/styles/main.css` 的一条共享规则。该规则直接复用已下载的 Bonofix 主题 `source/theme.scss` 中 `.content a.tag` 的尺寸值，不再自行设定字号、字重、行高或基线偏移。
 
 后续调试只需调整同一规则的以下属性：
 
 | 属性 | 初始值 | 作用 |
 | --- | --- | --- |
-| `font-size` | `0.82em` | 缩小 tag 字体。 |
-| `line-height` | `1.15` | 直接控制 chip 的内容高度。 |
-| `padding` | `0 0.32em` | 纵向为零，仅保留最小水平留白。 |
-| `vertical-align` | `-0.05em` | 让 chip 与正文基线贴合。 |
+| `padding` | `0 7px` | Bonofix 的零纵向、7px 横向留白。 |
+| `border-radius` | `1em` | Bonofix 的圆角。 |
+| `margin` | `2px 0` | Bonofix 的垂直外边距。 |
+
+主题源码下载位置：`/private/tmp/logseq-bonofix-theme/source/theme.scss` 第 287 至 295 行。
 
 不增加固定高度，避免不同字体、缩放比例和语言下产生裁切。

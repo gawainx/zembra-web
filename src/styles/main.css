@@ -133,16 +133,11 @@ button[data-active="true"] {
 .note-tag-chip,
 .live-markdown-editor-content .editor-tag-chip {
   display: inline-block;
-  box-sizing: border-box;
   border-radius: 999px;
   background: var(--color-accent);
-  padding: 0 0.32em;
+  margin: 2px 0;
+  padding: 0 7px;
   color: var(--color-text-inverse);
-  font-size: 0.82em;
-  font-weight: 600;
-  line-height: 1.15;
-  white-space: nowrap;
-  vertical-align: -0.05em;
 }
 
 .note-markdown h1,
