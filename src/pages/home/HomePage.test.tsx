@@ -152,7 +152,7 @@ test("renders tag chips without repeating inline tag markers", async () => {
   expect(within(noteCard as HTMLElement).getByText("#zembra")).not.toBeNull();
   expect(within(noteCard as HTMLElement).queryByText(/^#zembra 界面/)).toBeNull();
   expect(within(noteCard as HTMLElement).getByText("#zembra").parentElement).toBe(
-    noteText.parentElement?.parentElement,
+    noteText,
   );
 });
 

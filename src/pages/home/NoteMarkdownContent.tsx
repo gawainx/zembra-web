@@ -7,10 +7,10 @@ import { useRef, useState, type ReactNode } from "react";
 import type { NoteDto } from "../../api/types";
 import {
   formatShortNoteRef,
-  parseRenderableNoteContent,
 } from "./homeUtils";
 
 const noteLinkUrlPrefix = "zembra-note://";
+const tagUrlPrefix = "zembra-tag://";
 
 interface MarkdownTextNode {
   type: "text";
@@ -33,29 +33,20 @@ type MarkdownNode = MarkdownTextNode | MarkdownLinkNode | MarkdownParentNode;
 /** Renders a note body with GFM Markdown and Zembra note-link previews. */
 export function NoteMarkdownContent({
   content,
-  inlineFirstParagraph = false,
   onLoadNotePreview,
 }: {
   content: string;
-  /** Lets the first Markdown paragraph flow after inline note metadata. */
-  inlineFirstParagraph?: boolean;
   onLoadNotePreview: (noteRef: string) => Promise<NoteDto>;
 }) {
   const components = createMarkdownComponents(onLoadNotePreview);
 
   return (
-    <div
-      className={
-        inlineFirstParagraph
-          ? "note-markdown note-markdown-inline-first-paragraph"
-          : "note-markdown"
-      }
-    >
+    <div className="note-markdown">
       <ReactMarkdown
         components={components}
-        remarkPlugins={[remarkGfm, remarkBreaks, remarkNoteLinks]}
+        remarkPlugins={[remarkGfm, remarkBreaks, remarkInlineTokens]}
         urlTransform={(url) =>
-          url.startsWith(noteLinkUrlPrefix)
+          url.startsWith(noteLinkUrlPrefix) || url.startsWith(tagUrlPrefix)
             ? url
             : defaultUrlTransform(url)
         }
@@ -66,55 +57,75 @@ export function NoteMarkdownContent({
   );
 }
 
-/** Converts Zembra note references in Markdown text nodes into internal links. */
-function remarkNoteLinks() {
+/** Converts Zembra note references and tags in Markdown text nodes into internal links. */
+function remarkInlineTokens() {
   return (tree: MarkdownNode) => {
-    transformNoteLinks(tree);
+    transformInlineTokens(tree);
   };
 }
 
-/** Walks Markdown nodes and rewrites text-node note references in place. */
-function transformNoteLinks(node: MarkdownNode): void {
+/** Walks Markdown nodes and rewrites text-node inline tokens in place. */
+function transformInlineTokens(node: MarkdownNode): void {
   if (!("children" in node) || !Array.isArray(node.children)) {
     return;
   }
 
   node.children = node.children.flatMap((child) => {
     if ("type" in child && child.type === "text") {
-      return createNoteLinkNodes(child.value);
+      return createInlineTokenNodes(child.value);
     }
 
     if ("type" in child && child.type === "link") {
       return [child];
     }
 
-    transformNoteLinks(child);
+    transformInlineTokens(child);
     return [child];
   });
 }
 
-/** Splits one text node into plain text and internal note-link nodes. */
-function createNoteLinkNodes(value: string): MarkdownNode[] {
-  return parseRenderableNoteContent(value).map((segment) => {
-    if (segment.type === "text") {
-      return {
-        type: "text",
-        value: segment.text,
-      };
+/** Splits one text node into plain text, internal note-link, and tag nodes. */
+function createInlineTokenNodes(value: string): MarkdownNode[] {
+  const nodes: MarkdownNode[] = [];
+  const tokenPattern = /\[\[([A-Fa-f0-9]{32})\]\]|(^|\s)#([^\s#@]+)/g;
+  let cursor = 0;
+
+  for (const match of value.matchAll(tokenPattern)) {
+    const index = match.index ?? 0;
+    const noteRef = match[1];
+    const tag = match[3];
+    const tokenStart = noteRef ? index : index + (match[2]?.length ?? 0);
+
+    appendTextNode(nodes, value.slice(cursor, tokenStart));
+
+    if (noteRef) {
+      nodes.push(createInternalLinkNode(noteLinkUrlPrefix, noteRef));
+    } else if (tag) {
+      nodes.push(createInternalLinkNode(tagUrlPrefix, tag));
     }
 
-    return {
-      type: "link",
-      url: `${noteLinkUrlPrefix}${segment.targetNoteRef}`,
-      title: null,
-      children: [
-        {
-          type: "text",
-          value: segment.anchorText,
-        },
-      ],
-    };
-  });
+    cursor = index + match[0].length;
+  }
+
+  appendTextNode(nodes, value.slice(cursor));
+  return nodes;
+}
+
+/** Adds a non-empty text node to a Markdown node collection. */
+function appendTextNode(nodes: MarkdownNode[], value: string): void {
+  if (value) {
+    nodes.push({ type: "text", value });
+  }
+}
+
+/** Creates one internal link node used by the Markdown component mapping. */
+function createInternalLinkNode(prefix: string, value: string): MarkdownLinkNode {
+  return {
+    type: "link",
+    url: `${prefix}${value}`,
+    title: null,
+    children: [{ type: "text", value }],
+  };
 }
 
 /** Creates Markdown element renderers bound to the note preview loader. */
@@ -130,6 +141,10 @@ function createMarkdownComponents(
             onLoadNotePreview={onLoadNotePreview}
           />
         );
+      }
+
+      if (href?.startsWith(tagUrlPrefix)) {
+        return <span className="note-tag-chip">#{href.slice(tagUrlPrefix.length)}</span>;
       }
 
       return (

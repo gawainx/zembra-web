@@ -14,9 +14,7 @@ import { NoteMarkdownContent } from "./NoteMarkdownContent";
 import type { ComposerTool } from "./homeTypes";
 import {
   formatNoteTimestamp,
-  formatTagPathLabel,
   stripRenderedFieldMarker,
-  stripRenderedTagMarkers,
 } from "./homeUtils";
 
 /** Renders one recent note in the home feed. */
@@ -69,12 +67,8 @@ export function NoteCard({
   const [isFieldUpdating, setIsFieldUpdating] = useState(false);
   const displayRole = note.role || t("sidebar.unknownRole");
   const displayContent = useMemo(
-    () =>
-      stripRenderedFieldMarker(
-        stripRenderedTagMarkers(note.content, note.tags),
-        fieldName,
-      ),
-    [fieldName, note.content, note.tags],
+    () => stripRenderedFieldMarker(note.content, fieldName),
+    [fieldName, note.content],
   );
   const contentRef = useRef<HTMLDivElement>(null);
   const measureOverflow = useCallback(() => {
@@ -255,21 +249,10 @@ export function NoteCard({
             ref={contentRef}
             style={expanded ? undefined : { maxHeight: "5.25rem" }}
           >
-            <div>
-              {note.tags.map((tag) => (
-                <span
-                  className="mr-1.5 inline-flex h-[25px] items-center rounded-full bg-[var(--color-accent)] px-2 text-[13px] font-semibold text-[var(--color-text-inverse)]"
-                  key={tag}
-                >
-                  #{formatTagPathLabel(tag)}
-                </span>
-              ))}
-              <NoteMarkdownContent
-                content={displayContent}
-                inlineFirstParagraph={note.tags.length > 0}
-                onLoadNotePreview={onLoadNotePreview}
-              />
-            </div>
+            <NoteMarkdownContent
+              content={displayContent}
+              onLoadNotePreview={onLoadNotePreview}
+            />
           </div>
           {hasOverflow || expanded ? (
             <button

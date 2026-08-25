@@ -130,12 +130,19 @@ button[data-active="true"] {
   margin: 0.35rem 0;
 }
 
-.note-markdown-inline-first-paragraph {
-  display: inline;
+.note-tag-chip,
+.live-markdown-editor-content .editor-tag-chip {
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: baseline;
 }
 
-.note-markdown-inline-first-paragraph > p:first-child {
-  display: inline;
+.note-tag-chip {
+  border-radius: 999px;
+  background: var(--color-accent);
+  padding: 0.05rem 0.45rem;
+  color: var(--color-text-inverse);
+  font-weight: 700;
 }
 
 .note-markdown h1,
