@@ -36,7 +36,7 @@ export function SettingsModal({ client, onClose }: SettingsModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-3 py-4 sm:px-6 sm:py-8">
       <button
-        className="absolute inset-0 bg-black/35"
+        className="absolute inset-0 bg-[var(--color-overlay-modal)]"
         type="button"
         aria-label={t("close")}
         onClick={onClose}

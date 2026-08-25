@@ -659,7 +659,7 @@ function FieldDeleteDialog({
   t: (key: string, options?: Record<string, string>) => string;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] px-4">
       <section
         aria-modal="true"
         className="w-full max-w-sm rounded-[14px] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 shadow-[var(--color-shadow-float)]"
@@ -694,7 +694,7 @@ function FieldDeleteDialog({
             {t("field.delete.cancel")}
           </button>
           <button
-            className="h-9 rounded-[10px] bg-[var(--color-error)] px-3 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-9 rounded-[10px] bg-[var(--color-error)] px-3 text-sm font-semibold text-[var(--color-error-contrast)] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isDeleting}
             type="button"
             onClick={onConfirm}

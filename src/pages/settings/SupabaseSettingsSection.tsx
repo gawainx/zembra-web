@@ -289,7 +289,7 @@ export function SupabaseSettingsSection({
                 }
               />
               <span className="absolute inset-0 rounded-full bg-[var(--color-border)] transition peer-checked:bg-[var(--color-accent)] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--color-accent)]" />
-              <span className="absolute left-1 size-5 rounded-full bg-white shadow-sm transition peer-checked:translate-x-5" />
+              <span className="absolute left-1 size-5 rounded-full bg-[var(--color-control-thumb)] shadow-sm transition peer-checked:translate-x-5" />
             </label>
           </SettingsFieldRow>
         </div>

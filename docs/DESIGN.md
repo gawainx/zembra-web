@@ -4,6 +4,10 @@
 
 ## 历史教训
 
+### 主题色只能从 palette 到语义 token 单向流动
+
+`src/styles/main.css` 中的 `--palette-*` 是亮暗主题唯一允许定义物理颜色的位置；`--color-*` 只能引用 palette 或其他语义 token；组件只能引用 `--color-*`。禁止在组件中写入 `white`、`black`、十六进制、`rgba()` 或 `color-mix()`，禁止将 palette token 直接用于组件。新增主题只覆写 palette，不新增组件级颜色例外。
+
 ### Tag chip 色彩只能消费语义 token
 
 tag chip 的组件选择器只能使用 `--color-tag-chip-background` 与 `--color-tag-chip-text`，禁止直接使用 `--color-accent`、任意十六进制色或在组件内进行 `color-mix()`。主题 pigment 与合成规则统一维护在 `src/styles/main.css` 的亮暗主题 token 区；新增主题只覆写该区 token，禁止为单个组件追加颜色例外。
