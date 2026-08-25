@@ -370,7 +370,7 @@ function tagChipDecorationExtension() {
                   return;
                 }
 
-                for (const match of node.text.matchAll(/(?:^|\s)#([^\s#@]+)/g)) {
+                for (const match of node.text.matchAll(/(?:^|\s)#([^\s#@]+)(?=\s)/g)) {
                   const fullMatch = match[0];
                   const leadingLength = fullMatch.startsWith("#") ? 0 : 1;
                   const from = position + (match.index ?? 0) + leadingLength;
