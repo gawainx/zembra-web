@@ -352,7 +352,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
           <div className="shrink-0">
             <div className="mb-[var(--space-3)] flex items-center justify-between gap-[var(--space-3)]">
               <div className="flex min-w-0 items-center gap-[var(--space-2)] text-lg font-bold">
-                <span>ℤ</span>
+                <span className="text-[2em] leading-none">ℤ</span>
                 <WorkspaceSwitcher
                   workspace={workspace}
                   workspaces={workspaces}
