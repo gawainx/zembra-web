@@ -24,5 +24,6 @@
 
 - [completed] 根据验收截图将 note card 的头部与正文间距收紧为 `--space-1`，上下内边距收紧为 `--space-2`。
 - [completed] 将撑高 header 的右侧操作区移出文档流，点击命中区域以图标尺寸和单侧 `--icon-hit-inset` token 计算，令正文按时间轴 label 的实际行高开始排版。
+- [completed] 将首页帮助与同步、设置入口与关闭、编辑器工具栏、侧栏删除、主题切换和后端刷新等纯图标控件统一为 `--icon-hit-size`。
 
 验证：`git diff --check`、首页组件测试与 `npm run build` 通过。

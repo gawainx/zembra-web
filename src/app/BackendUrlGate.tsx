@@ -279,15 +279,15 @@ export function BackendUrlGate({ children, dataSourceControl }: BackendUrlGatePr
                   ? t("backend.login.refreshWorkspacesAction")
                   : t("backend.login.loadWorkspacesAction")
               }
-              className="flex h-11 w-11 items-center justify-center rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] transition hover:border-[var(--color-border-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex size-[var(--icon-hit-size)] items-center justify-center rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] transition hover:border-[var(--color-border-strong)] disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isSubmitting || status === "checking"}
               onClick={() => void handleLoadWorkspaces()}
               type="button"
             >
               {isLoadingWorkspaces ? (
-                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                <Loader2 className="size-[var(--icon-size)] animate-spin" aria-hidden="true" />
               ) : (
-                <RefreshCw className="size-4" aria-hidden="true" />
+                <RefreshCw className="size-[var(--icon-size)]" aria-hidden="true" />
               )}
             </button>
           </div>

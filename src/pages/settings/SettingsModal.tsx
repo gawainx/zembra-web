@@ -50,12 +50,12 @@ export function SettingsModal({ client, onClose }: SettingsModalProps) {
         <aside className="flex min-w-0 flex-col px-3 pb-3 pt-3 md:min-h-[450px] md:px-4 md:pb-5 md:pt-5">
           <div className="flex min-h-11 items-center">
             <button
-              className="flex size-[var(--control-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)]"
+              className="flex size-[var(--icon-hit-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)]"
               type="button"
               aria-label={t("close")}
               onClick={onClose}
             >
-              <X className="size-5" aria-hidden="true" />
+              <X className="size-[var(--icon-size)]" aria-hidden="true" />
             </button>
           </div>
 

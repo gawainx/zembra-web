@@ -356,18 +356,18 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <button
-                  className="flex size-[34px] shrink-0 items-center justify-center rounded-[9px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
+                  className="flex size-[var(--icon-hit-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
                   type="button"
                   aria-label={t("composer.help")}
                   title={t("composer.help")}
                 >
                   <CircleHelp
-                    className="size-4 text-[var(--color-accent)]"
+                    className="size-[var(--icon-size)] text-[var(--color-accent)]"
                     aria-hidden="true"
                   />
                 </button>
                 {supportsSync ? <button
-                  className="flex size-[34px] shrink-0 items-center justify-center rounded-[9px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex size-[var(--icon-hit-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
                   type="button"
                   aria-label={t("actions.sync")}
                   title={t("actions.sync")}
@@ -376,12 +376,12 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
                 >
                   {isSyncing ? (
                     <Loader2
-                      className="size-4 animate-spin text-[var(--color-accent)]"
+                      className="size-[var(--icon-size)] animate-spin text-[var(--color-accent)]"
                       aria-hidden="true"
                     />
                   ) : (
                     <RefreshCw
-                      className="size-4 text-[var(--color-accent)]"
+                      className="size-[var(--icon-size)] text-[var(--color-accent)]"
                       aria-hidden="true"
                     />
                   )}

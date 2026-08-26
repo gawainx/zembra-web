@@ -160,12 +160,12 @@ export function NavItem({
             </span>
             <button
               aria-label={deleteLabel}
-              className="hidden size-6 items-center justify-center rounded-[7px] text-[var(--color-error)] hover:bg-[var(--color-error-soft)] disabled:cursor-not-allowed disabled:opacity-60 group-hover/nav:flex group-focus-within/nav:flex"
+              className="hidden size-[var(--icon-hit-size)] items-center justify-center rounded-[var(--radius-control)] text-[var(--color-error)] hover:bg-[var(--color-error-soft)] disabled:cursor-not-allowed disabled:opacity-60 group-hover/nav:flex group-focus-within/nav:flex"
               disabled={deleteDisabled}
               type="button"
               onClick={handleDeleteClick}
             >
-              <Trash2 className="size-3.5" aria-hidden="true" />
+              <Trash2 className="size-[var(--icon-size)]" aria-hidden="true" />
             </button>
           </>
         ) : (

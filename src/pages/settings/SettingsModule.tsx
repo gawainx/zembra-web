@@ -23,14 +23,14 @@ export function SettingsModule({ client }: SettingsModuleProps) {
   return (
     <>
       <button
-        className="flex size-[34px] shrink-0 items-center justify-center rounded-[9px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
+        className="flex size-[var(--icon-hit-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
         title={title}
         type="button"
         aria-label={title}
         onClick={() => setIsOpen(true)}
       >
         <Settings
-          className="size-4 text-[var(--color-accent)]"
+          className="size-[var(--icon-size)] text-[var(--color-accent)]"
           aria-hidden="true"
         />
       </button>

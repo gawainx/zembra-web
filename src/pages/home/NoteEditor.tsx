@@ -126,7 +126,7 @@ export const NoteEditor = forwardRef<
           <div className="flex items-center gap-4 text-[var(--color-text-secondary)]">
             {tools.map((tool) => (
               <button
-                className="flex size-7 items-center justify-center rounded-md hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
+                className="flex size-[var(--icon-hit-size)] items-center justify-center rounded-[var(--radius-control)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
                 key={tool.id}
                 type="button"
                 aria-label={tool.label}

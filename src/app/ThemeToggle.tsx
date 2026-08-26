@@ -14,14 +14,14 @@ export function ThemeToggle() {
 
   return (
     <button
-      className="inline-flex size-[var(--control-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
+      className="inline-flex size-[var(--icon-hit-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
       type="button"
       aria-label={label}
       title={label}
       onClick={() => setPreference(nextPreference)}
     >
       <Icon
-        className="size-4 text-[var(--color-accent)]"
+        className="size-[var(--icon-size)] text-[var(--color-accent)]"
         aria-hidden="true"
       />
     </button>
