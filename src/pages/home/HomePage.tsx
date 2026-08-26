@@ -570,14 +570,14 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
       </div>
 
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 px-5 lg:px-0">
-        <div className="mx-auto grid h-[154px] w-full max-w-[1156px] grid-cols-1 lg:grid-cols-[300px_760px] lg:gap-16">
+        <div className="mx-auto grid h-[154px] w-full max-w-[1156px] grid-cols-1 gap-[var(--space-4)] lg:grid-cols-[300px_760px]">
           <div className="min-w-0 bg-[image:var(--color-composer-gradient)] lg:col-start-2" />
         </div>
       </div>
 
       <div className="fixed inset-x-0 bottom-6 z-20 px-5 lg:px-0">
         <form
-          className="mx-auto grid w-full max-w-[1156px] grid-cols-1 lg:grid-cols-[300px_760px] lg:gap-16"
+          className="mx-auto grid w-full max-w-[1156px] grid-cols-1 gap-[var(--space-4)] lg:grid-cols-[300px_760px]"
           onSubmit={(event) => {
             event.preventDefault();
             void handleCreateSubmit();
