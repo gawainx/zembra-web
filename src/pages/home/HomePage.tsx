@@ -344,7 +344,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
 
   return (
     <main className="h-screen overflow-hidden bg-[var(--color-app-bg)] text-[var(--color-text-primary)]">
-      <div className="mx-auto grid h-full w-full max-w-[1156px] grid-cols-1 gap-[var(--space-4)] px-[var(--space-5)] pt-[var(--space-1)] lg:grid-cols-[300px_760px] lg:gap-16 lg:px-0">
+      <div className="mx-auto grid h-full w-full max-w-[1156px] grid-cols-1 gap-[var(--space-4)] px-[var(--space-5)] pt-[var(--space-1)] lg:grid-cols-[300px_760px] lg:px-0">
         <aside className="flex min-h-0 min-w-0 flex-col lg:min-h-0">
           <div className="shrink-0">
             <div className="mb-[var(--space-3)] flex items-center justify-between gap-[var(--space-3)]">
