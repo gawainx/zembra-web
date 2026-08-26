@@ -22,6 +22,7 @@ import type { FieldDto, NoteDto } from "../../api/types";
 import { SettingsModule } from "../settings/SettingsModule";
 import { NoteCard } from "./NoteCard";
 import { NoteEditor, type NoteEditorHandle } from "./NoteEditor";
+import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import {
   DailyNotesHeatmap,
   NavItem,
@@ -350,18 +351,13 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
         <aside className="flex min-h-0 min-w-0 flex-col lg:min-h-0">
           <div className="shrink-0">
             <div className="mb-[var(--space-3)] flex items-center justify-between gap-[var(--space-3)]">
-              <div className="flex min-w-0 items-center gap-2 text-lg font-bold">
-                <span>Zembra</span>
-                <select
-                  aria-label={workspace.name}
-                  className="min-w-0 max-w-40 rounded-[var(--radius-control)] bg-transparent px-[var(--space-2)] py-[var(--space-1)] text-sm font-semibold text-[var(--color-text-secondary)] outline-none focus-visible:outline focus-visible:outline-[var(--color-border-strong)]"
-                  value={workspace.id}
-                  onChange={(event) => switchWorkspace(event.target.value)}
-                >
-                  {workspaces.map((option) => (
-                    <option key={option.id} value={option.id}>{option.name}</option>
-                  ))}
-                </select>
+              <div className="flex min-w-0 items-center gap-[var(--space-2)] text-lg font-bold">
+                <span>ℤembra</span>
+                <WorkspaceSwitcher
+                  workspace={workspace}
+                  workspaces={workspaces}
+                  onWorkspaceChange={switchWorkspace}
+                />
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <button
