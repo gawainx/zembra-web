@@ -214,13 +214,6 @@ body {
   margin: 0;
 }
 
-button,
-input,
-textarea,
-.ProseMirror {
-  font: inherit;
-}
-
 button[data-active="true"] {
   background: var(--color-accent-soft);
   color: var(--color-text-primary);
