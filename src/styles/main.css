@@ -18,6 +18,11 @@
   --icon-hit-inset: 1px;
   --icon-hit-size: calc(var(--icon-size) + var(--icon-hit-inset) * 2);
   --note-card-header-actions-width: calc(var(--icon-hit-size) * 2 + var(--space-2));
+  --layout-sidebar-min: 15rem;
+  --layout-sidebar-max: 18.75rem;
+  --layout-content-min: 30rem;
+  --layout-content-max: 47.5rem;
+  --layout-shell-max: calc(var(--layout-sidebar-max) + var(--space-4) + var(--layout-content-max));
   --palette-neutral-app: #fffdf9;
   --palette-neutral-surface: #ffffff;
   --palette-neutral-muted: #f7f6f3;

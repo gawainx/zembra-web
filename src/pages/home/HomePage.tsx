@@ -344,7 +344,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
 
   return (
     <main className="h-screen overflow-hidden bg-[var(--color-app-bg)] text-[var(--color-text-primary)]">
-      <div className="mx-auto grid h-full w-full max-w-[1156px] grid-cols-1 gap-[var(--space-4)] px-[var(--space-5)] pt-[var(--space-1)] lg:grid-cols-[300px_760px] lg:px-0">
+      <div className="mx-auto grid h-full w-full max-w-[var(--layout-shell-max)] grid-cols-1 gap-[var(--space-4)] px-[var(--space-5)] pt-[var(--space-1)] lg:grid-cols-[minmax(var(--layout-sidebar-min),var(--layout-sidebar-max))_minmax(var(--layout-content-min),var(--layout-content-max))] lg:px-0">
         <aside className="flex min-h-0 min-w-0 flex-col lg:min-h-0">
           <div className="shrink-0">
             <div className="mb-[var(--space-3)] flex items-center justify-between gap-[var(--space-3)]">
@@ -570,14 +570,14 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
       </div>
 
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 px-5 lg:px-0">
-        <div className="mx-auto grid h-[154px] w-full max-w-[1156px] grid-cols-1 gap-[var(--space-4)] lg:grid-cols-[300px_760px]">
+        <div className="mx-auto grid h-[154px] w-full max-w-[var(--layout-shell-max)] grid-cols-1 gap-[var(--space-4)] lg:grid-cols-[minmax(var(--layout-sidebar-min),var(--layout-sidebar-max))_minmax(var(--layout-content-min),var(--layout-content-max))]">
           <div className="min-w-0 bg-[image:var(--color-composer-gradient)] lg:col-start-2" />
         </div>
       </div>
 
       <div className="fixed inset-x-0 bottom-6 z-20 px-5 lg:px-0">
         <form
-          className="mx-auto grid w-full max-w-[1156px] grid-cols-1 gap-[var(--space-4)] lg:grid-cols-[300px_760px]"
+          className="mx-auto grid w-full max-w-[var(--layout-shell-max)] grid-cols-1 gap-[var(--space-4)] lg:grid-cols-[minmax(var(--layout-sidebar-min),var(--layout-sidebar-max))_minmax(var(--layout-content-min),var(--layout-content-max))]"
           onSubmit={(event) => {
             event.preventDefault();
             void handleCreateSubmit();
