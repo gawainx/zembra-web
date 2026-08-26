@@ -354,7 +354,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
                 <span>Zembra</span>
                 <select
                   aria-label={workspace.name}
-                  className="min-w-0 max-w-40 rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-2)] py-[var(--space-1)] text-sm font-semibold text-[var(--color-text-secondary)] outline-none focus:border-[var(--color-border-strong)]"
+                  className="min-w-0 max-w-40 rounded-[var(--radius-control)] bg-transparent px-[var(--space-2)] py-[var(--space-1)] text-sm font-semibold text-[var(--color-text-secondary)] outline-none focus-visible:outline focus-visible:outline-[var(--color-border-strong)]"
                   value={workspace.id}
                   onChange={(event) => switchWorkspace(event.target.value)}
                 >

@@ -17,6 +17,7 @@
 
 - [completed] 将顶部数据源 badge 替换为当前 workspace 下拉框。
 - [completed] 切换后重新加载首页数据并更新持久化选择。
+- [completed] 移除顶部 workspace 下拉框的独立表面背景和常态边框，键盘聚焦时仅显示强调色 outline。
 
 验证：覆盖 workspace 切换、数据重载与顶部当前项展示。
 
