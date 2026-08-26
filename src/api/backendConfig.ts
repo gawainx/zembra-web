@@ -4,6 +4,9 @@ export const backendBaseUrlStorageKey = "zembra.backendBaseUrl";
 /** Local storage key used to persist the selected workspace ID. */
 export const workspaceIdStorageKey = "zembra.workspaceId";
 
+/** Local storage key used to persist the selected Supabase workspace ID. */
+export const supabaseWorkspaceIdStorageKey = "zembra.supabaseWorkspaceId";
+
 /** Function that resolves the current backend API base URL. */
 export type BackendBaseUrlResolver = () => string;
 
@@ -80,6 +83,22 @@ export function setConfiguredWorkspaceId(workspaceId: string): void {
 /** Removes the configured workspace ID from browser storage. */
 export function clearConfiguredWorkspaceId(): void {
   window.localStorage.removeItem(workspaceIdStorageKey);
+}
+
+/** Reads the selected Supabase workspace ID from browser storage. */
+export function getConfiguredSupabaseWorkspaceId(): string | undefined {
+  const value = window.localStorage.getItem(supabaseWorkspaceIdStorageKey)?.trim();
+  return value ? value : undefined;
+}
+
+/** Saves the selected Supabase workspace ID to browser storage. */
+export function setConfiguredSupabaseWorkspaceId(workspaceId: string): void {
+  window.localStorage.setItem(supabaseWorkspaceIdStorageKey, workspaceId.trim());
+}
+
+/** Removes the persisted Supabase workspace ID. */
+export function clearConfiguredSupabaseWorkspaceId(): void {
+  window.localStorage.removeItem(supabaseWorkspaceIdStorageKey);
 }
 
 /** Resolves a string or lazy base URL source into a concrete URL. */

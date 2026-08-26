@@ -17,6 +17,7 @@ import {
 import type { WorkspaceSummary } from "../api/types";
 import { activateDataSource } from "../api/data-source-client";
 import { createBackendDataSourceClients } from "../api/client";
+import { WorkspaceProvider } from "./workspace-context";
 
 interface BackendUrlGateProps {
   /** Application content rendered after the backend URL is reachable. */
@@ -159,6 +160,10 @@ export function BackendUrlGate({ children, dataSourceControl }: BackendUrlGatePr
       const defaultWorkspace =
         savedWorkspace ?? findWorkspaceWithMostVisibleNotes(nextWorkspaces);
       setSelectedWorkspaceId(defaultWorkspace.workspace_id);
+      if (savedWorkspace) {
+        activateBackendWorkspace(savedWorkspace.workspace_id);
+        setStatus("ready");
+      }
       console.info("[zembra] Workspaces loaded", {
         selectedWorkspaceId: defaultWorkspace.workspace_id.slice(0, 8),
         workspaceCount: nextWorkspaces.length,
@@ -183,20 +188,42 @@ export function BackendUrlGate({ children, dataSourceControl }: BackendUrlGatePr
       return;
     }
 
-    setConfiguredWorkspaceId(selectedWorkspaceId);
-    activateDataSource({
-      ...createBackendDataSourceClients(selectedWorkspaceId),
-      mode: "backend",
-      workspaceId: selectedWorkspaceId,
-    });
-    console.info("[zembra] Workspace selected; opening app", {
-      workspaceId: selectedWorkspaceId.slice(0, 8),
-    });
+    activateBackendWorkspace(selectedWorkspaceId);
     setStatus("ready");
   }
 
+  /** Activates and persists one backend workspace selected by the user. */
+  function activateBackendWorkspace(workspaceId: string) {
+    setConfiguredWorkspaceId(workspaceId);
+    activateDataSource({
+      ...createBackendDataSourceClients(workspaceId),
+      mode: "backend",
+      workspaceId,
+    });
+    setSelectedWorkspaceId(workspaceId);
+    console.info("[zembra] Backend workspace activated", {
+      workspaceId: workspaceId.slice(0, 8),
+    });
+  }
+
   if (status === "ready") {
-    return children;
+    const selectedWorkspace = workspaces.find(
+      (workspace) => workspace.workspace_id === selectedWorkspaceId,
+    );
+
+    if (!selectedWorkspace) {
+      return null;
+    }
+
+    return (
+      <WorkspaceProvider
+        switchWorkspace={activateBackendWorkspace}
+        workspace={{ id: selectedWorkspace.workspace_id, name: formatWorkspaceOption(selectedWorkspace) }}
+        workspaces={workspaces.map((workspace) => ({ id: workspace.workspace_id, name: formatWorkspaceOption(workspace) }))}
+      >
+        {children}
+      </WorkspaceProvider>
+    );
   }
 
   return (

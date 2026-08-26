@@ -15,6 +15,12 @@ import {
   SupabaseConfigurationError,
   type SupabaseWorkspace,
 } from "../api/supabase.client";
+import {
+  clearConfiguredSupabaseWorkspaceId,
+  getConfiguredSupabaseWorkspaceId,
+  setConfiguredSupabaseWorkspaceId,
+} from "../api/backendConfig";
+import { WorkspaceProvider } from "./workspace-context";
 
 interface DataSourceGateProps {
   /** Application content rendered after one source and workspace are confirmed. */
@@ -115,7 +121,7 @@ function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProps) {
     try {
       const client = getSupabaseBrowserClient();
       if (hasSession) {
-        activateSupabaseDataSource(client, selectedWorkspaceId);
+        activateSupabaseWorkspace(selectedWorkspaceId);
         setIsReady(true);
         return;
       }
@@ -143,6 +149,17 @@ function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProps) {
     setWorkspaces(nextWorkspaces);
     if (nextWorkspaces.length === 0) {
       setError(t("dataSource.noWorkspaces"));
+      return;
+    }
+    const savedWorkspaceId = getConfiguredSupabaseWorkspaceId();
+    const savedWorkspace = nextWorkspaces.find((workspace) => workspace.id === savedWorkspaceId);
+    if (savedWorkspaceId && !savedWorkspace) {
+      clearConfiguredSupabaseWorkspaceId();
+    }
+    if (savedWorkspace) {
+      setSelectedWorkspaceId(savedWorkspace.id);
+      activateSupabaseWorkspace(savedWorkspace.id);
+      setIsReady(true);
     }
   }
 
@@ -158,8 +175,33 @@ function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProps) {
     });
   }
 
+  /** Activates and persists one Supabase workspace selected by the user. */
+  function activateSupabaseWorkspace(workspaceId: string) {
+    const client = getSupabaseBrowserClient();
+    activateSupabaseDataSource(client, workspaceId);
+    setConfiguredSupabaseWorkspaceId(workspaceId);
+    setSelectedWorkspaceId(workspaceId);
+    console.info("[zembra] Supabase workspace activated", {
+      workspaceId: workspaceId.slice(0, 8),
+    });
+  }
+
   if (isReady) {
-    return children;
+    const selectedWorkspace = workspaces.find((workspace) => workspace.id === selectedWorkspaceId);
+
+    if (!selectedWorkspace) {
+      return null;
+    }
+
+    return (
+      <WorkspaceProvider
+        switchWorkspace={activateSupabaseWorkspace}
+        workspace={{ id: selectedWorkspace.id, name: selectedWorkspace.name || t("dataSource.unnamedWorkspace") }}
+        workspaces={workspaces.map((workspace) => ({ id: workspace.id, name: workspace.name || t("dataSource.unnamedWorkspace") }))}
+      >
+        {children}
+      </WorkspaceProvider>
+    );
   }
 
   return (

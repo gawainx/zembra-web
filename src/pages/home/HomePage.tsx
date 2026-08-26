@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "../../app/ThemeToggle";
+import { useWorkspace } from "../../app/workspace-context";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getDataSourceMode, syncClient as defaultSyncClient } from "../../api/client";
 import { ApiError } from "../../api/http";
@@ -53,6 +54,7 @@ interface HomePageProps {
 export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
   const { i18n, t } = useTranslation("home");
   const composerRef = useRef<NoteEditorHandle>(null);
+  const { workspace, workspaces, switchWorkspace } = useWorkspace();
   const [draft, setDraft] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<string>();
   const [editDraft, setEditDraft] = useState("");
@@ -138,7 +140,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
     void loadFields();
     void loadTags();
     void loadRecentNotes();
-  }, [loadDailyNoteCounts, loadFields, loadRecentNotes, loadTags]);
+  }, [loadDailyNoteCounts, loadFields, loadRecentNotes, loadTags, workspace.id]);
 
   useEffect(() => {
     const rootPath = findSelectedTagRootPath(tagTree, selectedTag);
@@ -350,9 +352,16 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
             <div className="mb-[var(--space-3)] flex items-center justify-between gap-[var(--space-3)]">
               <div className="flex min-w-0 items-center gap-2 text-lg font-bold">
                 <span>Zembra</span>
-                <span className="rounded-[5px] border border-[var(--color-text-primary)]/70 px-1.5 py-0.5 text-[10px] leading-tight">
-                  {supportsSync ? t("badge.local") : t("badge.supabase")}
-                </span>
+                <select
+                  aria-label={workspace.name}
+                  className="min-w-0 max-w-40 rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-2)] py-[var(--space-1)] text-sm font-semibold text-[var(--color-text-secondary)] outline-none focus:border-[var(--color-border-strong)]"
+                  value={workspace.id}
+                  onChange={(event) => switchWorkspace(event.target.value)}
+                >
+                  {workspaces.map((option) => (
+                    <option key={option.id} value={option.id}>{option.name}</option>
+                  ))}
+                </select>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <button

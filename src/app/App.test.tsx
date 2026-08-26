@@ -143,7 +143,7 @@ test("saves a reachable backend URL and selected workspace before rendering note
 
   expect(await screen.findByDisplayValue(/Large/)).not.toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "进入 Zembra" }));
-  expect(await screen.findByText("LOCAL")).not.toBeNull();
+  expect(await screen.findByDisplayValue("Large(note count: 5)")).not.toBeNull();
   expect(globalThis.fetch).toHaveBeenCalledWith(
     "http://127.0.0.1:8000/health",
     expect.objectContaining({ method: "GET" }),

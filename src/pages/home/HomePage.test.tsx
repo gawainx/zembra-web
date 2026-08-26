@@ -6,6 +6,7 @@ import { ApiError } from "../../api/http";
 import { i18next } from "../../i18n";
 import { useNotesStore } from "../../features/notes/noteStore";
 import { ThemeProvider } from "../../app/ThemeProvider";
+import { WorkspaceProvider } from "../../app/workspace-context";
 import { HomePage } from "./HomePage";
 import { formatNoteTimestamp } from "./homeUtils";
 
@@ -1154,7 +1155,13 @@ function renderHomePage(syncClient = createMockSyncClient()) {
 
   render(
     <ThemeProvider>
-      <RouterProvider router={router} />
+      <WorkspaceProvider
+        switchWorkspace={() => undefined}
+        workspace={{ id: "test-workspace", name: "Test workspace" }}
+        workspaces={[{ id: "test-workspace", name: "Test workspace" }]}
+      >
+        <RouterProvider router={router} />
+      </WorkspaceProvider>
     </ThemeProvider>,
   );
 }
