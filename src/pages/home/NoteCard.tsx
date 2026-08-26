@@ -132,7 +132,7 @@ export function NoteCard({
       onDoubleClick={handleDoubleClick}
     >
       <div className="flex items-start justify-between gap-[var(--space-3)] text-[13px] text-[var(--color-text-muted)]">
-        <div className="min-w-0">
+        <div className="min-w-0 pr-[var(--note-card-header-actions-width)]">
           {formatNoteTimestamp(note.createdAt, locale)}
           {fieldName ? (
             <span className="relative ml-1 inline-flex">
@@ -177,28 +177,28 @@ export function NoteCard({
             </span>
           ) : null}
         </div>
-        <div className="flex shrink-0 items-start gap-1.5">
+        <div className="absolute right-[var(--space-3)] top-[var(--space-2)] flex items-start gap-[var(--space-2)]">
           <span
             aria-label={t("note.roleLabel", { role: displayRole })}
-            className="inline-flex size-7 items-center justify-center text-[var(--color-accent)]"
+            className="inline-flex size-[var(--icon-size)] items-center justify-center text-[var(--color-accent)]"
             title={displayRole}
           >
             {note.role === "Human" ? (
-              <User className="size-4 shrink-0" aria-hidden="true" />
+              <User className="size-[var(--icon-size)] shrink-0" aria-hidden="true" />
             ) : (
-              <Bot className="size-4 shrink-0" aria-hidden="true" />
+              <Bot className="size-[var(--icon-size)] shrink-0" aria-hidden="true" />
             )}
           </span>
           {!isEditing ? (
-            <div className="relative -mr-2 -mt-1 shrink-0">
+            <div className="relative shrink-0">
             <button
               aria-expanded={isActionsOpen}
               aria-label={t("note.actions")}
-              className="flex size-8 items-center justify-center rounded-[9px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
+              className="flex size-[var(--icon-hit-size)] items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
               onClick={() => setIsActionsOpen((current) => !current)}
               type="button"
             >
-              <MoreHorizontal className="size-5" aria-hidden="true" />
+              <MoreHorizontal className="size-[var(--icon-size)]" aria-hidden="true" />
             </button>
             {isActionsOpen ? (
               <div className="absolute right-0 top-9 z-30 min-w-28 overflow-hidden rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--color-shadow-float)]">
