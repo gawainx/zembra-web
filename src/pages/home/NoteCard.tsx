@@ -128,7 +128,7 @@ export function NoteCard({
 
   return (
     <article
-      className="relative flex flex-col gap-[var(--space-2)] rounded-[var(--radius-card)] border border-[var(--color-border-subtle)] bg-[var(--color-surface)] p-[var(--space-3)]"
+      className="relative flex flex-col gap-[var(--space-1)] rounded-[var(--radius-card)] border border-[var(--color-border-subtle)] bg-[var(--color-surface)] px-[var(--space-3)] py-[var(--space-2)]"
       onDoubleClick={handleDoubleClick}
     >
       <div className="flex items-start justify-between gap-[var(--space-3)] text-[13px] text-[var(--color-text-muted)]">

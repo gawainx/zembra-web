@@ -20,8 +20,8 @@
 
 验证：运行设置与应用组件测试、生产构建，并在亮暗主题检查主要界面。
 
-## Stage 3：收尾
+## Stage 3：验收反馈收紧
 
-- [completed] 核对组件仅消费布局 token，更新计划状态并提交。
+- [completed] 根据验收截图将 note card 的头部与正文间距收紧为 `--space-1`，上下内边距收紧为 `--space-2`。
 
-验证：`git diff --check`、相关测试与 `npm run build` 通过。
+验证：`git diff --check`、首页组件测试与 `npm run build` 通过。
