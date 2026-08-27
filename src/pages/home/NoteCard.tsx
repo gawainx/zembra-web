@@ -149,7 +149,7 @@ export function NoteCard({
               </button>
               {isFieldMenuOpen ? (
                 <div
-                  className="absolute left-0 top-6 z-40 min-w-36 overflow-hidden rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-[var(--color-shadow-float)]"
+                  className="absolute left-0 top-6 z-40 inline-flex w-max flex-col overflow-hidden rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] p-1 shadow-[var(--color-shadow-float)]"
                   role="menu"
                 >
                   {fields.map((field) => {
@@ -158,7 +158,7 @@ export function NoteCard({
                     return (
                       <button
                         aria-checked={selected}
-                        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] disabled:cursor-not-allowed disabled:opacity-60"
+                        className="flex self-stretch items-center justify-between gap-2 whitespace-nowrap rounded-[6px] px-1.5 py-1 text-left text-[13px] font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] disabled:cursor-not-allowed disabled:opacity-60"
                         disabled={isFieldUpdating}
                         key={field.id}
                         onClick={() => void handleFieldSelect(field.name)}
