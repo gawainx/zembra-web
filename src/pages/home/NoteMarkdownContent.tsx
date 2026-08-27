@@ -310,7 +310,7 @@ function NoteLinkPreview({
         {formatShortNoteRef(noteRef)}
       </button>
       {isOpen ? (
-        <span
+        <div
           className="fixed z-40 block w-72 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 py-2 text-left text-sm leading-6 text-[var(--color-text-primary)] shadow-[var(--color-shadow-float)]"
           style={{
             left: `${Math.max(8, previewPosition.left)}px`,
@@ -322,9 +322,10 @@ function NoteLinkPreview({
             isLoading,
             loadingLabel: t("note.linkPreview.loading"),
             previewContent: preview?.content,
+            onLoadNotePreview,
             unavailableLabel: t("note.linkPreview.unavailable"),
           })}
-        </span>
+        </div>
       ) : null}
     </span>
   );
@@ -335,12 +336,14 @@ function renderPreviewContent({
   hasError,
   isLoading,
   loadingLabel,
+  onLoadNotePreview,
   previewContent,
   unavailableLabel,
 }: {
   hasError: boolean;
   isLoading: boolean;
   loadingLabel: string;
+  onLoadNotePreview: (noteRef: string) => Promise<NoteDto>;
   previewContent?: string;
   unavailableLabel: string;
 }): ReactNode {
@@ -352,5 +355,12 @@ function renderPreviewContent({
     return unavailableLabel;
   }
 
-  return previewContent ?? unavailableLabel;
+  return previewContent !== undefined ? (
+    <NoteMarkdownContent
+      content={previewContent}
+      onLoadNotePreview={onLoadNotePreview}
+    />
+  ) : (
+    unavailableLabel
+  );
 }

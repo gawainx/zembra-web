@@ -827,7 +827,7 @@ test("mentions note links and previews linked note content", async () => {
         },
         {
           id: targetNoteId,
-          content: "target preview content",
+          content: "**target preview content**",
           role: "Human",
           createdAt: 1_779_382_320,
           updatedAt: 1_779_382_320,
@@ -858,7 +858,8 @@ test("mentions note links and previews linked note content", async () => {
     }),
   );
 
-  expect(await screen.findByText("target preview content")).not.toBeNull();
+  const previewContent = await screen.findByText("target preview content");
+  expect(previewContent.closest("strong")).not.toBeNull();
 });
 
 /** Verifies mention inserts into the active inline editor when a note is being edited. */
