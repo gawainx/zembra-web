@@ -46,9 +46,14 @@ export function normalizeMarkdownSource(markdown: string): string {
   return markdown
     .replace(/\\#([^\s#@]+)/g, "#$1")
     .replace(
-      /\[([^\]\n]+)\]\\\(\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)\)/g,
-      (match, label: string, nestedLabel: string, url: string) =>
-        nestedLabel === url ? `[${label}](${url})` : match,
+      /\[([^\]\n]+)\]\\*\(\[(https?:\/\/[^\]\s]+)\]\(([^\s)]+)\)\)/g,
+      (match, label: string, nestedUrl: string, nestedTarget: string) => {
+        const targetWithoutProtocol = nestedUrl.replace(/^https?:\/\//, "");
+
+        return nestedTarget === nestedUrl || nestedTarget === targetWithoutProtocol
+          ? `[${label}](${nestedUrl})`
+          : match;
+      },
     )
     .replace(/\u00a0/g, " ");
 }

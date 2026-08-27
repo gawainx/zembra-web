@@ -189,7 +189,7 @@ test("renders a repaired escaped Markdown link from the full user content", asyn
       notes: [
         {
           id: "escaped-link-note",
-          content: `\\#cuda [${label}]\\([${url}](${url})) 这篇论文，离线固化图拓扑，并且有github可以参考`,
+        content: `#cuda [${label}]([${url}](github.com/foundry-org/foundry)) 这篇论文，离线固化图拓扑，并且有github可以参考`,
           role: "Human",
           createdAt: 1_779_382_320,
           updatedAt: 1_779_382_320,

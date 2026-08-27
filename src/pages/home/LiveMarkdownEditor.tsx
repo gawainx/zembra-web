@@ -155,7 +155,7 @@ export const LiveMarkdownEditor = forwardRef<
     const normalizedValue = normalizeMarkdownSource(value);
     const current = normalizeMarkdownSource(editor.getMarkdown());
 
-    if (current !== normalizedValue) {
+    if (value !== normalizedValue || current !== normalizedValue) {
       editor.commands.setContent(normalizedValue, {
         contentType: "markdown",
         emitUpdate: false,

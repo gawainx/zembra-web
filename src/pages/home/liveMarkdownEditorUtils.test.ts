@@ -76,10 +76,10 @@ describe("normalizeMarkdownSource", () => {
     );
   });
 
-  test("repairs escaped links with a nested URL-only link", () => {
+  test("repairs an observed nested link whose target omits the protocol", () => {
     expect(
       normalizeMarkdownSource(
-        "[Foundry]\\([https://github.com/foundry-org/foundry](https://github.com/foundry-org/foundry))",
+        "[Foundry]([https://github.com/foundry-org/foundry](github.com/foundry-org/foundry))",
       ),
     ).toBe("[Foundry](https://github.com/foundry-org/foundry)");
   });
@@ -87,7 +87,7 @@ describe("normalizeMarkdownSource", () => {
   test("repairs the full escaped link content reported from a note card", () => {
     expect(
       normalizeMarkdownSource(
-        "\\#cuda [foundry-org/foundry: Foundry materializes CUDA graphs along with its execution context to disk to support fast cold start of serving engines.]\\([https://github.com/foundry-org/foundry](https://github.com/foundry-org/foundry)) 这篇论文，离线固化图拓扑，并且有github可以参考",
+        "#cuda [foundry-org/foundry: Foundry materializes CUDA graphs along with its execution context to disk to support fast cold start of serving engines.]([https://github.com/foundry-org/foundry](github.com/foundry-org/foundry)) 这篇论文，离线固化图拓扑，并且有github可以参考",
       ),
     ).toBe(
       "#cuda [foundry-org/foundry: Foundry materializes CUDA graphs along with its execution context to disk to support fast cold start of serving engines.](https://github.com/foundry-org/foundry) 这篇论文，离线固化图拓扑，并且有github可以参考",
@@ -95,7 +95,7 @@ describe("normalizeMarkdownSource", () => {
   });
 
   test("keeps nested links with distinct display text unchanged", () => {
-    const markdown = "[Foundry]\\([project page](https://github.com/foundry-org/foundry))";
+    const markdown = "[Foundry]([project page](github.com/foundry-org/foundry))";
 
     expect(normalizeMarkdownSource(markdown)).toBe(markdown);
   });
