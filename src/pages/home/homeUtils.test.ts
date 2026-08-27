@@ -15,6 +15,7 @@ import {
 
 const firstNoteId = "abcdef1234567890abcdef1234567890";
 const secondNoteId = "1234567890abcdef1234567890abcdef";
+const hyphenatedNoteId = "db4b2d02-fdfa-4915-8bfe-edfe685f54d11";
 
 describe("note link parsing", () => {
   test("extracts full UUID note links with anchor text and position", () => {
@@ -42,8 +43,30 @@ describe("note link parsing", () => {
     ]);
   });
 
-  test("ignores short or non-hex note link candidates", () => {
-    expect(parseNoteLinks("[[abc123]] [[not-a-note-id]]")).toEqual([]);
+  test("extracts the note ID format emitted by Mention", () => {
+    expect(parseNoteLinks(`see [[${hyphenatedNoteId}]] now`)).toEqual([
+      {
+        anchorText: `[[${hyphenatedNoteId}]]`,
+        position: 4,
+        targetNoteRef: hyphenatedNoteId,
+      },
+    ]);
+  });
+
+  test("accepts full opaque note IDs and ignores malformed delimiters", () => {
+    expect(parseNoteLinks("[[abc123]] [[note-ref-alpha]]")).toEqual([
+      {
+        anchorText: "[[abc123]]",
+        position: 0,
+        targetNoteRef: "abc123",
+      },
+      {
+        anchorText: "[[note-ref-alpha]]",
+        position: 11,
+        targetNoteRef: "note-ref-alpha",
+      },
+    ]);
+    expect(parseNoteLinks("[[has a space]] [[unclosed]")).toEqual([]);
   });
 
   test("formats note references as six-character labels", () => {

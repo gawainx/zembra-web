@@ -19,7 +19,8 @@ export interface TagFilterMatch {
   names: string[];
 }
 
-const fullNoteLinkPattern = /\[\[([A-Fa-f0-9]{32})\]\]/g;
+/** Matches complete non-whitespace note IDs inside Zembra double-bracket references. */
+export const fullNoteLinkPattern = /\[\[([^\[\]\s]+)\]\]/g;
 
 /** Applies current home feed filters to recent notes. */
 export function filterVisibleNotes(

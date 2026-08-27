@@ -7,6 +7,7 @@ import { useRef, useState, type ReactNode } from "react";
 import type { NoteDto } from "../../api/types";
 import {
   formatShortNoteRef,
+  fullNoteLinkPattern,
 } from "./homeUtils";
 import { normalizeMarkdownSource } from "./liveMarkdownEditorUtils";
 
@@ -146,7 +147,10 @@ function isLinkNode(node: MarkdownNode | undefined): node is MarkdownLinkNode {
 /** Splits one text node into plain text, internal note-link, and tag nodes. */
 function createInlineTokenNodes(value: string): MarkdownNode[] {
   const nodes: MarkdownNode[] = [];
-  const tokenPattern = /\[\[([A-Fa-f0-9]{32})\]\]|(^|\s)#([^\s#@]+)/g;
+  const tokenPattern = new RegExp(
+    `${fullNoteLinkPattern.source}|(^|\\s)#([^\\s#@]+)`,
+    "g",
+  );
   let cursor = 0;
 
   for (const match of value.matchAll(tokenPattern)) {

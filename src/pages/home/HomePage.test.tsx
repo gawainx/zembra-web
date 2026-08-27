@@ -811,8 +811,8 @@ test("mentions note links and previews linked note content", async () => {
   renderHomePage();
   await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
 
-  const sourceNoteId = "fedcba1234567890fedcba1234567890";
-  const targetNoteId = "abcdef1234567890abcdef1234567890";
+  const sourceNoteId = "fedcba12-3456-7890-fedc-ba1234567890";
+  const targetNoteId = "abcdef12-3456-7890-abcd-ef1234567890";
 
   act(() => {
     useNotesStore.setState({
@@ -913,7 +913,7 @@ test("submits parsed note links when creating and editing notes", async () => {
   renderHomePage();
   await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
 
-  const targetNoteId = "abcdef1234567890abcdef1234567890";
+  const targetNoteId = "abcdef12-3456-7890-abcd-ef1234567890";
   const createNote = vi.fn(async () => undefined);
   const updateNote = vi.fn(async () => undefined);
 
