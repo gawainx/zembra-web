@@ -204,6 +204,13 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
     });
   }
 
+  /** Clears every sidebar classification filter and restores all recent notes. */
+  async function handleAllNotesSelect() {
+    setSelectedField(undefined);
+    setSelectedTag(undefined);
+    await setSelectedRole(undefined);
+  }
+
   /** Starts editing a note when no other card owns a draft. */
   function handleEditStart(note: NoteDto) {
     if (editingNoteId && editingNoteId !== note.id) {
@@ -417,14 +424,18 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
           </div>
 
           <div className="hidden min-h-0 flex-1 overflow-y-auto pb-44 pr-1 lg:block">
+            <NavItem
+              active={
+                selectedRole === undefined &&
+                selectedField === undefined &&
+                selectedTag === undefined
+              }
+              count={roleTotalCount}
+              label={t("sidebar.allNotes")}
+              prefix={<List className="size-4" aria-hidden="true" />}
+              onClick={() => void handleAllNotesSelect()}
+            />
             <SidebarSection className="mt-4" title={t("sidebar.roles")}>
-              <NavItem
-                active={selectedRole === undefined}
-                count={roleTotalCount}
-                label={t("sidebar.all")}
-                prefix={<List className="size-4" aria-hidden="true" />}
-                onClick={() => void setSelectedRole(undefined)}
-              />
               {Array.from(roleUsage.entries()).map(([role, count]) => {
                 const label = role || t("sidebar.unknownRole");
 
@@ -448,14 +459,6 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
             </SidebarSection>
 
             <SidebarSection title={t("sidebar.fields")}>
-              <NavItem
-                active={selectedField === undefined}
-                count={notes.length}
-                label={t("sidebar.all")}
-                prefix="@"
-                tone="field"
-                onClick={() => setSelectedField(undefined)}
-              />
               {fields.map((field) => (
                 <NavItem
                   active={selectedField === field.id}

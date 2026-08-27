@@ -72,6 +72,7 @@ export const home = {
   },
   sidebar: {
     all: "全部",
+    allNotes: "全部筆記",
     collapseTag: "收合 {{tag}}",
     emptyTags: "暫無標籤",
     expandTag: "展開 {{tag}}",

@@ -72,6 +72,7 @@ export const home = {
   },
   sidebar: {
     all: "全部",
+    allNotes: "全部笔记",
     collapseTag: "折叠 {{tag}}",
     emptyTags: "暂无标签",
     expandTag: "展开 {{tag}}",

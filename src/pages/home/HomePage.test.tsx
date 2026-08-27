@@ -455,8 +455,8 @@ test("renders note card content as GFM markdown", async () => {
   expect((noteCard as HTMLElement).textContent).toContain("<span>raw html</span>");
 });
 
-/** Verifies field navigation counts use actual note membership. */
-test("renders actual note counts for all and field navigation", async () => {
+/** Verifies the global all-notes count and field counts use actual note membership. */
+test("renders actual note counts for global all-notes and field navigation", async () => {
   renderHomePage();
 
   await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
@@ -487,19 +487,11 @@ test("renders actual note counts for all and field navigation", async () => {
           fieldId: "project-field",
           tags: [],
         },
-        {
-          id: "note-3",
-          content: "unfiled note",
-          role: "Human",
-          createdAt: 1_779_382_320,
-          updatedAt: 1_779_382_320,
-          tags: [],
-        },
       ],
     });
   });
 
-  expect(await sidebarNavCount("全部", 1)).toBe("3");
+  expect(await sidebarNavCount("全部笔记")).toBe("2");
   expect(await sidebarNavCount("inbox")).toBe("1");
   expect(await sidebarNavCount("project")).toBe("1");
   expect(await sidebarNavCount("empty")).toBe("0");
@@ -614,10 +606,16 @@ test("renders optional role navigation and filters fields and tags by role", asy
   expect(screen.queryByText("初始化")).toBeNull();
 
   await act(async () => {
-    fireEvent.click(screen.getAllByRole("button", { name: /全部/ })[0]);
+    useNotesStore.setState({
+      selectedField: "field-architecture",
+      selectedTag: "architecture",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "全部笔记" }));
   });
 
   await waitFor(() => expect(useNotesStore.getState().selectedRole).toBeUndefined());
+  expect(useNotesStore.getState().selectedField).toBeUndefined();
+  expect(useNotesStore.getState().selectedTag).toBeUndefined();
   expect(useNotesStore.getState().notes.map((note) => note.role).sort()).toEqual([
     "Agent",
     "Human",

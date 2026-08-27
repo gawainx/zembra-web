@@ -72,6 +72,7 @@ export const home = {
   },
   sidebar: {
     all: "All",
+    allNotes: "All notes",
     collapseTag: "Collapse {{tag}}",
     emptyTags: "No tags yet",
     expandTag: "Expand {{tag}}",
