@@ -12,7 +12,7 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Extension } from "@tiptap/core";
 import { Plugin } from "@tiptap/pm/state";
-import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { Decoration, DecorationSet, type EditorView } from "@tiptap/pm/view";
 import {
   forwardRef,
   type FormEvent,
@@ -116,6 +116,7 @@ export const LiveMarkdownEditor = forwardRef<
     contentType: "markdown",
     editable: !disabled,
     editorProps: {
+      handlePaste: handlePlainTextPaste,
       attributes: {
         "aria-label": placeholder,
         class: [
@@ -352,6 +353,23 @@ export const LiveMarkdownEditor = forwardRef<
     </div>
   );
 });
+
+/** Inserts clipboard plain text so external rich-text marks never enter the editor. */
+function handlePlainTextPaste(view: EditorView, event: ClipboardEvent): boolean {
+  const clipboardData = event.clipboardData;
+
+  if (!clipboardData) {
+    return false;
+  }
+
+  event.preventDefault();
+  const plainText = clipboardData.getData("text/plain");
+  const { from, to } = view.state.selection;
+  const transaction = view.state.tr.insertText(plainText, from, to).scrollIntoView();
+
+  view.dispatch(transaction);
+  return true;
+}
 
 /** Adds visual chip decoration to hash tags while keeping plain Markdown text editable. */
 function tagChipDecorationExtension() {

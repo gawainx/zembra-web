@@ -129,6 +129,26 @@ test("previews composer toolbar actions in the live Markdown editor", async () =
   expect(markdownValue(composer)).toBe("**important**");
 });
 
+/** Verifies rich-text clipboard markup is discarded before insertion. */
+test("pastes external rich text as unformatted plain text", async () => {
+  renderHomePage();
+
+  const composer = await findComposerEditor();
+  const getData = vi.fn((format: string) =>
+    format === "text/plain" ? "unstyled copied text" : "<u>styled copied text</u>",
+  );
+
+  act(() => {
+    fireEvent.paste(composer, { clipboardData: { getData } });
+  });
+
+  await waitFor(() =>
+    expect(markdownValue(composer)).toBe("unstyled copied text"),
+  );
+  expect(getData).toHaveBeenCalledWith("text/plain");
+  expect(composer.querySelector("u")).toBeNull();
+});
+
 /** Verifies rendered tag chips are not duplicated in note body text. */
 test("renders tag chips without repeating inline tag markers", async () => {
   renderHomePage();
