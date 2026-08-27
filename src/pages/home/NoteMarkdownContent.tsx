@@ -212,7 +212,7 @@ function createMarkdownComponents(
 
       return (
         <a
-          className="font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+          className="font-semibold text-[var(--color-field)] underline"
           href={href}
           rel="noreferrer"
           target="_blank"
