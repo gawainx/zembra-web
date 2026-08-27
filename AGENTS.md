@@ -88,6 +88,12 @@
 - Supabase SDK 只能在认证、实时订阅或明确直连场景中局部使用，禁止 UI 组件直接依赖 Supabase 查询实现。
 - 涉及数据库、schema、同步或持久化的新依赖，必须先记录到需求澄清文档，再进入设计或实现。
 
+### 生产包体约束
+- Vite 生产构建必须在 `vite.config.ts` 中使用 `manualChunks` 按加载边界拆分第三方依赖，禁止把 React、路由、i18n、图标、Supabase、富文本编辑器及其依赖混入同一个入口 chunk。
+- 仅在明确需要时才允许静态导入依赖；Supabase 登录与数据访问、Tiptap 与 ProseMirror 等非首屏能力必须通过动态导入延迟加载，避免默认首页预加载。
+- 新增或升级前端依赖、修改静态入口或调整构建配置后，必须运行 `npm run build` 检查产物。禁止通过提高 `chunkSizeWarningLimit`、关闭警告或其他方式掩盖超大 chunk。
+- 生产构建不得输出压缩后 JavaScript chunk 超过 500 kB 的警告。出现警告时，必须先定位依赖边界并完成合理拆包，再汇报完成。
+
 ### 日志规范
 - 涉及前后端边界、外部服务调用、启动门禁、配置读取写入和错误兜底时，必须合理补充关键日志。
 - 日志至少覆盖开始、成功、失败和关键上下文，避免吞掉异常；前端使用 `console.info`、`console.warn` 或 `console.error`。
