@@ -177,6 +177,29 @@ test("renders tag chips without repeating inline tag markers", async () => {
   );
 });
 
+/** Verifies cards repair the known escaped Markdown link shape before rendering. */
+test("renders repaired escaped Markdown links as titled external links", async () => {
+  renderHomePage();
+
+  useNotesStore.setState({
+    notes: [
+      {
+        id: "escaped-link-note",
+        content: "[Foundry]\\([https://github.com/foundry-org/foundry](https://github.com/foundry-org/foundry))",
+        role: "Human",
+        createdAt: 1_779_382_320,
+        updatedAt: 1_779_382_320,
+        tags: [],
+      },
+    ],
+  });
+
+  const link = await screen.findByRole("link", { name: "Foundry" });
+
+  expect(link.getAttribute("href")).toBe("https://github.com/foundry-org/foundry");
+  expect(link.textContent).toBe("Foundry");
+});
+
 /** Verifies rendered field metadata is not duplicated in note body text. */
 test("renders field metadata without repeating inline field markers", async () => {
   renderHomePage();

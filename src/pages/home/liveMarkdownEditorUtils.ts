@@ -41,10 +41,15 @@ export function getTagSuggestions(
   ];
 }
 
-/** Converts editor Markdown output into the note content format expected by parsers. */
-export function normalizeEditorMarkdown(markdown: string): string {
+/** Converts supported escaped Markdown source into the note content format expected by parsers. */
+export function normalizeMarkdownSource(markdown: string): string {
   return markdown
     .replace(/\\#([^\s#@]+)/g, "#$1")
+    .replace(
+      /\[([^\]\n]+)\]\\\(\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)\)/g,
+      (match, label: string, nestedLabel: string, url: string) =>
+        nestedLabel === url ? `[${label}](${url})` : match,
+    )
     .replace(/\u00a0/g, " ");
 }
 

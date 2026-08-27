@@ -8,6 +8,7 @@ import type { NoteDto } from "../../api/types";
 import {
   formatShortNoteRef,
 } from "./homeUtils";
+import { normalizeMarkdownSource } from "./liveMarkdownEditorUtils";
 
 const noteLinkUrlPrefix = "zembra-note://";
 const tagUrlPrefix = "zembra-tag://";
@@ -51,7 +52,7 @@ export function NoteMarkdownContent({
             : defaultUrlTransform(url)
         }
       >
-        {content}
+        {normalizeMarkdownSource(content)}
       </ReactMarkdown>
     </div>
   );

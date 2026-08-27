@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   findActiveTagQuery,
   getTagSuggestions,
-  normalizeEditorMarkdown,
+  normalizeMarkdownSource,
 } from "./liveMarkdownEditorUtils";
 
 const tags = [
@@ -69,10 +69,24 @@ describe("findActiveTagQuery", () => {
   });
 });
 
-describe("normalizeEditorMarkdown", () => {
+describe("normalizeMarkdownSource", () => {
   test("keeps hash tag markers parseable after markdown serialization", () => {
-    expect(normalizeEditorMarkdown("\\#books/hands-on-gpt\nnext")).toBe(
+    expect(normalizeMarkdownSource("\\#books/hands-on-gpt\nnext")).toBe(
       "#books/hands-on-gpt\nnext",
     );
+  });
+
+  test("repairs escaped links with a nested URL-only link", () => {
+    expect(
+      normalizeMarkdownSource(
+        "[Foundry]\\([https://github.com/foundry-org/foundry](https://github.com/foundry-org/foundry))",
+      ),
+    ).toBe("[Foundry](https://github.com/foundry-org/foundry)");
+  });
+
+  test("keeps nested links with distinct display text unchanged", () => {
+    const markdown = "[Foundry]\\([project page](https://github.com/foundry-org/foundry))";
+
+    expect(normalizeMarkdownSource(markdown)).toBe(markdown);
   });
 });

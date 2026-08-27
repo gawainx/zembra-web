@@ -27,7 +27,7 @@ import type { ComposerTool } from "./homeTypes";
 import {
   findActiveTagQuery,
   getTagSuggestions,
-  normalizeEditorMarkdown,
+  normalizeMarkdownSource,
   type TagSuggestion,
 } from "./liveMarkdownEditorUtils";
 
@@ -131,7 +131,7 @@ export const LiveMarkdownEditor = forwardRef<
     },
     extensions,
     onUpdate({ editor: currentEditor }) {
-      onChange(normalizeEditorMarkdown(currentEditor.getMarkdown()));
+      onChange(normalizeMarkdownSource(currentEditor.getMarkdown()));
       updateTagMenu(currentEditor);
     },
     onSelectionUpdate({ editor: currentEditor }) {
@@ -152,7 +152,7 @@ export const LiveMarkdownEditor = forwardRef<
       return;
     }
 
-    const current = normalizeEditorMarkdown(editor.getMarkdown());
+    const current = normalizeMarkdownSource(editor.getMarkdown());
 
     if (current !== value) {
       editor.commands.setContent(value, {
@@ -314,7 +314,7 @@ export const LiveMarkdownEditor = forwardRef<
       emitUpdate: false,
     });
     editor.view.dom.setAttribute("data-markdown-value", textContent);
-    onChange(normalizeEditorMarkdown(textContent));
+    onChange(normalizeMarkdownSource(textContent));
     updateTagMenu(editor);
   }
 
