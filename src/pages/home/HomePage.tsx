@@ -453,7 +453,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
             <DailyNotesHeatmap days={dailyNoteCounts} locale={i18n.resolvedLanguage} />
           </div>
 
-          <div className="hidden min-h-0 flex-1 overflow-y-auto pb-44 pr-1 lg:block">
+          <div className="hidden min-h-0 flex-1 overflow-y-auto pb-44 pr-1 pt-4 lg:block">
             <NavItem
               active={
                 selectedRole === undefined &&
