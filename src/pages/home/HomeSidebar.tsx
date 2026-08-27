@@ -111,7 +111,6 @@ export function NavItem({
   onClick,
   onDelete,
   prefix,
-  tone = "default",
 }: {
   active: boolean;
   count: number;
@@ -122,11 +121,8 @@ export function NavItem({
   onClick: () => void;
   onDelete?: () => void;
   prefix: ReactNode;
-  /** Visual semantic applied to a field navigation row. */
-  tone?: "default" | "field";
 }) {
   const canDelete = Boolean(onDelete && deleteLabel);
-  const isFieldTone = tone === "field";
 
   /** Runs the optional delete action without selecting the navigation row. */
   function handleDeleteClick(event: MouseEvent<HTMLButtonElement>) {
@@ -137,7 +133,7 @@ export function NavItem({
 
   return (
     <div
-      className={`group/nav grid min-h-9 grid-cols-[24px_1fr_28px] items-center gap-[var(--space-2)] rounded-[var(--radius-control)] px-[var(--space-3)] py-[var(--space-2)] text-left text-[15px] hover:bg-[var(--color-surface-muted)] data-[disabled=true]:opacity-45 data-[disabled=true]:hover:bg-transparent ${isFieldTone ? "text-[var(--color-field)] data-[active=true]:bg-[var(--color-accent-soft)] data-[active=true]:text-[var(--color-accent)]" : "text-[var(--color-text-secondary)] data-[active=true]:bg-[var(--color-accent-soft)] data-[active=true]:text-[var(--color-text-primary)]"}`}
+      className="group/nav grid min-h-9 grid-cols-[24px_1fr_28px] items-center gap-[var(--space-2)] rounded-[var(--radius-control)] px-[var(--space-3)] py-[var(--space-2)] text-left text-[15px] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] data-[active=true]:bg-[var(--color-accent-soft)] data-[active=true]:text-[var(--color-text-primary)] data-[disabled=true]:opacity-45 data-[disabled=true]:hover:bg-transparent"
       data-active={active}
       data-disabled={disabled}
     >
@@ -147,7 +143,7 @@ export function NavItem({
         type="button"
         onClick={onClick}
       >
-        <span className={`flex min-w-0 items-center justify-center text-center text-lg font-bold leading-none ${isFieldTone ? "text-[var(--color-field)] group-data-[active=true]/nav:text-[var(--color-accent)]" : "text-[var(--color-accent)]"}`}>
+        <span className="flex min-w-0 items-center justify-center text-center text-lg font-bold leading-none text-[var(--color-accent)]">
           {prefix}
         </span>
         <span className="min-w-0 truncate">{label}</span>

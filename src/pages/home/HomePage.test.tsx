@@ -594,6 +594,13 @@ test("renders optional role navigation and filters fields and tags by role", asy
     "Human",
   ]);
 
+  act(() => {
+    useNotesStore.setState({
+      selectedField: "field-architecture",
+      selectedTag: "architecture",
+    });
+  });
+
   await act(async () => {
     fireEvent.click(await screen.findByRole("button", { name: /Agent/ }));
   });
@@ -604,6 +611,8 @@ test("renders optional role navigation and filters fields and tags by role", asy
   expect(await screen.findByText(/数据库契约来自/)).not.toBeNull();
   expect(await sidebarNavCount("架构")).toBe("1");
   expect(screen.queryByText("初始化")).toBeNull();
+  expect(useNotesStore.getState().selectedField).toBeUndefined();
+  expect(useNotesStore.getState().selectedTag).toBeUndefined();
 
   await act(async () => {
     useNotesStore.setState({

@@ -208,7 +208,37 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
   async function handleAllNotesSelect() {
     setSelectedField(undefined);
     setSelectedTag(undefined);
-    await setSelectedRole(undefined);
+
+    if (selectedRole !== undefined) {
+      await setSelectedRole(undefined);
+    }
+  }
+
+  /** Selects one role and removes active field and tag filters. */
+  async function handleRoleSelect(role: string) {
+    setSelectedField(undefined);
+    setSelectedTag(undefined);
+    await setSelectedRole(role);
+  }
+
+  /** Selects one field and removes active role and tag filters. */
+  async function handleFieldSelect(fieldId: string) {
+    setSelectedTag(undefined);
+    setSelectedField(fieldId);
+
+    if (selectedRole !== undefined) {
+      await setSelectedRole(undefined);
+    }
+  }
+
+  /** Selects one tag and removes active role and field filters. */
+  async function handleTagSelect(path: string) {
+    setSelectedField(undefined);
+    setSelectedTag(path);
+
+    if (selectedRole !== undefined) {
+      await setSelectedRole(undefined);
+    }
   }
 
   /** Starts editing a note when no other card owns a draft. */
@@ -452,7 +482,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
                         <Bot className="size-4" aria-hidden="true" />
                       )
                     }
-                    onClick={() => void setSelectedRole(role)}
+                    onClick={() => void handleRoleSelect(role)}
                   />
                 );
               })}
@@ -472,13 +502,12 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
                   key={field.id}
                   label={field.name}
                   prefix="@"
-                  tone="field"
                   onDelete={
                     (fieldUsage.get(field.id) ?? 0) === 0
                       ? () => handleFieldDeleteRequest(field)
                       : undefined
                   }
-                  onClick={() => setSelectedField(field.id)}
+                  onClick={() => void handleFieldSelect(field.id)}
                 />
               ))}
             </SidebarSection>
@@ -518,9 +547,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
                         0,
                       ),
                   )}
-                  onSelect={(path) =>
-                    setSelectedTag(selectedTag === path ? undefined : path)
-                  }
+                  onSelect={(path) => void handleTagSelect(path)}
                   onToggle={handleTagRootToggle}
                 />
               ))}
