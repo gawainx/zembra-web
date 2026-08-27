@@ -152,16 +152,17 @@ export const LiveMarkdownEditor = forwardRef<
       return;
     }
 
+    const normalizedValue = normalizeMarkdownSource(value);
     const current = normalizeMarkdownSource(editor.getMarkdown());
 
-    if (current !== value) {
-      editor.commands.setContent(value, {
+    if (current !== normalizedValue) {
+      editor.commands.setContent(normalizedValue, {
         contentType: "markdown",
         emitUpdate: false,
       });
     }
 
-    editor.view.dom.setAttribute("data-markdown-value", value);
+    editor.view.dom.setAttribute("data-markdown-value", normalizedValue);
   }, [editor, value]);
 
   useImperativeHandle(

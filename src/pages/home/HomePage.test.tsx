@@ -178,26 +178,31 @@ test("renders tag chips without repeating inline tag markers", async () => {
 });
 
 /** Verifies cards repair the known escaped Markdown link shape before rendering. */
-test("renders repaired escaped Markdown links as titled external links", async () => {
+test("renders a repaired escaped Markdown link from the full user content", async () => {
   renderHomePage();
 
-  useNotesStore.setState({
-    notes: [
-      {
-        id: "escaped-link-note",
-        content: "[Foundry]\\([https://github.com/foundry-org/foundry](https://github.com/foundry-org/foundry))",
-        role: "Human",
-        createdAt: 1_779_382_320,
-        updatedAt: 1_779_382_320,
-        tags: [],
-      },
-    ],
+  const label = "foundry-org/foundry: Foundry materializes CUDA graphs along with its execution context to disk to support fast cold start of serving engines.";
+  const url = "https://github.com/foundry-org/foundry";
+
+  act(() => {
+    useNotesStore.setState({
+      notes: [
+        {
+          id: "escaped-link-note",
+          content: `\\#cuda [${label}]\\([${url}](${url})) 这篇论文，离线固化图拓扑，并且有github可以参考`,
+          role: "Human",
+          createdAt: 1_779_382_320,
+          updatedAt: 1_779_382_320,
+          tags: ["cuda"],
+        },
+      ],
+    });
   });
 
-  const link = await screen.findByRole("link", { name: "Foundry" });
+  const link = await screen.findByRole("link", { name: label });
 
-  expect(link.getAttribute("href")).toBe("https://github.com/foundry-org/foundry");
-  expect(link.textContent).toBe("Foundry");
+  expect(link.getAttribute("href")).toBe(url);
+  expect(link.textContent).toBe(label);
 });
 
 /** Verifies rendered field metadata is not duplicated in note body text. */

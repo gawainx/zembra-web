@@ -84,6 +84,16 @@ describe("normalizeMarkdownSource", () => {
     ).toBe("[Foundry](https://github.com/foundry-org/foundry)");
   });
 
+  test("repairs the full escaped link content reported from a note card", () => {
+    expect(
+      normalizeMarkdownSource(
+        "\\#cuda [foundry-org/foundry: Foundry materializes CUDA graphs along with its execution context to disk to support fast cold start of serving engines.]\\([https://github.com/foundry-org/foundry](https://github.com/foundry-org/foundry)) 这篇论文，离线固化图拓扑，并且有github可以参考",
+      ),
+    ).toBe(
+      "#cuda [foundry-org/foundry: Foundry materializes CUDA graphs along with its execution context to disk to support fast cold start of serving engines.](https://github.com/foundry-org/foundry) 这篇论文，离线固化图拓扑，并且有github可以参考",
+    );
+  });
+
   test("keeps nested links with distinct display text unchanged", () => {
     const markdown = "[Foundry]\\([project page](https://github.com/foundry-org/foundry))";
 

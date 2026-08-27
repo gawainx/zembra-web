@@ -31,6 +31,7 @@ import {
   TagTreeItem,
 } from "./HomeSidebar";
 import type { ComposerTool } from "./homeTypes";
+import { normalizeMarkdownSource } from "./liveMarkdownEditorUtils";
 import {
   buildTagFilterMatch,
   buildTagTree,
@@ -210,7 +211,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
     }
 
     setEditingNoteId(note.id);
-    setEditDraft(note.content);
+    setEditDraft(normalizeMarkdownSource(note.content));
   }
 
   /** Cancels the current note edit draft. */
