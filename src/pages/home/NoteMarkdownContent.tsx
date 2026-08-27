@@ -71,7 +71,7 @@ function transformInlineTokens(node: MarkdownNode): void {
     return;
   }
 
-  node.children = node.children.flatMap((child) => {
+  node.children = repairMalformedExternalLinks(node.children).flatMap((child) => {
     if ("type" in child && child.type === "text") {
       return createInlineTokenNodes(child.value);
     }
@@ -83,6 +83,64 @@ function transformInlineTokens(node: MarkdownNode): void {
     transformInlineTokens(child);
     return [child];
   });
+}
+
+/** Reassembles the exact text-link-text node sequence produced by malformed external links. */
+function repairMalformedExternalLinks(children: MarkdownNode[]): MarkdownNode[] {
+  const repairedChildren: MarkdownNode[] = [];
+
+  for (let index = 0; index < children.length; index += 1) {
+    const previous = children[index];
+    const link = children[index + 1];
+    const following = children[index + 2];
+
+    if (
+      !isTextNode(previous) ||
+      !isLinkNode(link) ||
+      !isTextNode(following)
+    ) {
+      repairedChildren.push(previous);
+      continue;
+    }
+
+    const match = /\[([^\]\n]+)\]\($/.exec(previous.value);
+
+    if (
+      !match ||
+      !following.value.startsWith(")") ||
+      link.children.length !== 1 ||
+      link.children[0].value !== link.url ||
+      !/^https?:\/\//.test(link.url)
+    ) {
+      repairedChildren.push(previous);
+      continue;
+    }
+
+    appendTextNode(
+      repairedChildren,
+      previous.value.slice(0, previous.value.length - match[0].length),
+    );
+    repairedChildren.push({
+      type: "link",
+      url: link.url,
+      title: null,
+      children: [{ type: "text", value: match[1] }],
+    });
+    appendTextNode(repairedChildren, following.value.slice(1));
+    index += 2;
+  }
+
+  return repairedChildren;
+}
+
+/** Returns whether a Markdown node is a text node. */
+function isTextNode(node: MarkdownNode | undefined): node is MarkdownTextNode {
+  return node !== undefined && "type" in node && node.type === "text";
+}
+
+/** Returns whether a Markdown node is an external link node. */
+function isLinkNode(node: MarkdownNode | undefined): node is MarkdownLinkNode {
+  return node !== undefined && "type" in node && node.type === "link";
 }
 
 /** Splits one text node into plain text, internal note-link, and tag nodes. */

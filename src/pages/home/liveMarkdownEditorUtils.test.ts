@@ -76,6 +76,16 @@ describe("normalizeMarkdownSource", () => {
     );
   });
 
+  test("repairs the escaped link delimiters emitted by the editor", () => {
+    expect(
+      normalizeMarkdownSource(
+        "#cuda \\[foundry-org/foundry: Foundry materializes CUDA graphs along with its execution context to disk to support fast cold start of serving engines.\\](https://github.com/foundry-org/foundry) 这篇论文，离线固化图拓扑，并且有github可以参考",
+      ),
+    ).toBe(
+      "#cuda [foundry-org/foundry: Foundry materializes CUDA graphs along with its execution context to disk to support fast cold start of serving engines.](https://github.com/foundry-org/foundry) 这篇论文，离线固化图拓扑，并且有github可以参考",
+    );
+  });
+
   test("repairs an observed nested link whose target omits the protocol", () => {
     expect(
       normalizeMarkdownSource(

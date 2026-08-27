@@ -177,8 +177,8 @@ test("renders tag chips without repeating inline tag markers", async () => {
   );
 });
 
-/** Verifies cards repair the known escaped Markdown link shape before rendering. */
-test("renders a repaired escaped Markdown link from the full user content", async () => {
+/** Verifies cards repair the editor-escaped link delimiters before rendering. */
+test("renders a repaired editor-escaped Markdown link from the full user content", async () => {
   renderHomePage();
 
   const label = "foundry-org/foundry: Foundry materializes CUDA graphs along with its execution context to disk to support fast cold start of serving engines.";
@@ -189,7 +189,7 @@ test("renders a repaired escaped Markdown link from the full user content", asyn
       notes: [
         {
           id: "escaped-link-note",
-        content: `#cuda [${label}]([${url}](github.com/foundry-org/foundry)) 这篇论文，离线固化图拓扑，并且有github可以参考`,
+          content: `#cuda \\[${label}\\](${url}) 这篇论文，离线固化图拓扑，并且有github可以参考`,
           role: "Human",
           createdAt: 1_779_382_320,
           updatedAt: 1_779_382_320,
