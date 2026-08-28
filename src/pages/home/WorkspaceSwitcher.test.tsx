@@ -60,6 +60,29 @@ test("submits a renamed workspace on focus loss", async () => {
   );
 });
 
+/** Verifies the edit control becomes a submit action while the name is editable. */
+test("submits a renamed workspace from the confirmation control", async () => {
+  const renameWorkspace = vi.fn(async () => undefined);
+  render(
+    <WorkspaceSwitcher
+      workspace={workspace}
+      workspaces={[workspace]}
+      onWorkspaceChange={() => undefined}
+      onWorkspaceRename={renameWorkspace}
+    />,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Rename workspace" }));
+  fireEvent.change(screen.getByRole("textbox", { name: "Workspace name" }), {
+    target: { value: "Renamed notes" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Save workspace name" }));
+
+  await waitFor(() =>
+    expect(renameWorkspace).toHaveBeenCalledWith("workspace-1", "Renamed notes"),
+  );
+});
+
 /** Verifies an empty workspace name remains editable without a write request. */
 test("does not submit an empty workspace name on focus loss", () => {
   const renameWorkspace = vi.fn(async () => undefined);

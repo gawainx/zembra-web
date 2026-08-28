@@ -90,5 +90,6 @@ export const home = {
   workspace: {
     nameInput: "Workspace name",
     rename: "Rename workspace",
+    save: "Save workspace name",
   },
 };

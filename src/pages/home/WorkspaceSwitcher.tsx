@@ -1,4 +1,4 @@
-import { ChevronDown, Pencil } from "lucide-react";
+import { Check, ChevronDown, Pencil } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { ActiveWorkspace } from "../../app/workspace-context";
@@ -117,13 +117,24 @@ export function WorkspaceSwitcher({
       )}
       {onWorkspaceRename ? (
         <button
-          aria-label={t("workspace.rename")}
+          aria-label={isEditing ? t("workspace.save") : t("workspace.rename")}
           className="flex size-[var(--icon-hit-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
           disabled={isSaving}
           type="button"
-          onClick={handleRenameStart}
+          onClick={() => {
+            if (isEditing) {
+              void handleRenameSubmit();
+              return;
+            }
+
+            handleRenameStart();
+          }}
         >
-          <Pencil className="size-[var(--icon-size)]" aria-hidden="true" />
+          {isEditing ? (
+            <Check className="size-[var(--icon-size)]" aria-hidden="true" />
+          ) : (
+            <Pencil className="size-[var(--icon-size)]" aria-hidden="true" />
+          )}
         </button>
       ) : null}
     </div>
