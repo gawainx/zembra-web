@@ -15,6 +15,7 @@ import { ThemeToggle } from "../../app/ThemeToggle";
 import { useWorkspace } from "../../app/workspace-context";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getDataSourceMode, syncClient as defaultSyncClient } from "../../api/client";
+import { defaultFieldName } from "../../api/defaultField";
 import { ApiError } from "../../api/http";
 import type { SyncClient } from "../../api/sync.client";
 import { useNotesStore } from "../../features/notes/noteStore";
@@ -56,17 +57,19 @@ interface HomePageProps {
 export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
   const { i18n, t } = useTranslation("home");
   const composerRef = useRef<NoteEditorHandle>(null);
-  const { workspace, workspaces, switchWorkspace } = useWorkspace();
+  const { workspace, workspaces, switchWorkspace, renameWorkspace } = useWorkspace();
   const [draft, setDraft] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<string>();
   const [editDraft, setEditDraft] = useState("");
-  const [isUpdating, setIsUpdating] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<string | undefined>();
   const [syncError, setSyncError] = useState<string | undefined>();
   const [pendingDeleteField, setPendingDeleteField] = useState<FieldDto>();
-  const [isFieldDeleting, setIsFieldDeleting] = useState(false);
-  const [fieldDeleteError, setFieldDeleteError] = useState<string | undefined>();
+
+  useEffect(() => {
+    document.title = `${workspace.title} - Zembra`;
+  }, [workspace.title]);
+
   const {
     notes,
     roleNavigationNotes,
@@ -174,7 +177,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
     const field =
       fieldNames[0] ??
       fields.find((item) => item.id === selectedField)?.name ??
-      "inbox";
+      defaultFieldName;
     const tags = parseTagNames(content);
     const links = parseNoteLinks(content);
 
@@ -273,8 +276,8 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
     );
   }
 
-  /** Persists the current edit draft and exits edit mode on success. */
-  async function handleEditSubmit() {
+  /** Optimistically persists the current edit draft and immediately exits edit mode. */
+  function handleEditSubmit() {
     if (!editingNoteId) {
       return;
     }
@@ -287,23 +290,22 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
 
     const fieldNames = parseFieldNames(content);
 
-    setIsUpdating(true);
-    try {
-      await updateNote(editingNoteId, {
-        content,
-        field: fieldNames[0] ?? null,
-        links: parseNoteLinks(content),
-        tags: parseTagNames(content),
-      });
-      handleEditCancel();
-    } finally {
-      setIsUpdating(false);
-    }
+    const existingFieldName = fieldNameById.get(
+      notes.find((note) => note.id === editingNoteId)?.fieldId ?? "",
+    );
+
+    void updateNote(editingNoteId, {
+      content,
+      field: fieldNames[0] ?? existingFieldName ?? defaultFieldName,
+      links: parseNoteLinks(content),
+      tags: parseTagNames(content),
+    });
+    handleEditCancel();
   }
 
   /** Persists a field-only change for one note without changing navigation filters. */
-  async function handleNoteFieldChange(note: NoteDto, field: string) {
-    await updateNote(note.id, {
+  function handleNoteFieldChange(note: NoteDto, field: string) {
+    void updateNote(note.id, {
       content: note.content,
       field,
       links: parseNoteLinks(note.content),
@@ -314,49 +316,21 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
   /** Opens the in-app confirmation dialog for deleting an unused field. */
   function handleFieldDeleteRequest(field: FieldDto) {
     setPendingDeleteField(field);
-    setFieldDeleteError(undefined);
   }
 
-  /** Closes the field deletion dialog when no deletion request is running. */
+  /** Closes the field deletion dialog. */
   function handleFieldDeleteCancel() {
-    if (isFieldDeleting) {
-      return;
-    }
-
     setPendingDeleteField(undefined);
-    setFieldDeleteError(undefined);
   }
 
-  /** Confirms deletion of the pending unused field. */
-  async function handleFieldDeleteConfirm() {
+  /** Optimistically removes the pending unused field and queues deletion. */
+  function handleFieldDeleteConfirm() {
     if (!pendingDeleteField) {
       return;
     }
 
-    setIsFieldDeleting(true);
-    setFieldDeleteError(undefined);
-    console.info("[zembra] Deleting unused field", {
-      fieldId: pendingDeleteField.id,
-      fieldName: pendingDeleteField.name,
-    });
-
-    try {
-      await deleteField(pendingDeleteField.id);
-      console.info("[zembra] Deleted unused field", {
-        fieldId: pendingDeleteField.id,
-        fieldName: pendingDeleteField.name,
-      });
-      setPendingDeleteField(undefined);
-    } catch (error) {
-      console.warn("[zembra] Failed to delete unused field", {
-        error,
-        fieldId: pendingDeleteField.id,
-        fieldName: pendingDeleteField.name,
-      });
-      setFieldDeleteError(formatFieldDeleteError(error, t));
-    } finally {
-      setIsFieldDeleting(false);
-    }
+    void deleteField(pendingDeleteField.id);
+    setPendingDeleteField(undefined);
   }
 
   /** Triggers a manual synchronization cycle from the home workspace. */
@@ -395,6 +369,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
                   workspace={workspace}
                   workspaces={workspaces}
                   onWorkspaceChange={switchWorkspace}
+                  onWorkspaceRename={renameWorkspace}
                 />
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -493,7 +468,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
                 <NavItem
                   active={selectedField === field.id}
                   count={fieldUsage.get(field.id) ?? 0}
-                  deleteDisabled={isFieldDeleting}
+                  deleteDisabled={false}
                   deleteLabel={
                     (fieldUsage.get(field.id) ?? 0) === 0
                       ? t("field.delete.action", { field: field.name })
@@ -592,7 +567,6 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
                   onMention={handleMentionNote}
                   fieldName={note.fieldId ? fieldNameById.get(note.fieldId) : undefined}
                   isEditing={editingNoteId === note.id}
-                  isUpdating={isUpdating}
                   key={note.id}
                   locale={i18n.resolvedLanguage}
                   note={note}
@@ -640,9 +614,9 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
         </form>
         {pendingDeleteField ? (
           <FieldDeleteDialog
-            error={fieldDeleteError}
+            error={undefined}
             field={pendingDeleteField}
-            isDeleting={isFieldDeleting}
+            isDeleting={false}
             t={t}
             onCancel={handleFieldDeleteCancel}
             onConfirm={() => void handleFieldDeleteConfirm()}
@@ -660,22 +634,6 @@ function formatErrorMessage(error: unknown): string {
   }
 
   return "Request failed";
-}
-
-/** Formats field deletion errors into localized user-facing copy. */
-function formatFieldDeleteError(
-  error: unknown,
-  t: (key: string) => string,
-): string {
-  if (error instanceof ApiError && error.status === 409) {
-    return t("field.delete.errorInUse");
-  }
-
-  if (error instanceof ApiError || error instanceof Error) {
-    return error.message || t("field.delete.errorGeneric");
-  }
-
-  return t("field.delete.errorGeneric");
 }
 
 /** Renders the in-app confirmation dialog for deleting an unused field. */

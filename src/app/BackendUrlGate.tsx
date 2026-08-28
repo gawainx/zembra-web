@@ -218,8 +218,8 @@ export function BackendUrlGate({ children, dataSourceControl }: BackendUrlGatePr
     return (
       <WorkspaceProvider
         switchWorkspace={activateBackendWorkspace}
-        workspace={{ id: selectedWorkspace.workspace_id, name: formatWorkspaceOption(selectedWorkspace) }}
-        workspaces={workspaces.map((workspace) => ({ id: workspace.workspace_id, name: formatWorkspaceOption(workspace) }))}
+        workspace={{ id: selectedWorkspace.workspace_id, name: formatWorkspaceOption(selectedWorkspace), title: formatWorkspaceName(selectedWorkspace) }}
+        workspaces={workspaces.map((workspace) => ({ id: workspace.workspace_id, name: formatWorkspaceOption(workspace), title: formatWorkspaceName(workspace) }))}
       >
         {children}
       </WorkspaceProvider>
@@ -361,9 +361,15 @@ function findWorkspaceWithMostVisibleNotes(
 
 /** Formats one workspace option with a display name and note count. */
 function formatWorkspaceOption(workspace: WorkspaceSummary): string {
-  const name =
+  const name = formatWorkspaceName(workspace);
+  return `${name}(note count: ${workspace.visible_note_count})`;
+}
+
+/** Returns the workspace name without list-only metadata. */
+function formatWorkspaceName(workspace: WorkspaceSummary): string {
+  return (
     workspace.workspace_name?.trim() ||
     workspace.short_hash.trim() ||
-    workspace.workspace_id.slice(0, 8);
-  return `${name}(note count: ${workspace.visible_note_count})`;
+    workspace.workspace_id.slice(0, 8)
+  );
 }

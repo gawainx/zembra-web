@@ -9,6 +9,7 @@ import type {
   RecentNotesQuery,
   UpdateNoteInput,
 } from "./types";
+import { resolveRequiredFieldName } from "./defaultField";
 
 interface SupabaseNoteRow {
   id: string;
@@ -108,7 +109,10 @@ export function createSupabaseNotesClient(
     async updateNote(noteRef, input) {
       const existing = await resolveNoteRow(client, workspaceId, noteRef);
       const now = currentUnixSeconds();
-      const fieldId = await ensureField(client, workspaceId, input.field, now);
+      const fieldId =
+        input.field === undefined && existing.field_id
+          ? existing.field_id
+          : await ensureField(client, workspaceId, input.field, now);
       const { error } = await client
         .from("notes")
         .update({ content: input.content, field_id: fieldId, updated_at: now })
@@ -202,12 +206,9 @@ function mapNoteRow(note: SupabaseNoteRow, tags: string[]): NoteDto {
   return { id: note.id, content: note.content, role: note.role, fieldId: note.field_id ?? undefined, createdAt: note.created_at, updatedAt: note.updated_at, tags };
 }
 
-/** Creates or reuses the field named by an editor input. */
-async function ensureField(client: SupabaseClient, workspaceId: string, fieldName: string | null | undefined, now: number): Promise<string | null> {
-  const normalizedName = fieldName?.trim();
-  if (!normalizedName) {
-    return null;
-  }
+/** Creates or reuses the required field named by an editor input. */
+async function ensureField(client: SupabaseClient, workspaceId: string, fieldName: string | null | undefined, now: number): Promise<string> {
+  const normalizedName = resolveRequiredFieldName(fieldName);
   const { data, error } = await client.from("fields").select("id").eq("workspace_id", workspaceId).eq("name", normalizedName).maybeSingle();
   throwSupabaseError(error, "look up field");
   if (data) {
@@ -215,8 +216,20 @@ async function ensureField(client: SupabaseClient, workspaceId: string, fieldNam
   }
   const id = crypto.randomUUID();
   const { error: insertError } = await client.from("fields").insert({ id, workspace_id: workspaceId, name: normalizedName, created_at: now });
+  if (insertError && isUniqueConstraintError(insertError)) {
+    const { data: existingField, error: retryError } = await client.from("fields").select("id").eq("workspace_id", workspaceId).eq("name", normalizedName).maybeSingle();
+    throwSupabaseError(retryError, "recheck field after concurrent creation");
+    if (existingField) {
+      return existingField.id as string;
+    }
+  }
   throwSupabaseError(insertError, "create field");
   return id;
+}
+
+/** Checks whether a failed insert lost the field-name uniqueness race. */
+function isUniqueConstraintError(error: { code?: string }): boolean {
+  return error.code === "23505";
 }
 
 /** Replaces all tag associations for a note while ensuring the selected hierarchy paths exist. */

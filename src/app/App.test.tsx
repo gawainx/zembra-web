@@ -113,6 +113,19 @@ test("saves a reachable backend URL and selected workspace before rendering note
       return new Response(null, { status: 204 });
     }
 
+    if (url.includes("/fields")) {
+      return new Response(JSON.stringify({ fields: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+    }
+    if (url.includes("/tags")) {
+      return new Response(JSON.stringify({ tags: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+    }
+    if (url.includes("daily-counts")) {
+      return new Response(JSON.stringify({ days: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+    }
+    if (url.includes("/notes/recent")) {
+      return new Response(JSON.stringify({ notes: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+    }
+
     return new Response(
       JSON.stringify({
         workspaces: [

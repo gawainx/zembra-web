@@ -87,4 +87,9 @@ export const home = {
     notes: "Notes",
     tags: "Tags",
   },
+  workspace: {
+    nameInput: "Workspace name",
+    rename: "Rename workspace",
+    save: "Save workspace name",
+  },
 };

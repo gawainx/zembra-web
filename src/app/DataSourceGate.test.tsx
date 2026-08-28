@@ -32,6 +32,7 @@ vi.mock("../api/supabase.client", () => ({
     url: "https://project.supabase.co",
   }),
   listSupabaseWorkspaces: mocks.listSupabaseWorkspaces,
+  renameSupabaseWorkspace: vi.fn(),
   SupabaseConfigurationError: class SupabaseConfigurationError extends Error {},
 }));
 

@@ -2,13 +2,26 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import { createRootRoute, createRoute, createRouter, RouterProvider } from "@tanstack/react-router";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import type { SyncClient } from "../../api/sync.client";
-import { ApiError } from "../../api/http";
 import { i18next } from "../../i18n";
 import { useNotesStore } from "../../features/notes/noteStore";
 import { ThemeProvider } from "../../app/ThemeProvider";
 import { WorkspaceProvider } from "../../app/workspace-context";
 import { HomePage } from "./HomePage";
 import { formatNoteTimestamp } from "./homeUtils";
+
+const clientMocks = vi.hoisted(() => ({
+  notes: {} as Record<string, unknown>,
+  taxonomy: {} as Record<string, unknown>,
+}));
+
+vi.mock("../../api/client", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../api/client")>();
+  return {
+    ...actual,
+    getNotesClient: () => clientMocks.notes,
+    getTaxonomyClient: () => clientMocks.taxonomy,
+  };
+});
 
 beforeEach(async () => {
   await i18next.changeLanguage("zh-CN");
@@ -66,6 +79,13 @@ test("renders daily note count heatmap from store data", async () => {
   expect((await screen.findAllByLabelText(/3 条笔记/)).length).toBeGreaterThan(0);
 });
 
+/** Verifies the active workspace is reflected in the browser title. */
+test("sets the browser title from the active workspace", () => {
+  renderHomePage();
+
+  expect(document.title).toBe("Test workspace - Zembra");
+});
+
 /** Verifies that inline note editing parses the first field and locks other cards. */
 test("edits one note inline and warns when multiple fields are present", async () => {
   renderHomePage();
@@ -99,6 +119,47 @@ test("edits one note inline and warns when multiple fields are present", async (
   expect(await screen.findByText(/edited content/)).not.toBeNull();
   await waitFor(() =>
     expect(screen.queryByText("检测到多个 Field，本次只使用 @project")).toBeNull(),
+  );
+});
+
+/** Verifies editing without an inline field preserves the note's existing field. */
+test("preserves the existing field when editing without an inline field", async () => {
+  renderHomePage();
+  await waitFor(() => expect(useNotesStore.getState().fields.length).toBeGreaterThan(0));
+  const updateNote = vi.fn(async () => undefined);
+  const note = {
+    id: "project-note",
+    content: "project note",
+    createdAt: 1,
+    fieldId: "field-project",
+    role: "Human",
+    tags: [],
+    updatedAt: 1,
+  };
+
+  act(() => {
+    useNotesStore.setState({
+      fields: [{ id: "field-project", name: "project", createdAt: 1 }],
+      notes: [note],
+      roleNavigationNotes: [note],
+      updateNote,
+    });
+  });
+
+  const noteText = await screen.findByText("project note");
+  const card = noteText.closest("article");
+  expect(card).not.toBeNull();
+  fireEvent.doubleClick(card as HTMLElement);
+
+  const editor = await within(card as HTMLElement).findByRole("textbox");
+  changeMarkdownEditor(editor, "edited project note");
+  fireEvent.click(within(card as HTMLElement).getByRole("button", { name: "发送" }));
+
+  await waitFor(() =>
+    expect(updateNote).toHaveBeenCalledWith(
+      "project-note",
+      expect.objectContaining({ field: "project" }),
+    ),
   );
 });
 
@@ -551,17 +612,11 @@ test("deletes an empty field from the sidebar after in-app confirmation", async 
   expect(useNotesStore.getState().selectedField).toBeUndefined();
 });
 
-/** Verifies field deletion errors stay inside the confirmation dialog. */
-test("keeps an empty field when deletion fails", async () => {
+/** Verifies field deletion closes its dialog before the background result returns. */
+test("closes empty field deletion without blocking on the request", async () => {
   renderHomePage();
   await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
-  const deleteField = vi.fn(async () => {
-    throw new ApiError(409, {
-      code: "field_in_use",
-      details: {},
-      message: "field is still used",
-    });
-  });
+  const deleteField = vi.fn(async () => undefined);
 
   act(() => {
     useNotesStore.setState({
@@ -574,9 +629,9 @@ test("keeps an empty field when deletion fails", async () => {
   fireEvent.click(await screen.findByRole("button", { name: "删除 Field @empty" }));
   fireEvent.click(await screen.findByRole("button", { name: "删除" }));
 
-  expect(await screen.findByText("该 Field 仍有笔记，不能删除")).not.toBeNull();
+  await waitFor(() => expect(deleteField).toHaveBeenCalledWith("empty-field"));
   expect(await screen.findByText("empty")).not.toBeNull();
-  expect(screen.getByRole("dialog", { name: "删除 Field" })).not.toBeNull();
+  expect(screen.queryByRole("dialog", { name: "删除 Field" })).toBeNull();
 });
 
 /** Verifies role navigation is optional and filters the feed when selected. */
@@ -1199,8 +1254,71 @@ function createMockSyncClient(): SyncClient {
   };
 }
 
+/** Seeds deterministic note data without relying on production mock clients. */
+function configureHomeTestStore() {
+  const now = Math.floor(Date.now() / 1000);
+  useNotesStore.setState({
+    dailyNoteCounts: Array.from({ length: 30 }, (_, index) => ({
+      count: index % 9 === 0 ? 3 : index % 5 === 0 ? 1 : 0,
+      date: new Date((now - (29 - index) * 86_400) * 1000).toISOString().slice(0, 10),
+    })),
+    fields: [
+      { id: "field-inbox", name: "inbox", createdAt: 1 },
+      { id: "field-project", name: "project", createdAt: 2 },
+    ],
+    loadDailyNoteCounts: async () => undefined,
+    loadFields: async () => undefined,
+    loadRecentNotes: async () => undefined,
+    loadTags: async () => undefined,
+    notes: [
+      {
+        id: "note-human",
+        content: "今天先把卡片笔记的输入、标签筛选和轻量部署路径搭起来。",
+        createdAt: now - 7200,
+        fieldId: "field-inbox",
+        role: "Human",
+        tags: ["产品", "初始化"],
+        updatedAt: now - 3600,
+      },
+      {
+        id: "note-agent",
+        content: "数据库契约来自 vendor/zembra-schema，前端只通过 API Client 消费业务数据。",
+        createdAt: now - 5400,
+        fieldId: "field-inbox",
+        role: "Agent",
+        tags: ["架构", "schema"],
+        updatedAt: now - 3600,
+      },
+    ],
+    roleNavigationNotes: [],
+    tags: [
+      { id: "tag-product", name: "产品", path: "产品", depth: 0, createdAt: 1 },
+      { id: "tag-architecture", name: "架构", path: "架构", depth: 0, createdAt: 2 },
+    ],
+  });
+  const initialNotes = useNotesStore.getState().notes;
+  clientMocks.notes = {
+    createNote: async () => useNotesStore.getState().notes[0],
+    deleteNote: async () => undefined,
+    getNote: async () => useNotesStore.getState().notes[0],
+    listDailyNoteCounts: async () => useNotesStore.getState().dailyNoteCounts,
+    listNotes: async () => useNotesStore.getState().notes,
+    listRecentNotes: async (query?: { role?: string }) =>
+      initialNotes.filter((note) => !query?.role || note.role === query.role),
+    updateNote: async () => useNotesStore.getState().notes[0],
+  };
+  clientMocks.taxonomy = {
+    deleteField: async () => undefined,
+    listFields: async () => useNotesStore.getState().fields,
+    listTags: async () => useNotesStore.getState().tags,
+  };
+}
+
 /** Renders HomePage with the providers required by its header controls. */
 function renderHomePage(syncClient = createMockSyncClient()) {
+  act(() => {
+    configureHomeTestStore();
+  });
   const rootRoute = createRootRoute();
   const homeRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -1213,8 +1331,8 @@ function renderHomePage(syncClient = createMockSyncClient()) {
     <ThemeProvider>
       <WorkspaceProvider
         switchWorkspace={() => undefined}
-        workspace={{ id: "test-workspace", name: "Test workspace" }}
-        workspaces={[{ id: "test-workspace", name: "Test workspace" }]}
+        workspace={{ id: "test-workspace", name: "Test workspace", title: "Test workspace" }}
+        workspaces={[{ id: "test-workspace", name: "Test workspace", title: "Test workspace" }]}
       >
         <RouterProvider router={router} />
       </WorkspaceProvider>

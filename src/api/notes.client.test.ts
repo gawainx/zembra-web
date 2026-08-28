@@ -230,7 +230,7 @@ describe("createNotesHttpClient", () => {
       expect(init?.method).toBe("POST");
       expect(JSON.parse(String(init?.body))).toEqual({
         content: "new note",
-        field: undefined,
+        field: "inbox",
         links: [],
         role: "Human",
         tags: ["api"],
@@ -349,7 +349,7 @@ describe("createNotesHttpClient", () => {
     } satisfies Partial<ApiError>);
   });
 
-  test("updates notes with replacement field and tags", async () => {
+  test("updates notes with inbox when the replacement field is empty", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
 
@@ -358,7 +358,7 @@ describe("createNotesHttpClient", () => {
         expect(JSON.parse(String(init?.body))).toEqual({
           content: "edited note",
           device_id: "device-1",
-          field: "project",
+          field: "inbox",
           links: [
             {
               anchor_text: "[[abcdef1234567890abcdef1234567890]]",
@@ -374,13 +374,13 @@ describe("createNotesHttpClient", () => {
             id: "abc123",
             content: "edited note",
             role: "Human",
-            field_id: "field-project",
+            field_id: "field-inbox",
             created_at: 1,
             updated_at: 3,
           },
           metadata: {
             backlinks: [],
-            field: "project",
+            field: "inbox",
             outgoing_links: [],
             role: "Human",
             tags: ["api", "edit"],
@@ -401,7 +401,7 @@ describe("createNotesHttpClient", () => {
       client.updateNote("abc123", {
         content: "edited note",
         deviceId: "device-1",
-        field: "project",
+        field: null,
         links: [
           {
             anchorText: "[[abcdef1234567890abcdef1234567890]]",
@@ -415,7 +415,7 @@ describe("createNotesHttpClient", () => {
       id: "abc123",
       content: "edited note",
       role: "Human",
-      fieldId: "field-project",
+      fieldId: "field-inbox",
       createdAt: 1,
       updatedAt: 3,
       tags: ["api", "edit"],

@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from "vitest";
-import { createMockNotesClient } from "./notes.client";
-import { createMockTaxonomyClient } from "./taxonomy.client";
+import type { NotesClient } from "./notes.client";
+import type { TaxonomyClient } from "./taxonomy.client";
 import {
   activateDataSource,
   clearActiveDataSource,
@@ -21,8 +21,8 @@ test("defaults the stored data source mode to backend", () => {
 
 /** Verifies that a confirmed Supabase source remains available to feature-layer client lookups. */
 test("activates a Supabase data source", () => {
-  const notes = createMockNotesClient();
-  const taxonomy = createMockTaxonomyClient();
+  const notes = {} as NotesClient;
+  const taxonomy = {} as TaxonomyClient;
   setStoredDataSourceMode("supabase");
   activateDataSource({
     mode: "supabase",

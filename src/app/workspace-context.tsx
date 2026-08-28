@@ -6,6 +6,8 @@ export interface ActiveWorkspace {
   id: string;
   /** Human-readable workspace name shown in navigation. */
   name: string;
+  /** Plain workspace name used in browser metadata. */
+  title: string;
 }
 
 interface WorkspaceContextValue {
@@ -15,6 +17,8 @@ interface WorkspaceContextValue {
   workspaces: ActiveWorkspace[];
   /** Activates and persists a newly selected authorized workspace. */
   switchWorkspace: (workspaceId: string) => void;
+  /** Renames a workspace when the active data source supports it. */
+  renameWorkspace?: (workspaceId: string, name: string) => Promise<void>;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextValue | undefined>(undefined);
@@ -25,10 +29,11 @@ export function WorkspaceProvider({
   workspace,
   workspaces,
   switchWorkspace,
+  renameWorkspace,
 }: WorkspaceContextValue & { children: ReactNode }) {
   const value = useMemo(
-    () => ({ workspace, workspaces, switchWorkspace }),
-    [switchWorkspace, workspace, workspaces],
+    () => ({ workspace, workspaces, switchWorkspace, renameWorkspace }),
+    [renameWorkspace, switchWorkspace, workspace, workspaces],
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

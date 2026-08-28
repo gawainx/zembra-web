@@ -98,8 +98,34 @@ test("removes a note before delete completion and restores it on failure", async
   expect(useNotesStore.getState().notes).toEqual([]);
 
   deferred.reject(new Error("offline"));
-  await expect(request).rejects.toThrow("offline");
+  await expect(request).resolves.toBeUndefined();
 
   expect(useNotesStore.getState().notes).toEqual([existingNote]);
   expect(useNotesStore.getState().roleNavigationNotes).toEqual([existingNote]);
+});
+
+/** Verifies an edited note is visible immediately and rolls back on remote failure. */
+test("updates a note before completion and restores it on failure", async () => {
+  const deferred = createDeferred<NoteDto>();
+  clientMocks.notes = {
+    updateNote: vi.fn(() => deferred.promise),
+  };
+  useNotesStore.setState({
+    notes: [existingNote],
+    roleNavigationNotes: [existingNote],
+  });
+
+  let request!: Promise<void>;
+  act(() => {
+    request = useNotesStore.getState().updateNote(existingNote.id, {
+      content: "edited note",
+    });
+  });
+
+  expect(useNotesStore.getState().notes[0].content).toBe("edited note");
+
+  deferred.reject(new Error("offline"));
+  await expect(request).resolves.toBeUndefined();
+
+  expect(useNotesStore.getState().notes).toEqual([existingNote]);
 });

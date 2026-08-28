@@ -6,6 +6,7 @@ import {
   getSupabaseBrowserClient,
   getSupabasePublicConfig,
   listSupabaseWorkspaces,
+  renameSupabaseWorkspace,
   SupabaseConfigurationError,
   type SupabaseWorkspace,
 } from "../api/supabase.client";
@@ -15,6 +16,10 @@ import {
   setConfiguredSupabaseWorkspaceId,
 } from "../api/backendConfig";
 import { WorkspaceProvider } from "./workspace-context";
+import { notifyMutationCompleted } from "./mutationToast";
+
+const workspaceRenameQueues = new Map<string, Promise<void>>();
+const workspaceRenameVersions = new Map<string, number>();
 
 interface SupabaseEntryProps {
   /** Shared source selector rendered before Supabase-specific controls. */
@@ -152,6 +157,52 @@ export function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProp
     });
   }
 
+  /** Optimistically renames one workspace and queues its remote Supabase update. */
+  async function renameWorkspace(workspaceId: string, name: string): Promise<void> {
+    const previousWorkspace = workspaces.find((workspace) => workspace.id === workspaceId);
+
+    if (!previousWorkspace) {
+      return;
+    }
+
+    const nextVersion = (workspaceRenameVersions.get(workspaceId) ?? 0) + 1;
+    workspaceRenameVersions.set(workspaceId, nextVersion);
+    const renamedWorkspace = { ...previousWorkspace, name };
+    setWorkspaces((currentWorkspaces) =>
+      currentWorkspaces.map((workspace) =>
+        workspace.id === renamedWorkspace.id ? renamedWorkspace : workspace,
+      ),
+    );
+
+    return enqueueWorkspaceRename(workspaceId, async () => {
+      try {
+        await renameSupabaseWorkspace(getSupabaseBrowserClient(), workspaceId, name);
+        notifyMutationCompleted({
+          duration: 3000,
+          message: "workspaceRenamed",
+          tone: "success",
+        });
+      } catch (error) {
+        if (workspaceRenameVersions.get(workspaceId) === nextVersion) {
+          setWorkspaces((currentWorkspaces) =>
+            currentWorkspaces.map((workspace) =>
+              workspace.id === workspaceId ? previousWorkspace : workspace,
+            ),
+          );
+        }
+        console.warn("[zembra] Failed to rename Supabase workspace", {
+          error,
+          workspaceId: workspaceId.slice(0, 8),
+        });
+        notifyMutationCompleted({
+          duration: 10000,
+          message: "workspaceRenameFailed",
+          tone: "error",
+        });
+      }
+    });
+  }
+
   if (isReady) {
     const selectedWorkspace = workspaces.find(
       (workspace) => workspace.id === selectedWorkspaceId,
@@ -163,14 +214,17 @@ export function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProp
 
     return (
       <WorkspaceProvider
+        renameWorkspace={renameWorkspace}
         switchWorkspace={activateSupabaseWorkspace}
         workspace={{
           id: selectedWorkspace.id,
           name: selectedWorkspace.name || t("dataSource.unnamedWorkspace"),
+          title: selectedWorkspace.name || t("dataSource.unnamedWorkspace"),
         }}
         workspaces={workspaces.map((workspace) => ({
           id: workspace.id,
           name: workspace.name || t("dataSource.unnamedWorkspace"),
+          title: workspace.name || t("dataSource.unnamedWorkspace"),
         }))}
       >
         {children}
@@ -256,4 +310,20 @@ export function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProp
       </section>
     </main>
   );
+}
+
+/** Serializes remote workspace renames without delaying their local UI updates. */
+function enqueueWorkspaceRename(
+  workspaceId: string,
+  operation: () => Promise<void>,
+): Promise<void> {
+  const previous = workspaceRenameQueues.get(workspaceId) ?? Promise.resolve();
+  const next = previous.catch(() => undefined).then(operation);
+  workspaceRenameQueues.set(workspaceId, next);
+  void next.finally(() => {
+    if (workspaceRenameQueues.get(workspaceId) === next) {
+      workspaceRenameQueues.delete(workspaceId);
+    }
+  });
+  return next;
 }

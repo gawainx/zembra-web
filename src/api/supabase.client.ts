@@ -64,6 +64,42 @@ export async function listSupabaseWorkspaces(
   return workspaces;
 }
 
+/** Updates one manager-authorized workspace name through the Supabase Data API. */
+export async function renameSupabaseWorkspace(
+  client: SupabaseClient,
+  workspaceId: string,
+  name: string,
+): Promise<SupabaseWorkspace> {
+  const workspaceName = name.trim();
+
+  if (!workspaceName) {
+    throw new Error("Workspace name cannot be empty");
+  }
+
+  console.info("[zembra] Renaming Supabase workspace", {
+    workspaceId: workspaceId.slice(0, 8),
+  });
+  const { data, error } = await client
+    .from("workspaces")
+    .update({
+      updated_at: Math.floor(Date.now() / 1000),
+      workspace_name: workspaceName,
+    })
+    .eq("id", workspaceId)
+    .select("id, workspace_name")
+    .single();
+
+  if (error) {
+    console.warn("[zembra] Failed to rename Supabase workspace", {
+      error,
+      workspaceId: workspaceId.slice(0, 8),
+    });
+    throw error;
+  }
+
+  return { id: data.id as string, name: data.workspace_name as string | null };
+}
+
 /** Creates a browser Supabase client from public deployment configuration. */
 export function createSupabaseBrowserClient(
   config: SupabasePublicConfig,

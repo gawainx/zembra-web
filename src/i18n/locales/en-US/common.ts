@@ -53,6 +53,12 @@ export const common = {
     noteCreateFailed: "Could not save. Please try again.",
     noteDeleted: "Deleted",
     noteDeleteFailed: "Could not delete. The note was restored.",
+    noteUpdated: "Saved",
+    noteUpdateFailed: "Could not save. The note was restored.",
+    fieldDeleted: "Field deleted",
+    fieldDeleteFailed: "Could not delete Field. It was restored.",
+    workspaceRenamed: "Workspace renamed",
+    workspaceRenameFailed: "Could not rename workspace. The previous name was restored.",
   },
   language: {
     label: "Language",

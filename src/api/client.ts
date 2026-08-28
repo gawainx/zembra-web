@@ -5,17 +5,14 @@ import {
   getEffectiveBackendBaseUrl,
 } from "./backendConfig";
 import {
-  createMockNotesClient,
   createNotesHttpClient,
   type NotesClient,
 } from "./notes.client";
 import {
-  createMockTaxonomyClient,
   createTaxonomyHttpClient,
   type TaxonomyClient,
 } from "./taxonomy.client";
 import {
-  createMockSyncClient,
   createSyncHttpClient,
   type SyncClient,
 } from "./sync.client";
@@ -64,10 +61,6 @@ export async function listWorkspaces(): Promise<ListWorkspacesResponse> {
 
 /** Creates the default notes client configured for the current Vite environment. */
 export function createDefaultNotesClient(): NotesClient {
-  if (import.meta.env.MODE === "test") {
-    return createMockNotesClient();
-  }
-
   return createNotesHttpClient({
     baseUrl: resolveDefaultApiBaseUrl,
     workspaceId: resolveDefaultWorkspaceId,
@@ -76,10 +69,6 @@ export function createDefaultNotesClient(): NotesClient {
 
 /** Creates the default taxonomy client configured for the current Vite environment. */
 export function createDefaultTaxonomyClient(): TaxonomyClient {
-  if (import.meta.env.MODE === "test") {
-    return createMockTaxonomyClient();
-  }
-
   return createTaxonomyHttpClient({
     baseUrl: resolveDefaultApiBaseUrl,
     workspaceId: resolveDefaultWorkspaceId,
@@ -88,10 +77,6 @@ export function createDefaultTaxonomyClient(): TaxonomyClient {
 
 /** Creates the default sync client configured for the current Vite environment. */
 export function createDefaultSyncClient(): SyncClient {
-  if (import.meta.env.MODE === "test") {
-    return createMockSyncClient();
-  }
-
   return createSyncHttpClient({ baseUrl: resolveDefaultApiBaseUrl });
 }
 
@@ -106,10 +91,6 @@ export const syncClient = createDefaultSyncClient();
 
 /** Creates Backend clients scoped to the workspace confirmed by the Backend entry flow. */
 export function createBackendDataSourceClients(workspaceId: string): DataSourceClients {
-  if (import.meta.env.MODE === "test") {
-    return { notes: createMockNotesClient(), sync: createMockSyncClient(), taxonomy: createMockTaxonomyClient() };
-  }
-
   return {
     notes: createNotesHttpClient({ baseUrl: resolveDefaultApiBaseUrl, workspaceId }),
     sync: createSyncHttpClient({ baseUrl: resolveDefaultApiBaseUrl }),

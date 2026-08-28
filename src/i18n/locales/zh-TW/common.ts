@@ -48,6 +48,12 @@ export const common = {
     noteCreateFailed: "無法儲存，請重試",
     noteDeleted: "已刪除",
     noteDeleteFailed: "無法刪除，筆記已還原",
+    noteUpdated: "已儲存",
+    noteUpdateFailed: "無法儲存，筆記已還原",
+    fieldDeleted: "Field 已刪除",
+    fieldDeleteFailed: "無法刪除 Field，已還原",
+    workspaceRenamed: "Workspace 已改名",
+    workspaceRenameFailed: "無法修改 Workspace 名稱，已還原原名稱",
   },
   language: {
     label: "語言",

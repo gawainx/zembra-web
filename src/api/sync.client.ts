@@ -92,44 +92,6 @@ export function createSyncHttpClient(options: SyncHttpClientOptions): SyncClient
   };
 }
 
-/** Creates a mock synchronization client for tests and local isolated rendering. */
-export function createMockSyncClient(): SyncClient {
-  let config: SyncConfigDto = {
-    enabled: false,
-    intervalSeconds: 300,
-    supabaseUrl: "https://example.supabase.co",
-    serviceRoleKeyConfigured: false,
-  };
-
-  return {
-    async getConfig() {
-      return config;
-    },
-    async updateConfig(input) {
-      config = {
-        enabled: input.enabled,
-        intervalSeconds: input.intervalSeconds,
-        supabaseUrl: input.supabaseUrl,
-        serviceRoleKeyConfigured:
-          input.serviceRoleKey?.trim() ? true : config.serviceRoleKeyConfigured,
-      };
-      return config;
-    },
-    async testConfig() {
-      return { ok: true, message: "Configuration accepted" };
-    },
-    async getStatus() {
-      return {
-        enabled: config.enabled,
-        states: [],
-      };
-    },
-    async runSync() {
-      return { pushed: 0, pulled: 0 };
-    },
-  };
-}
-
 /** Maps backend synchronization configuration to the frontend DTO shape. */
 export function mapSyncConfigResponseToDto(
   response: SyncConfigResponse,
