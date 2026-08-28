@@ -59,6 +59,9 @@ interface NotesState {
   loadTags: () => Promise<void>;
 }
 
+const remoteMutationQueues = new Map<string, Promise<void>>();
+const remoteMutationVersions = new Map<string, number>();
+
 /** Stores note list state for the card note interface. */
 export const useNotesStore = create<NotesState>((set, get) => ({
   notes: [],
@@ -151,27 +154,69 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     }
   },
   updateNote: async (noteRef, input) => {
-    const note = await getNotesClient().updateNote(noteRef, input);
+    const current = get();
+    const previousNote = current.notes.find((note) => note.id === noteRef)
+      ?? current.roleNavigationNotes.find((note) => note.id === noteRef);
+
+    if (!previousNote) {
+      return;
+    }
+
+    const version = nextMutationVersion(`note:${previousNote.id}`);
+    const optimisticNote: NoteDto = {
+      ...previousNote,
+      content: input.content,
+      fieldId:
+        current.fields.find((field) => field.name === input.field)?.id
+        ?? previousNote.fieldId,
+      tags: input.tags ?? previousNote.tags,
+      updatedAt: Math.floor(Date.now() / 1000),
+    };
     set((state) => ({
       notes:
-        state.selectedRole === undefined || state.selectedRole === note.role
-          ? [note, ...state.notes.filter((item) => item.id !== note.id)].slice(
+        state.selectedRole === undefined || state.selectedRole === optimisticNote.role
+          ? [optimisticNote, ...state.notes.filter((item) => item.id !== optimisticNote.id)].slice(
               0,
               50,
             )
-          : state.notes.filter((item) => item.id !== note.id),
+          : state.notes.filter((item) => item.id !== optimisticNote.id),
       roleNavigationNotes: [
-        note,
-        ...state.roleNavigationNotes.filter((item) => item.id !== note.id),
+        optimisticNote,
+        ...state.roleNavigationNotes.filter((item) => item.id !== optimisticNote.id),
       ].slice(0, 50),
     }));
 
-    const [fields, tags, dailyNoteCounts] = await Promise.all([
-      getTaxonomyClient().listFields(),
-      getTaxonomyClient().listTags(),
-      getNotesClient().listDailyNoteCounts(),
-    ]);
-    set({ dailyNoteCounts, fields, tags });
+    return enqueueRemoteMutation(`note:${previousNote.id}`, async () => {
+      try {
+        const note = await getNotesClient().updateNote(noteRef, input);
+        if (isCurrentMutation(`note:${previousNote.id}`, version)) {
+          set((state) => ({
+            notes: replaceNote(state.notes, optimisticNote.id, note),
+            roleNavigationNotes: replaceNote(
+              state.roleNavigationNotes,
+              optimisticNote.id,
+              note,
+            ),
+          }));
+        }
+        console.info("[zembra] Updated note", { noteId: note.id });
+        notifyMutationCompleted({ duration: 3000, message: "noteUpdated", tone: "success" });
+        void refreshNoteMetadata(set);
+      } catch (error) {
+        if (isCurrentMutation(`note:${previousNote.id}`, version)) {
+          set((state) => ({
+            notes: replaceNote(state.notes, optimisticNote.id, previousNote),
+            roleNavigationNotes: replaceNote(
+              state.roleNavigationNotes,
+              optimisticNote.id,
+              previousNote,
+            ),
+          }));
+        }
+        console.warn("[zembra] Failed to update note", { error, noteId: previousNote.id });
+        notifyMutationCompleted({ duration: 10000, message: "noteUpdateFailed", tone: "error" });
+      }
+    });
   },
   deleteNote: async (noteRef) => {
     const current = get();
@@ -182,6 +227,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     const note = current.notes[noteIndex];
     const roleNavigationNote = current.roleNavigationNotes[roleNavigationNoteIndex];
     const preview = current.notePreviewById[noteRef];
+    const version = nextMutationVersion(`note:${noteRef}`);
 
     set((state) => ({
       notes: state.notes.filter((note) => note.id !== noteRef),
@@ -191,45 +237,56 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       notePreviewById: omitNotePreview(state.notePreviewById, noteRef),
     }));
 
-    try {
-      await getNotesClient().deleteNote(noteRef);
-      console.info("[zembra] Deleted note", { noteId: noteRef });
-      notifyMutationCompleted({
-        duration: 3000,
-        message: "noteDeleted",
-        tone: "success",
-      });
-      void refreshNoteMetadata(set);
-    } catch (error) {
-      set((state) => ({
-        notes: restoreNote(state.notes, note, noteIndex),
-        roleNavigationNotes: restoreNote(
-          state.roleNavigationNotes,
-          roleNavigationNote,
-          roleNavigationNoteIndex,
-        ),
-        notePreviewById: preview
-          ? { ...state.notePreviewById, [noteRef]: preview }
-          : state.notePreviewById,
-      }));
-      console.warn("[zembra] Failed to delete note", { error, noteId: noteRef });
-      notifyMutationCompleted({
-        duration: 10000,
-        message: "noteDeleteFailed",
-        tone: "error",
-      });
-      throw error;
-    }
+    return enqueueRemoteMutation(`note:${noteRef}`, async () => {
+      try {
+        await getNotesClient().deleteNote(noteRef);
+        console.info("[zembra] Deleted note", { noteId: noteRef });
+        notifyMutationCompleted({ duration: 3000, message: "noteDeleted", tone: "success" });
+        void refreshNoteMetadata(set);
+      } catch (error) {
+        if (isCurrentMutation(`note:${noteRef}`, version)) {
+          set((state) => ({
+            notes: restoreNote(state.notes, note, noteIndex),
+            roleNavigationNotes: restoreNote(
+              state.roleNavigationNotes,
+              roleNavigationNote,
+              roleNavigationNoteIndex,
+            ),
+            notePreviewById: preview
+              ? { ...state.notePreviewById, [noteRef]: preview }
+              : state.notePreviewById,
+          }));
+        }
+        console.warn("[zembra] Failed to delete note", { error, noteId: noteRef });
+        notifyMutationCompleted({ duration: 10000, message: "noteDeleteFailed", tone: "error" });
+      }
+    });
   },
   deleteField: async (fieldId) => {
-    await getTaxonomyClient().deleteField(fieldId);
-    const fields = await getTaxonomyClient().listFields();
-
+    const current = get();
+    const fieldIndex = current.fields.findIndex((field) => field.id === fieldId);
+    const field = current.fields[fieldIndex];
+    const version = nextMutationVersion(`field:${fieldId}`);
     set((state) => ({
-      fields,
-      selectedField:
-        state.selectedField === fieldId ? undefined : state.selectedField,
+      fields: state.fields.filter((item) => item.id !== fieldId),
+      selectedField: state.selectedField === fieldId ? undefined : state.selectedField,
     }));
+
+    return enqueueRemoteMutation(`field:${fieldId}`, async () => {
+      try {
+        await getTaxonomyClient().deleteField(fieldId);
+        console.info("[zembra] Deleted field", { fieldId });
+        notifyMutationCompleted({ duration: 3000, message: "fieldDeleted", tone: "success" });
+      } catch (error) {
+        if (field && isCurrentMutation(`field:${fieldId}`, version)) {
+          set((state) => ({
+            fields: [...state.fields.slice(0, fieldIndex), field, ...state.fields.slice(fieldIndex)],
+          }));
+        }
+        console.warn("[zembra] Failed to delete field", { error, fieldId });
+        notifyMutationCompleted({ duration: 10000, message: "fieldDeleteFailed", tone: "error" });
+      }
+    });
   },
   loadNotePreview: async (noteRef) => {
     const state = get();
@@ -275,6 +332,34 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     set({ tags });
   },
 }));
+
+/** Returns the next operation version for one entity. */
+function nextMutationVersion(entityKey: string): number {
+  const version = (remoteMutationVersions.get(entityKey) ?? 0) + 1;
+  remoteMutationVersions.set(entityKey, version);
+  return version;
+}
+
+/** Returns whether one queued operation is still the latest local intent. */
+function isCurrentMutation(entityKey: string, version: number): boolean {
+  return remoteMutationVersions.get(entityKey) === version;
+}
+
+/** Serializes remote writes per entity without delaying optimistic UI updates. */
+function enqueueRemoteMutation(
+  entityKey: string,
+  operation: () => Promise<void>,
+): Promise<void> {
+  const previous = remoteMutationQueues.get(entityKey) ?? Promise.resolve();
+  const next = previous.catch(() => undefined).then(operation);
+  remoteMutationQueues.set(entityKey, next);
+  void next.finally(() => {
+    if (remoteMutationQueues.get(entityKey) === next) {
+      remoteMutationQueues.delete(entityKey);
+    }
+  });
+  return next;
+}
 
 /** Creates an in-memory note used until the remote create request resolves. */
 function createTemporaryNote(input: CreateNoteInput, fields: FieldDto[]): NoteDto {

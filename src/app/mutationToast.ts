@@ -8,7 +8,13 @@ export type MutationToastMessage =
   | "noteCreated"
   | "noteCreateFailed"
   | "noteDeleted"
-  | "noteDeleteFailed";
+  | "noteDeleteFailed"
+  | "noteUpdated"
+  | "noteUpdateFailed"
+  | "fieldDeleted"
+  | "fieldDeleteFailed"
+  | "workspaceRenamed"
+  | "workspaceRenameFailed";
 
 /** Describes one completed background note mutation for global feedback. */
 export interface MutationToastNotification {

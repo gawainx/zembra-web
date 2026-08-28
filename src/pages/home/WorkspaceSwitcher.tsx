@@ -22,10 +22,8 @@ export function WorkspaceSwitcher({
   const { t } = useTranslation("home");
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const isSubmittingRef = useRef(false);
   const [draftName, setDraftName] = useState(workspace.title);
   const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (isEditing) {
@@ -50,28 +48,16 @@ export function WorkspaceSwitcher({
     setIsEditing(true);
   }
 
-  /** Submits a non-empty workspace name once for Enter or focus loss. */
-  async function handleRenameSubmit() {
+  /** Optimistically submits a non-empty workspace name for Enter or focus loss. */
+  function handleRenameSubmit() {
     const name = draftName.trim();
 
-    if (!onWorkspaceRename || !name || isSubmittingRef.current) {
+    if (!onWorkspaceRename || !name) {
       return;
     }
 
-    isSubmittingRef.current = true;
-    setIsSaving(true);
-    try {
-      await onWorkspaceRename(workspace.id, name);
-      setIsEditing(false);
-    } catch (error) {
-      console.error("[zembra] Failed to rename workspace from the switcher", {
-        error,
-        workspaceId: workspace.id.slice(0, 8),
-      });
-    } finally {
-      isSubmittingRef.current = false;
-      setIsSaving(false);
-    }
+    void onWorkspaceRename(workspace.id, name);
+    setIsEditing(false);
   }
 
   return (
@@ -81,15 +67,14 @@ export function WorkspaceSwitcher({
           aria-invalid={!draftName.trim()}
           aria-label={t("workspace.nameInput")}
           className="min-w-0 border-0 bg-transparent p-0 text-lg font-bold text-[var(--color-text-primary)] outline-none"
-          disabled={isSaving}
           ref={inputRef}
           value={draftName}
-          onBlur={() => void handleRenameSubmit()}
+          onBlur={handleRenameSubmit}
           onChange={(event) => setDraftName(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
               event.preventDefault();
-              void handleRenameSubmit();
+              handleRenameSubmit();
             }
           }}
         />
@@ -119,11 +104,10 @@ export function WorkspaceSwitcher({
         <button
           aria-label={isEditing ? t("workspace.save") : t("workspace.rename")}
           className="flex size-[var(--icon-hit-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={isSaving}
           type="button"
           onClick={() => {
             if (isEditing) {
-              void handleRenameSubmit();
+              handleRenameSubmit();
               return;
             }
 

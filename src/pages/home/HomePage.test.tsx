@@ -2,7 +2,6 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import { createRootRoute, createRoute, createRouter, RouterProvider } from "@tanstack/react-router";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import type { SyncClient } from "../../api/sync.client";
-import { ApiError } from "../../api/http";
 import { i18next } from "../../i18n";
 import { useNotesStore } from "../../features/notes/noteStore";
 import { ThemeProvider } from "../../app/ThemeProvider";
@@ -558,17 +557,11 @@ test("deletes an empty field from the sidebar after in-app confirmation", async 
   expect(useNotesStore.getState().selectedField).toBeUndefined();
 });
 
-/** Verifies field deletion errors stay inside the confirmation dialog. */
-test("keeps an empty field when deletion fails", async () => {
+/** Verifies field deletion closes its dialog before the background result returns. */
+test("closes empty field deletion without blocking on the request", async () => {
   renderHomePage();
   await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
-  const deleteField = vi.fn(async () => {
-    throw new ApiError(409, {
-      code: "field_in_use",
-      details: {},
-      message: "field is still used",
-    });
-  });
+  const deleteField = vi.fn(async () => undefined);
 
   act(() => {
     useNotesStore.setState({
@@ -581,9 +574,9 @@ test("keeps an empty field when deletion fails", async () => {
   fireEvent.click(await screen.findByRole("button", { name: "删除 Field @empty" }));
   fireEvent.click(await screen.findByRole("button", { name: "删除" }));
 
-  expect(await screen.findByText("该 Field 仍有笔记，不能删除")).not.toBeNull();
+  await waitFor(() => expect(deleteField).toHaveBeenCalledWith("empty-field"));
   expect(await screen.findByText("empty")).not.toBeNull();
-  expect(screen.getByRole("dialog", { name: "删除 Field" })).not.toBeNull();
+  expect(screen.queryByRole("dialog", { name: "删除 Field" })).toBeNull();
 });
 
 /** Verifies role navigation is optional and filters the feed when selected. */

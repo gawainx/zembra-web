@@ -25,7 +25,6 @@ export function NoteCard({
   fields,
   fieldName,
   isEditing,
-  isUpdating,
   locale,
   note,
   onDelete,
@@ -45,15 +44,14 @@ export function NoteCard({
   fields: FieldDto[];
   fieldName?: string;
   isEditing: boolean;
-  isUpdating: boolean;
   locale?: string;
   note: NoteDto;
   onDelete: (noteId: string) => Promise<void>;
   onEditCancel: () => void;
   onEditDraftChange: (draft: string) => void;
   onEditStart: (note: NoteDto) => void;
-  onEditSubmit: () => Promise<void>;
-  onFieldChange: (note: NoteDto, fieldName: string) => Promise<void>;
+  onEditSubmit: () => void;
+  onFieldChange: (note: NoteDto, fieldName: string) => void;
   onLoadNotePreview: (noteRef: string) => Promise<NoteDto>;
   onMention: (noteId: string) => void;
   tags: TagDto[];
@@ -64,7 +62,6 @@ export function NoteCard({
   const [hasOverflow, setHasOverflow] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isFieldMenuOpen, setIsFieldMenuOpen] = useState(false);
-  const [isFieldUpdating, setIsFieldUpdating] = useState(false);
   const displayRole = note.role || t("sidebar.unknownRole");
   const displayContent = useMemo(
     () => stripRenderedFieldMarker(note.content, fieldName),
@@ -111,19 +108,14 @@ export function NoteCard({
   }
 
   /** Changes this note to the selected field and closes the metadata menu. */
-  async function handleFieldSelect(nextFieldName: string) {
-    if (nextFieldName === fieldName || isFieldUpdating) {
+  function handleFieldSelect(nextFieldName: string) {
+    if (nextFieldName === fieldName) {
       setIsFieldMenuOpen(false);
       return;
     }
 
-    setIsFieldUpdating(true);
-    try {
-      await onFieldChange(note, nextFieldName);
-      setIsFieldMenuOpen(false);
-    } finally {
-      setIsFieldUpdating(false);
-    }
+    onFieldChange(note, nextFieldName);
+    setIsFieldMenuOpen(false);
   }
 
   return (
@@ -140,7 +132,7 @@ export function NoteCard({
                 aria-expanded={isFieldMenuOpen}
                 aria-label={t("note.fieldMenu.switch", { field: fieldName })}
                 className="inline-flex items-center gap-0.5 rounded-[6px] font-bold text-[var(--color-field)] hover:bg-[var(--color-field-soft)] disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={isEditing || fields.length === 0 || isFieldUpdating}
+                disabled={isEditing || fields.length === 0}
                 onClick={() => setIsFieldMenuOpen((current) => !current)}
                 type="button"
               >
@@ -159,9 +151,8 @@ export function NoteCard({
                       <button
                         aria-checked={selected}
                         className="flex self-stretch items-center justify-between gap-2 whitespace-nowrap rounded-[6px] px-1.5 py-1 text-left text-[13px] font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] disabled:cursor-not-allowed disabled:opacity-60"
-                        disabled={isFieldUpdating}
                         key={field.id}
-                        onClick={() => void handleFieldSelect(field.name)}
+                        onClick={() => handleFieldSelect(field.name)}
                         role="menuitemradio"
                         type="button"
                       >
@@ -226,14 +217,14 @@ export function NoteCard({
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            void onEditSubmit();
+            onEditSubmit();
           }}
         >
           <NoteEditor
             draft={editDraft ?? ""}
-            isSubmitting={isUpdating}
+            isSubmitting={false}
             placeholder={t("composer.placeholder")}
-            submitLabel={isUpdating ? t("note.edit.saving") : t("composer.send")}
+            submitLabel={t("composer.send")}
             tags={tags}
             tools={tools}
             variant="embedded"
