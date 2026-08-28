@@ -35,4 +35,4 @@
 - R044 `bfa8e1f` 完成双链引用语法修复：让 Mention 原样插入的完整 note ID 与解析、提交和 Markdown 渲染共用同一规则，支持无空白的引用 ID，保留既有 32 位 ID 行为，不调整数据源或缓存边界。
 - R045 `ab88de7` 完成双链预览 Markdown 渲染：预览复用 note card 的 Markdown、tag 和双链能力，并以块级浮层容器承载段落、列表和代码等结构，保留现有预览加载和失败反馈。
 - R047 `34d7fb3` 将笔记卡片 Markdown 外链改为 Bonofix 语义红色 `--color-field` 与下划线，保持标签和内部笔记预览不变；`f03f81d` 后续移除外链加粗显示。相关测试和生产构建均通过，用户已验收。
-- R052 `2fdae18` 已完成单数据源构建目标的调研、需求澄清、技术设计与执行计划：Docker 固定 Backend，Vercel 与 Tauri 固定 Supabase Direct；等待用户审阅后实施。
+- R052 `a0ee7c9` 已完成单数据源构建目标：Docker 固定 Backend，Vercel 与 Tauri 固定 Supabase Direct；删除运行时切换，按 Vite alias 分离入口、client 和同步 UI。20 个测试文件、137 项测试及两种构建通过；Docker daemon 未启动，镜像层验证待运行环境恢复。

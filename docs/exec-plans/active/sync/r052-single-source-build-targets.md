@@ -6,7 +6,7 @@
 
 设计文档：`docs/design-docs/sync/r052-single-source-build-targets.md`
 
-状态：等待用户审阅
+状态：已实施，等待用户验收
 
 ## 成功标准
 
@@ -44,3 +44,9 @@ Backend 与 Supabase Direct 分别从独立、唯一的数据源模块图构建�
 ## 预期文件
 
 `vite.config.ts`、`package.json`、`src/main.tsx`、`src/app/App.tsx`、数据源入口/runtime、受影响的 API 与测试、`Dockerfile`、`src-tauri/tauri.conf.json`、`scripts/package_macos_app.sh`、部署说明和本计划。实际实现只改造承载上述职责的既有文件；不会修改数据库契约或新增第三方依赖。
+
+## 执行记录
+
+2026-08-28 已完成全部 Stage，代码提交为 `a0ee7c9`。Vite 通过构建期 alias 将入口、数据访问 runtime 与首页同步控件分别解析为 Backend 或 Supabase Direct 实现；运行时数据源选择、模式 localStorage 和双模式 client 解析器已删除。Docker 调用 `build:backend`，Vercel、Tauri 与 macOS 打包调用 `build:supabase`。
+
+已运行 `npm test`，20 个测试文件、137 项测试全部通过；`npm run build:backend` 与 `npm run build:supabase` 均通过。Backend `dist` 不包含 Supabase chunk、Magic Link 或 Supabase entry；Supabase `dist` 不包含 Backend URL gate、Backend connection event 或健康检查实现。`npm run tauri:build` 已确认调用 `npm run build:supabase`。Docker daemon 当前未运行，因此 `docker build` 无法完成镜像层验证；Dockerfile 构建命令已静态核对为 `build:backend`。
