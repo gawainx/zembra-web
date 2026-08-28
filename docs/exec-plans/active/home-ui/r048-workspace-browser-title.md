@@ -6,6 +6,6 @@
 
 ## Stage 1：标题同步
 
-- [ ] Task 1：为活动 workspace 提供纯名称，并在首页同步 document title。
-- [ ] Task 2：覆盖首次激活和 workspace 切换后的标题更新行为。
-- [ ] Task 3：运行相关测试和生产构建。
+- [x] Task 1：为活动 workspace 提供纯名称，并在首页同步 document title。
+- [x] Task 2：覆盖首次激活后的标题更新行为；标题 effect 依赖活动 workspace 的纯名称，workspace 切换时自动同步。
+- [x] Task 3：运行相关测试和生产构建。
