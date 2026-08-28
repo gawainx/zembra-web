@@ -56,7 +56,7 @@ interface HomePageProps {
 export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
   const { i18n, t } = useTranslation("home");
   const composerRef = useRef<NoteEditorHandle>(null);
-  const { workspace, workspaces, switchWorkspace } = useWorkspace();
+  const { workspace, workspaces, switchWorkspace, renameWorkspace } = useWorkspace();
   const [draft, setDraft] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<string>();
   const [editDraft, setEditDraft] = useState("");
@@ -400,6 +400,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
                   workspace={workspace}
                   workspaces={workspaces}
                   onWorkspaceChange={switchWorkspace}
+                  onWorkspaceRename={renameWorkspace}
                 />
               </div>
               <div className="flex shrink-0 items-center gap-2">

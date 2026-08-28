@@ -87,4 +87,8 @@ export const home = {
     notes: "笔记",
     tags: "标签",
   },
+  workspace: {
+    nameInput: "Workspace 名称",
+    rename: "修改 Workspace 名称",
+  },
 };

@@ -6,6 +6,7 @@ import {
   getSupabaseBrowserClient,
   getSupabasePublicConfig,
   listSupabaseWorkspaces,
+  renameSupabaseWorkspace,
   SupabaseConfigurationError,
   type SupabaseWorkspace,
 } from "../api/supabase.client";
@@ -152,6 +153,23 @@ export function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProp
     });
   }
 
+  /** Renames one authorized workspace and refreshes its local display state. */
+  async function renameWorkspace(workspaceId: string, name: string): Promise<void> {
+    const renamedWorkspace = await renameSupabaseWorkspace(
+      getSupabaseBrowserClient(),
+      workspaceId,
+      name,
+    );
+    setWorkspaces((currentWorkspaces) =>
+      currentWorkspaces.map((workspace) =>
+        workspace.id === renamedWorkspace.id ? renamedWorkspace : workspace,
+      ),
+    );
+    console.info("[zembra] Renamed Supabase workspace", {
+      workspaceId: workspaceId.slice(0, 8),
+    });
+  }
+
   if (isReady) {
     const selectedWorkspace = workspaces.find(
       (workspace) => workspace.id === selectedWorkspaceId,
@@ -163,6 +181,7 @@ export function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProp
 
     return (
       <WorkspaceProvider
+        renameWorkspace={renameWorkspace}
         switchWorkspace={activateSupabaseWorkspace}
         workspace={{
           id: selectedWorkspace.id,
