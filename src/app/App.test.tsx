@@ -46,22 +46,7 @@ test("renders the backend URL gate before the workspace", async () => {
   expect(hostInput.placeholder).toBe("IP / Host: 127.0.0.1");
   expect(portInput.value).toBe("");
   expect(portInput.placeholder).toBe("Port: 3000");
-});
-
-/** Verifies that selecting Supabase exposes a safe configuration error without a browser secret. */
-test("shows a Supabase configuration error when public deployment variables are absent", async () => {
-  vi.spyOn(console, "info").mockImplementation(() => undefined);
-  vi.stubEnv("VITE_SUPABASE_URL", "");
-  vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY", "");
-  render(<App />);
-
-  fireEvent.change(await screen.findByLabelText("数据源"), {
-    target: { value: "supabase" },
-  });
-
-  expect((await screen.findByRole("alert")).textContent).toBe(
-    "此部署尚未配置 Supabase。",
-  );
+  expect(screen.queryByLabelText("数据源")).toBeNull();
 });
 
 /** Verifies that the default backend URL is used when the user leaves input empty. */

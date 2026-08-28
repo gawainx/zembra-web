@@ -2,8 +2,8 @@ import { SettingsModal } from "./SettingsModal";
 import type { SyncClient } from "../../api/sync.client";
 
 interface SyncSettingsPageProps {
-  /** Optional client override used by tests and isolated previews. */
-  client?: SyncClient;
+  /** Backend synchronization client used by this legacy settings route. */
+  client: SyncClient;
 }
 
 /** Renders a compatibility shell for the legacy synchronization settings route. */

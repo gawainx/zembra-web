@@ -7,14 +7,13 @@ import {
 } from "lucide-react";
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { syncClient as defaultSyncClient } from "../../api/client";
 import { ApiError } from "../../api/http";
 import type { SyncClient } from "../../api/sync.client";
 import type { SyncConfigDto, SyncConfigTestResultDto } from "../../api/types";
 
 interface SupabaseSettingsSectionProps {
-  /** Optional client override used by tests and isolated previews. */
-  client?: SyncClient;
+  /** Backend synchronization client used by this Backend-only settings section. */
+  client: SyncClient;
 }
 
 interface SupabaseSettingsFormState {
@@ -38,9 +37,7 @@ const settingsNumberInputClassName =
   "h-10 w-[60px] border-0 border-b border-[var(--color-border)] bg-transparent px-0 text-right text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-border-strong)]";
 
 /** Renders the Supabase synchronization section inside the Settings modal. */
-export function SupabaseSettingsSection({
-  client = defaultSyncClient,
-}: SupabaseSettingsSectionProps) {
+export function SupabaseSettingsSection({ client }: SupabaseSettingsSectionProps) {
   const { t } = useTranslation("settings");
   const [config, setConfig] = useState<SyncConfigDto | undefined>(undefined);
   const [formState, setFormState] =

@@ -5,14 +5,14 @@ import type { SyncClient } from "../../api/sync.client";
 import { SettingsModal } from "./SettingsModal";
 
 interface SettingsModuleProps {
-  /** Optional synchronization client override used by tests and isolated previews. */
-  client?: SyncClient;
+  /** Backend synchronization client used by the Settings module. */
+  client: SyncClient;
 }
 
 /**
  * Renders the self-contained Settings module entrypoint.
  *
- * @param props.client Optional synchronization client used by settings sections.
+ * @param props.client Backend synchronization client used by settings sections.
  * @returns A toolbar button and the Settings modal when opened.
  */
 export function SettingsModule({ client }: SettingsModuleProps) {

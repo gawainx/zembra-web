@@ -1,10 +1,40 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 
 /** Creates the Vite configuration for the Zembra web UI. */
-export default defineConfig({
+export default defineConfig(({ command, mode }) => {
+  const dataSourceTarget = mode === "backend" || mode === "supabase"
+    ? mode
+    : mode === "test"
+      ? "backend"
+      : undefined;
+
+  if (!dataSourceTarget) {
+    throw new Error(
+      "Choose a data-source build target with --mode backend or --mode supabase.",
+    );
+  }
+
+  return {
   plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      "@zembra/data-source-runtime": resolve(
+        __dirname,
+        `src/api/runtime/${dataSourceTarget}.ts`,
+      ),
+      "@zembra/source-entry": resolve(
+        __dirname,
+        `src/app/source-entry/${dataSourceTarget}.tsx`,
+      ),
+      "@zembra/source-home-controls": resolve(
+        __dirname,
+        `src/pages/home/source-home-controls/${dataSourceTarget}.tsx`,
+      ),
+    },
+  },
   build: {
     rollupOptions: {
       output: {
@@ -59,4 +89,5 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
   },
+  };
 });

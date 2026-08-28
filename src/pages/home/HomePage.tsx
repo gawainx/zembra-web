@@ -5,8 +5,6 @@ import {
   CircleHelp,
   Hash,
   List,
-  Loader2,
-  RefreshCw,
   Search,
   User,
 } from "lucide-react";
@@ -14,13 +12,14 @@ import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "../../app/ThemeToggle";
 import { useWorkspace } from "../../app/workspace-context";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getDataSourceMode, syncClient as defaultSyncClient } from "../../api/client";
 import { defaultFieldName } from "../../api/defaultField";
-import { ApiError } from "../../api/http";
-import type { SyncClient } from "../../api/sync.client";
+import {
+  SourceHomeControlsProvider,
+  SourceStatusFeedback,
+  SourceToolbarActions,
+} from "@zembra/source-home-controls";
 import { useNotesStore } from "../../features/notes/noteStore";
 import type { FieldDto, NoteDto } from "../../api/types";
-import { SettingsModule } from "../settings/SettingsModule";
 import { NoteCard } from "./NoteCard";
 import { NoteEditor, type NoteEditorHandle } from "./NoteEditor";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
@@ -48,22 +47,14 @@ import {
   sortNotesByCreatedAt,
 } from "./homeUtils";
 
-interface HomePageProps {
-  /** Optional synchronization client override used by tests. */
-  syncClient?: SyncClient;
-}
-
 /** Renders the redesigned Zembra note workspace shell. */
-export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
+export function HomePage() {
   const { i18n, t } = useTranslation("home");
   const composerRef = useRef<NoteEditorHandle>(null);
   const { workspace, workspaces, switchWorkspace, renameWorkspace } = useWorkspace();
   const [draft, setDraft] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<string>();
   const [editDraft, setEditDraft] = useState("");
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncFeedback, setSyncFeedback] = useState<string | undefined>();
-  const [syncError, setSyncError] = useState<string | undefined>();
   const [pendingDeleteField, setPendingDeleteField] = useState<FieldDto>();
 
   useEffect(() => {
@@ -137,9 +128,6 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
   const [expandedTagRoots, setExpandedTagRoots] = useState<Set<string>>(
     () => new Set(),
   );
-  const dataSourceMode = getDataSourceMode();
-  const supportsSync = dataSourceMode === "backend";
-
   useEffect(() => {
     void loadDailyNoteCounts();
     void loadFields();
@@ -333,31 +321,8 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
     setPendingDeleteField(undefined);
   }
 
-  /** Triggers a manual synchronization cycle from the home workspace. */
-  async function handleManualSync() {
-    if (!supportsSync) {
-      return;
-    }
-    setIsSyncing(true);
-    setSyncFeedback(undefined);
-    setSyncError(undefined);
-
-    try {
-      const result = await syncClient.runSync();
-      setSyncFeedback(
-        t("actions.syncSummary", {
-          pulled: result.pulled,
-          pushed: result.pushed,
-        }),
-      );
-    } catch (error) {
-      setSyncError(formatErrorMessage(error));
-    } finally {
-      setIsSyncing(false);
-    }
-  }
-
   return (
+    <SourceHomeControlsProvider>
     <main className="h-screen overflow-hidden bg-[var(--color-app-bg)] text-[var(--color-text-primary)]">
       <div className="mx-auto grid h-full w-full max-w-[var(--layout-shell-max)] grid-cols-1 gap-[var(--space-4)] px-[var(--space-5)] pt-[var(--space-1)] lg:grid-cols-[minmax(var(--layout-sidebar-min),var(--layout-sidebar-max))_minmax(var(--layout-content-min),var(--layout-content-max))] lg:px-0">
         <aside className="flex min-h-0 min-w-0 flex-col lg:min-h-0">
@@ -384,40 +349,12 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
                     aria-hidden="true"
                   />
                 </button>
-                {supportsSync ? <button
-                  className="flex size-[var(--icon-hit-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
-                  type="button"
-                  aria-label={t("actions.sync")}
-                  title={t("actions.sync")}
-                  disabled={isSyncing}
-                  onClick={() => void handleManualSync()}
-                >
-                  {isSyncing ? (
-                    <Loader2
-                      className="size-[var(--icon-size)] animate-spin text-[var(--color-accent)]"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <RefreshCw
-                      className="size-[var(--icon-size)] text-[var(--color-accent)]"
-                      aria-hidden="true"
-                    />
-                  )}
-                </button> : null}
+                <SourceToolbarActions />
                 <ThemeToggle />
-                {supportsSync ? <SettingsModule client={syncClient} /> : null}
               </div>
             </div>
 
-            {supportsSync && (syncFeedback || syncError) ? (
-              <p
-                className="mb-3 rounded-[10px] border px-3 py-2 text-sm data-[tone=error]:border-[var(--color-error-border)] data-[tone=error]:bg-[var(--color-error-soft)] data-[tone=error]:text-[var(--color-error)] data-[tone=success]:border-[var(--color-success-border)] data-[tone=success]:bg-[var(--color-success-soft)] data-[tone=success]:text-[var(--color-accent)]"
-                data-tone={syncError ? "error" : "success"}
-                role="status"
-              >
-                {syncError ?? syncFeedback}
-              </p>
-            ) : null}
+            <SourceStatusFeedback />
 
             <div className="mb-5 hidden grid-cols-3 gap-4 lg:grid">
               <StatBlock label={t("stats.notes")} value={String(notes.length)} />
@@ -624,16 +561,8 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
         ) : null}
       </div>
     </main>
+    </SourceHomeControlsProvider>
   );
-}
-
-/** Formats an unknown thrown value into a short user-facing message. */
-function formatErrorMessage(error: unknown): string {
-  if (error instanceof ApiError || error instanceof Error) {
-    return error.message;
-  }
-
-  return "Request failed";
 }
 
 /** Renders the in-app confirmation dialog for deleting an unused field. */

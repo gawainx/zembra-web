@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import { notifyMutationCompleted } from "../../app/mutationToast";
-import { getNotesClient, getTaxonomyClient } from "../../api/client";
+import {
+  getNotesClient,
+  getTaxonomyClient,
+} from "@zembra/data-source-runtime";
 import type {
   CreateNoteInput,
   DailyNoteCount,

@@ -5,8 +5,8 @@ import type { SyncClient } from "../../api/sync.client";
 import { settingsCategories } from "./settingsRegistry";
 
 interface SettingsModalProps {
-  /** Optional client override used by tests and isolated previews. */
-  client?: SyncClient;
+  /** Backend synchronization client used by Settings categories. */
+  client: SyncClient;
   /** Called when the modal should close. */
   onClose: () => void;
 }

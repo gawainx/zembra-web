@@ -44,7 +44,7 @@ export function useWorkspace(): WorkspaceContextValue {
   const value = useContext(WorkspaceContext);
 
   if (!value) {
-    throw new Error("Workspace context is unavailable outside DataSourceGate");
+    throw new Error("Workspace context is unavailable outside the source entry");
   }
 
   return value;

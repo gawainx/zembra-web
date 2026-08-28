@@ -4,8 +4,8 @@
   "version": "0.1.1",
   "identifier": "com.antarxly.zembra",
   "build": {
-    "beforeDevCommand": "npm run dev -- --host 127.0.0.1",
-    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev:supabase -- --host 127.0.0.1",
+    "beforeBuildCommand": "npm run build:supabase",
     "devUrl": "http://127.0.0.1:5173",
     "frontendDist": "../dist"
   },

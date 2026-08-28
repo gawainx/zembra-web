@@ -1,7 +1,7 @@
 import { FormEvent, ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2, RefreshCw } from "lucide-react";
-import { listWorkspaces } from "../api/client";
+import { activateDataSource, listWorkspaces } from "../api/client";
 import {
   checkBackendReachability,
   clearConfiguredBackendBaseUrl,
@@ -15,22 +15,18 @@ import {
   setConfiguredWorkspaceId,
 } from "../api/backendConfig";
 import type { WorkspaceSummary } from "../api/types";
-import { activateDataSource } from "../api/data-source-client";
-import { createBackendDataSourceClients } from "../api/client";
 import { WorkspaceProvider } from "./workspace-context";
 
 interface BackendUrlGateProps {
   /** Application content rendered after the backend URL is reachable. */
   children: ReactNode;
-  /** Data-source picker rendered above Backend-specific entry fields. */
-  dataSourceControl?: ReactNode;
 }
 
 type GateStatus = "checking" | "ready" | "needs-url";
 const defaultBackendEndpoint = parseBackendEndpoint(defaultBackendBaseUrl);
 
 /** Gates the app behind a reachable backend API base URL. */
-export function BackendUrlGate({ children, dataSourceControl }: BackendUrlGateProps) {
+export function BackendUrlGate({ children }: BackendUrlGateProps) {
   const { t } = useTranslation("common");
   const [status, setStatus] = useState<GateStatus>("checking");
   const [backendHost, setBackendHost] = useState(() => {
@@ -195,11 +191,7 @@ export function BackendUrlGate({ children, dataSourceControl }: BackendUrlGatePr
   /** Activates and persists one backend workspace selected by the user. */
   function activateBackendWorkspace(workspaceId: string) {
     setConfiguredWorkspaceId(workspaceId);
-    activateDataSource({
-      ...createBackendDataSourceClients(workspaceId),
-      mode: "backend",
-      workspaceId,
-    });
+    activateDataSource(workspaceId);
     setSelectedWorkspaceId(workspaceId);
     console.info("[zembra] Backend workspace activated", {
       workspaceId: workspaceId.slice(0, 8),
@@ -237,7 +229,6 @@ export function BackendUrlGate({ children, dataSourceControl }: BackendUrlGatePr
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
-          {dataSourceControl}
           <div className="text-sm font-medium text-[var(--color-text-primary)]">
             Backend
           </div>

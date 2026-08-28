@@ -6,8 +6,8 @@ import { SupabaseSettingsSection } from "./SupabaseSettingsSection";
 export type SettingsCategoryId = "sync";
 
 export interface SettingsCategoryRenderProps {
-  /** Optional synchronization client override used by tests and previews. */
-  client?: SyncClient;
+  /** Backend synchronization client used by the category. */
+  client: SyncClient;
 }
 
 export interface SettingsCategory {

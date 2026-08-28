@@ -15,7 +15,13 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@zembra/data-source-runtime": ["src/api/runtime/backend.ts"],
+      "@zembra/source-entry": ["src/app/source-entry/backend.tsx"],
+      "@zembra/source-home-controls": ["src/pages/home/source-home-controls/backend.tsx"]
+    }
   },
   "include": ["src"]
 }

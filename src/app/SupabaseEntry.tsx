@@ -1,7 +1,6 @@
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { activateDataSource } from "../api/data-source-client";
-import { createSupabaseDataSourceClients } from "../api/client";
+import { activateDataSource } from "../api/client";
 import {
   getSupabaseBrowserClient,
   getSupabasePublicConfig,
@@ -22,14 +21,12 @@ const workspaceRenameQueues = new Map<string, Promise<void>>();
 const workspaceRenameVersions = new Map<string, number>();
 
 interface SupabaseEntryProps {
-  /** Shared source selector rendered before Supabase-specific controls. */
-  dataSourceControl: ReactNode;
   /** Application content rendered after the Supabase session is confirmed. */
   children: ReactNode;
 }
 
 /** Handles Magic Link authentication followed by RLS-authorized workspace selection. */
-export function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProps) {
+export function SupabaseEntry({ children }: SupabaseEntryProps) {
   const { t } = useTranslation("common");
   const [email, setEmail] = useState("");
   const [workspaces, setWorkspaces] = useState<SupabaseWorkspace[]>([]);
@@ -134,22 +131,10 @@ export function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProp
     }
   }
 
-  /** Activates Supabase business clients for the chosen authorized workspace. */
-  function activateSupabaseDataSource(
-    client: ReturnType<typeof getSupabaseBrowserClient>,
-    workspaceId: string,
-  ) {
-    activateDataSource({
-      ...createSupabaseDataSourceClients(client, workspaceId),
-      mode: "supabase",
-      workspaceId,
-    });
-  }
-
   /** Activates and persists one Supabase workspace selected by the user. */
   function activateSupabaseWorkspace(workspaceId: string) {
     const client = getSupabaseBrowserClient();
-    activateSupabaseDataSource(client, workspaceId);
+    activateDataSource(client, workspaceId);
     setConfiguredSupabaseWorkspaceId(workspaceId);
     setSelectedWorkspaceId(workspaceId);
     console.info("[zembra] Supabase workspace activated", {
@@ -242,7 +227,6 @@ export function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProp
           </p>
         </div>
         <form className="space-y-4" onSubmit={handleSupabaseEntry}>
-          {dataSourceControl}
           {hasSession ? (
             <label className="block text-sm font-medium text-[var(--color-text-primary)]">
               <span>{t("dataSource.workspaceLabel")}</span>

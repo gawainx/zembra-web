@@ -9,7 +9,7 @@ const clientMocks = vi.hoisted(() => ({
   taxonomy: {} as Partial<TaxonomyClient>,
 }));
 
-vi.mock("../../api/client", () => ({
+vi.mock("@zembra/data-source-runtime", () => ({
   getNotesClient: () => clientMocks.notes,
   getTaxonomyClient: () => clientMocks.taxonomy,
 }));

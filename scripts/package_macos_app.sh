@@ -11,7 +11,7 @@ echo "==> Running frontend tests"
 npm test
 
 echo "==> Building frontend assets"
-npm run build
+npm run build:supabase
 
 echo "==> Building macOS app bundle"
 if npm run tauri -- info >/dev/null 2>&1; then

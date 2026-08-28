@@ -11,17 +11,15 @@ import { formatNoteTimestamp } from "./homeUtils";
 
 const clientMocks = vi.hoisted(() => ({
   notes: {} as Record<string, unknown>,
+  sync: {} as SyncClient,
   taxonomy: {} as Record<string, unknown>,
 }));
 
-vi.mock("../../api/client", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../api/client")>();
-  return {
-    ...actual,
-    getNotesClient: () => clientMocks.notes,
-    getTaxonomyClient: () => clientMocks.taxonomy,
-  };
-});
+vi.mock("@zembra/data-source-runtime", () => ({
+  getNotesClient: () => clientMocks.notes,
+  getSyncClient: () => clientMocks.sync,
+  getTaxonomyClient: () => clientMocks.taxonomy,
+}));
 
 beforeEach(async () => {
   await i18next.changeLanguage("zh-CN");
@@ -965,7 +963,7 @@ test("mentions note links into the active edit draft", async () => {
     within(targetCard as HTMLElement).getByRole("button", { name: "Mention" }),
   );
 
-  expect(markdownValue(within(editableCard as HTMLElement).getByRole("textbox")))
+  expect(markdownValue(await within(editableCard as HTMLElement).findByRole("textbox")))
     .toBe("editable content [[bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb]]");
   const noteEditors = getComposerEditors();
   expect(markdownValue(noteEditors[noteEditors.length - 1])).toBe("");
@@ -1318,12 +1316,13 @@ function configureHomeTestStore() {
 function renderHomePage(syncClient = createMockSyncClient()) {
   act(() => {
     configureHomeTestStore();
+    clientMocks.sync = syncClient;
   });
   const rootRoute = createRootRoute();
   const homeRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/",
-    component: () => <HomePage syncClient={syncClient} />,
+    component: HomePage,
   });
   const router = createRouter({ routeTree: rootRoute.addChildren([homeRoute]) });
 
