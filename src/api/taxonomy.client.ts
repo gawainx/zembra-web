@@ -78,39 +78,6 @@ export function createTaxonomyHttpClient(
   };
 }
 
-/** Creates a mock taxonomy client used by tests before backend access is needed. */
-export function createMockTaxonomyClient(): TaxonomyClient {
-  return {
-    async listFields() {
-      return [
-        { id: "mock-field-inbox", name: "inbox", createdAt: 1 },
-        { id: "mock-field-projects", name: "projects", createdAt: 2 },
-      ];
-    },
-    async listTags() {
-      return [
-        {
-          id: "mock-tag-product",
-          name: "产品",
-          path: "产品",
-          depth: 0,
-          createdAt: 1,
-        },
-        {
-          id: "mock-tag-architecture",
-          name: "架构",
-          path: "架构",
-          depth: 0,
-          createdAt: 2,
-        },
-      ];
-    },
-    async deleteField() {
-      return undefined;
-    },
-  };
-}
-
 /** Resolves a configured workspace source into a concrete workspace UUID. */
 async function resolveWorkspaceId(source?: WorkspaceIdSource): Promise<string> {
   if (!source) {

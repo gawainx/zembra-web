@@ -9,6 +9,20 @@ import { WorkspaceProvider } from "../../app/workspace-context";
 import { HomePage } from "./HomePage";
 import { formatNoteTimestamp } from "./homeUtils";
 
+const clientMocks = vi.hoisted(() => ({
+  notes: {} as Record<string, unknown>,
+  taxonomy: {} as Record<string, unknown>,
+}));
+
+vi.mock("../../api/client", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../api/client")>();
+  return {
+    ...actual,
+    getNotesClient: () => clientMocks.notes,
+    getTaxonomyClient: () => clientMocks.taxonomy,
+  };
+});
+
 beforeEach(async () => {
   await i18next.changeLanguage("zh-CN");
 });
@@ -1240,8 +1254,71 @@ function createMockSyncClient(): SyncClient {
   };
 }
 
+/** Seeds deterministic note data without relying on production mock clients. */
+function configureHomeTestStore() {
+  const now = Math.floor(Date.now() / 1000);
+  useNotesStore.setState({
+    dailyNoteCounts: Array.from({ length: 30 }, (_, index) => ({
+      count: index % 9 === 0 ? 3 : index % 5 === 0 ? 1 : 0,
+      date: new Date((now - (29 - index) * 86_400) * 1000).toISOString().slice(0, 10),
+    })),
+    fields: [
+      { id: "field-inbox", name: "inbox", createdAt: 1 },
+      { id: "field-project", name: "project", createdAt: 2 },
+    ],
+    loadDailyNoteCounts: async () => undefined,
+    loadFields: async () => undefined,
+    loadRecentNotes: async () => undefined,
+    loadTags: async () => undefined,
+    notes: [
+      {
+        id: "note-human",
+        content: "今天先把卡片笔记的输入、标签筛选和轻量部署路径搭起来。",
+        createdAt: now - 7200,
+        fieldId: "field-inbox",
+        role: "Human",
+        tags: ["产品", "初始化"],
+        updatedAt: now - 3600,
+      },
+      {
+        id: "note-agent",
+        content: "数据库契约来自 vendor/zembra-schema，前端只通过 API Client 消费业务数据。",
+        createdAt: now - 5400,
+        fieldId: "field-inbox",
+        role: "Agent",
+        tags: ["架构", "schema"],
+        updatedAt: now - 3600,
+      },
+    ],
+    roleNavigationNotes: [],
+    tags: [
+      { id: "tag-product", name: "产品", path: "产品", depth: 0, createdAt: 1 },
+      { id: "tag-architecture", name: "架构", path: "架构", depth: 0, createdAt: 2 },
+    ],
+  });
+  const initialNotes = useNotesStore.getState().notes;
+  clientMocks.notes = {
+    createNote: async () => useNotesStore.getState().notes[0],
+    deleteNote: async () => undefined,
+    getNote: async () => useNotesStore.getState().notes[0],
+    listDailyNoteCounts: async () => useNotesStore.getState().dailyNoteCounts,
+    listNotes: async () => useNotesStore.getState().notes,
+    listRecentNotes: async (query?: { role?: string }) =>
+      initialNotes.filter((note) => !query?.role || note.role === query.role),
+    updateNote: async () => useNotesStore.getState().notes[0],
+  };
+  clientMocks.taxonomy = {
+    deleteField: async () => undefined,
+    listFields: async () => useNotesStore.getState().fields,
+    listTags: async () => useNotesStore.getState().tags,
+  };
+}
+
 /** Renders HomePage with the providers required by its header controls. */
 function renderHomePage(syncClient = createMockSyncClient()) {
+  act(() => {
+    configureHomeTestStore();
+  });
   const rootRoute = createRootRoute();
   const homeRoute = createRoute({
     getParentRoute: () => rootRoute,

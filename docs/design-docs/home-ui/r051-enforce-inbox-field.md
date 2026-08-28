@@ -14,6 +14,8 @@
 
 本需求严格不修改 `vendor/zembra-schema`、数据库 DDL、migration 或任何 schema 产物。后端接收到的创建和显式清空更新请求会获得非空 `field: "inbox"`，Supabase 直连路径在客户端完成 Field 创建和关联。
 
+生产 `src` 不保存任何 mock 笔记、Field、Tag 或同步数据。测试数据仅定义在 `*.test.ts` 和 `*.test.tsx`，并通过测试专用 client 注入。
+
 ## 验证
 
 `src/api/notes.client.test.ts` 验证 HTTP 创建和显式清空更新均发送 `inbox`。`src/pages/home/HomePage.test.tsx` 覆盖首页现有 Field 选择和创建行为。执行 `npm test -- --run src/api/notes.client.test.ts src/pages/home/HomePage.test.tsx` 与 `npm run build`。
