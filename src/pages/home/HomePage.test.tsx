@@ -66,6 +66,13 @@ test("renders daily note count heatmap from store data", async () => {
   expect((await screen.findAllByLabelText(/3 条笔记/)).length).toBeGreaterThan(0);
 });
 
+/** Verifies the active workspace is reflected in the browser title. */
+test("sets the browser title from the active workspace", () => {
+  renderHomePage();
+
+  expect(document.title).toBe("Test workspace - Zembra");
+});
+
 /** Verifies that inline note editing parses the first field and locks other cards. */
 test("edits one note inline and warns when multiple fields are present", async () => {
   renderHomePage();
@@ -1213,8 +1220,8 @@ function renderHomePage(syncClient = createMockSyncClient()) {
     <ThemeProvider>
       <WorkspaceProvider
         switchWorkspace={() => undefined}
-        workspace={{ id: "test-workspace", name: "Test workspace" }}
-        workspaces={[{ id: "test-workspace", name: "Test workspace" }]}
+        workspace={{ id: "test-workspace", name: "Test workspace", title: "Test workspace" }}
+        workspaces={[{ id: "test-workspace", name: "Test workspace", title: "Test workspace" }]}
       >
         <RouterProvider router={router} />
       </WorkspaceProvider>

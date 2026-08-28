@@ -6,6 +6,8 @@ export interface ActiveWorkspace {
   id: string;
   /** Human-readable workspace name shown in navigation. */
   name: string;
+  /** Plain workspace name used in browser metadata. */
+  title: string;
 }
 
 interface WorkspaceContextValue {

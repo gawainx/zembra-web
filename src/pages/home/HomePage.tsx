@@ -67,6 +67,11 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
   const [pendingDeleteField, setPendingDeleteField] = useState<FieldDto>();
   const [isFieldDeleting, setIsFieldDeleting] = useState(false);
   const [fieldDeleteError, setFieldDeleteError] = useState<string | undefined>();
+
+  useEffect(() => {
+    document.title = `${workspace.title} - Zembra`;
+  }, [workspace.title]);
+
   const {
     notes,
     roleNavigationNotes,

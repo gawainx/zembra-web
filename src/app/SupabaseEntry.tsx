@@ -167,10 +167,12 @@ export function SupabaseEntry({ children, dataSourceControl }: SupabaseEntryProp
         workspace={{
           id: selectedWorkspace.id,
           name: selectedWorkspace.name || t("dataSource.unnamedWorkspace"),
+          title: selectedWorkspace.name || t("dataSource.unnamedWorkspace"),
         }}
         workspaces={workspaces.map((workspace) => ({
           id: workspace.id,
           name: workspace.name || t("dataSource.unnamedWorkspace"),
+          title: workspace.name || t("dataSource.unnamedWorkspace"),
         }))}
       >
         {children}
