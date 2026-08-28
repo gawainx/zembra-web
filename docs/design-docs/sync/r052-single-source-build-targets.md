@@ -47,12 +47,12 @@ src/
 
 | 命令 | 构建目标 | 消费的部署配置 |
 | --- | --- | --- |
-| `npm run build:backend` | Backend | `VITE_ZEMBRA_API_BASE_URL`、`VITE_ZEMBRA_WORKSPACE_ID` 与 Backend 现有配置。 |
-| `npm run build:supabase` | Supabase Direct | `VITE_SUPABASE_URL`、`VITE_SUPABASE_PUBLISHABLE_KEY` 与 Supabase Auth 现有公开配置。 |
+| `npm run build:backend` | Docker | `VITE_ZEMBRA_API_BASE_URL`、`VITE_ZEMBRA_WORKSPACE_ID` 与 Backend 现有配置。 |
+| `npm run build:supabase` | Vercel、Tauri | `VITE_SUPABASE_URL`、`VITE_SUPABASE_PUBLISHABLE_KEY` 与 Supabase Auth 现有公开配置。 |
 | `npm run dev:backend` | Backend | 与 Backend 构建相同。 |
 | `npm run dev:supabase` | Supabase Direct | 与 Supabase 构建相同。 |
 
-`npm run build` 不再作为含义不明的默认生产目标；Docker 显式调用 `build:backend`，Tauri 配置和 macOS 打包脚本显式调用 `build:supabase`。Vercel 项目构建命令必须明确使用其中一个 build script。公开 `VITE_` 变量只属于其对应目标，Supabase service role 或 secret key 仍不得进入前端构建环境。
+`npm run build` 不再作为含义不明的默认生产目标；Docker 显式调用 `build:backend`，Vercel、Tauri 配置和 macOS 打包脚本显式调用 `build:supabase`。Vercel 不提供 Backend 构建命令或环境变量配置。公开 `VITE_` 变量只属于其对应目标，Supabase service role 或 secret key 仍不得进入前端构建环境。
 
 ## 验证策略
 

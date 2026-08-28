@@ -10,12 +10,11 @@
 
 | 分发渠道 | 固定数据源 | 运行时能力 |
 | --- | --- | --- |
-| Web / Vercel Backend 构建 | Backend | 保留当前 Backend URL 输入、连通性检查、workspace 选择、笔记操作、同步按钮、同步状态、Sync 设置和连接失败提示。 |
-| Web / Vercel Supabase 构建 | Supabase Direct | 保留 Magic Link、会话恢复、RLS 授权 workspace 查询与选择、笔记操作和 workspace 重命名；不包含 Backend 配置、HTTP client、同步界面或 Sync 设置。 |
+| Vercel | Supabase Direct | 保留 Magic Link、会话恢复、RLS 授权 workspace 查询与选择、笔记操作和 workspace 重命名；不包含 Backend 配置、HTTP client、同步界面或 Sync 设置。 |
 | Docker | Backend | Docker 镜像只执行 Backend 构建，镜像内不包含 `@supabase/supabase-js` 及 Supabase Direct 实现。 |
 | macOS Tauri | Supabase Direct | Tauri 开发、构建与打包都使用 Supabase 构建，应用包内不包含 Backend 入口、HTTP client、同步界面或 Sync 设置。 |
 
-Web / Vercel 的 Backend 与 Supabase 构建是两个独立部署目标，可分别配置为不同 Vercel 项目或同一项目的不同构建配置。每个目标只能部署对应构建产物，不能通过环境变量或本地存储在浏览器中切换为另一数据源。
+Vercel 与 Tauri 只部署 Supabase Direct 构建，Docker 只部署 Backend 构建。各渠道均不能通过环境变量或本地存储在浏览器中切换为另一数据源。
 
 ## 当前状态与调研结论
 
@@ -33,8 +32,8 @@ Web / Vercel 的 Backend 与 Supabase 构建是两个独立部署目标，可分
 
 | 场景 | 预期 |
 | --- | --- |
-| `build:backend` | 生产 `dist` 不含 `@supabase`、`SupabaseEntry`、Supabase business client 或 Supabase 登录代码；Backend 完整流程保持可用。 |
-| `build:supabase` | 生产 `dist` 不含 Backend URL 门禁、HTTP API client、sync client、Sync 设置或 Backend 连接提示；Supabase 登录与业务流程保持可用。 |
+| Docker Backend 构建 | 生产 `dist` 不含 `@supabase`、`SupabaseEntry`、Supabase business client 或 Supabase 登录代码；Backend 完整流程保持可用。 |
+| Vercel / Tauri Supabase 构建 | 生产 `dist` 不含 Backend URL 门禁、HTTP API client、sync client、Sync 设置或 Backend 连接提示；Supabase 登录与业务流程保持可用。 |
 | 运行时入口 | 不显示数据源下拉；不读取或写入数据源模式 localStorage；应用启动只进入构建目标对应的门禁。 |
 | Docker | `docker build` 生成 Backend-only 静态镜像。 |
 | Tauri | `tauri:dev`、`tauri:build` 与 macOS 打包脚本固定使用 Supabase 构建。 |

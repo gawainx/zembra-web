@@ -37,7 +37,7 @@ Backend 与 Supabase Direct 分别从独立、唯一的数据源模块图构建�
 
 | 步骤 | 改动 | 验证 |
 | --- | --- | --- |
-| 4.1 | 修改 Dockerfile 只调用 `build:backend`，更新部署示例；为 Vercel 写明两个项目各自的 build command。 | `docker build` 成功，镜像中的静态资源不包含 Supabase 标识。 |
+| 4.1 | 修改 Dockerfile 只调用 `build:backend`，更新部署示例；Vercel 配置只允许 `build:supabase`。 | `docker build` 成功，镜像中的静态资源不包含 Supabase 标识；Vercel 构建命令固定为 Supabase。 |
 | 4.2 | 修改 `src-tauri/tauri.conf.json`、npm scripts 和 macOS 打包脚本，使开发与打包只调用 Supabase 命令。 | `npm run tauri:build` 或等价打包命令成功，产物不包含 Backend 标识。 |
 | 4.3 | 执行全量测试、两种生产构建、产物扫描和 `git diff --check`；记录两类产物大小与排除证据。 | 测试和构建全部通过，无未选数据源模块；提交后等待用户验收。 |
 
