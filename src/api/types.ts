@@ -52,7 +52,7 @@ export interface CreateNoteInput {
   content: string;
   /** Tag names parsed or selected by the user. */
   tags?: string[];
-  /** Optional field name associated with the note. */
+  /** Field name associated with the note; blank values resolve to inbox. */
   field?: string;
   /** Optional role used when creating the note. */
   role?: string;
@@ -68,7 +68,7 @@ export interface UpdateNoteInput {
   content: string;
   /** Optional replacement tag names parsed from the note body. */
   tags?: string[];
-  /** Optional field name update; null moves the note to inbox. */
+  /** Replacement field name; null or blank values resolve to inbox. */
   field?: string | null;
   /** Optional device identifier used for revision tracking. */
   deviceId?: string;

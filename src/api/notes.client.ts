@@ -17,6 +17,7 @@ import type {
   RecentNotesQuery,
   UpdateNoteInput,
 } from "./types";
+import { resolveRequiredFieldName } from "./defaultField";
 
 /** Defines a workspace ID value or lazy resolver. */
 type WorkspaceIdSource = string | (() => string | Promise<string>);
@@ -135,7 +136,7 @@ export function createNotesHttpClient(
           body: {
             content: input.content,
             device_id: input.deviceId,
-            field: input.field,
+            field: resolveRequiredFieldName(input.field),
             links: mapNoteLinksToRequest(input.links ?? []),
             role: input.role ?? "Human",
             tags: input.tags ?? [],
@@ -156,7 +157,10 @@ export function createNotesHttpClient(
           body: {
             content: input.content,
             device_id: input.deviceId,
-            field: input.field,
+            field:
+              input.field === undefined
+                ? undefined
+                : resolveRequiredFieldName(input.field),
             links: input.links
               ? mapNoteLinksToRequest(input.links)
               : input.links,
@@ -197,6 +201,7 @@ export function createMockNotesClient(): NotesClient {
     {
       id: "demo-note-1",
       content: "今天先把卡片笔记的输入、标签筛选和轻量部署路径搭起来。",
+      fieldId: "mock-field-inbox",
       role: "Human",
       createdAt: now - 7200,
       updatedAt: now - 3600,
@@ -205,6 +210,7 @@ export function createMockNotesClient(): NotesClient {
     {
       id: "demo-note-2",
       content: "数据库契约来自 vendor/zembra-schema，前端只通过 API Client 消费业务数据。",
+      fieldId: "mock-field-inbox",
       role: "Agent",
       createdAt: now - 5400,
       updatedAt: now - 1800,
@@ -244,6 +250,7 @@ export function createMockNotesClient(): NotesClient {
       const note: NoteDto = {
         id: `demo-note-${timestamp}`,
         content: input.content,
+        fieldId: `mock-field-${resolveRequiredFieldName(input.field)}`,
         role: input.role ?? "Human",
         createdAt: timestamp,
         updatedAt: timestamp,

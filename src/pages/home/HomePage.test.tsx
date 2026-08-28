@@ -108,6 +108,47 @@ test("edits one note inline and warns when multiple fields are present", async (
   );
 });
 
+/** Verifies editing without an inline field preserves the note's existing field. */
+test("preserves the existing field when editing without an inline field", async () => {
+  renderHomePage();
+  await waitFor(() => expect(useNotesStore.getState().fields.length).toBeGreaterThan(0));
+  const updateNote = vi.fn(async () => undefined);
+  const note = {
+    id: "project-note",
+    content: "project note",
+    createdAt: 1,
+    fieldId: "field-project",
+    role: "Human",
+    tags: [],
+    updatedAt: 1,
+  };
+
+  act(() => {
+    useNotesStore.setState({
+      fields: [{ id: "field-project", name: "project", createdAt: 1 }],
+      notes: [note],
+      roleNavigationNotes: [note],
+      updateNote,
+    });
+  });
+
+  const noteText = await screen.findByText("project note");
+  const card = noteText.closest("article");
+  expect(card).not.toBeNull();
+  fireEvent.doubleClick(card as HTMLElement);
+
+  const editor = await within(card as HTMLElement).findByRole("textbox");
+  changeMarkdownEditor(editor, "edited project note");
+  fireEvent.click(within(card as HTMLElement).getByRole("button", { name: "发送" }));
+
+  await waitFor(() =>
+    expect(updateNote).toHaveBeenCalledWith(
+      "project-note",
+      expect.objectContaining({ field: "project" }),
+    ),
+  );
+});
+
 /** Verifies toolbar buttons use live editor semantics instead of raw Markdown text insertion. */
 test("previews composer toolbar actions in the live Markdown editor", async () => {
   renderHomePage();

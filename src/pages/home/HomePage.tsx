@@ -15,6 +15,7 @@ import { ThemeToggle } from "../../app/ThemeToggle";
 import { useWorkspace } from "../../app/workspace-context";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getDataSourceMode, syncClient as defaultSyncClient } from "../../api/client";
+import { defaultFieldName } from "../../api/defaultField";
 import { ApiError } from "../../api/http";
 import type { SyncClient } from "../../api/sync.client";
 import { useNotesStore } from "../../features/notes/noteStore";
@@ -176,7 +177,7 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
     const field =
       fieldNames[0] ??
       fields.find((item) => item.id === selectedField)?.name ??
-      "inbox";
+      defaultFieldName;
     const tags = parseTagNames(content);
     const links = parseNoteLinks(content);
 
@@ -289,9 +290,13 @@ export function HomePage({ syncClient = defaultSyncClient }: HomePageProps) {
 
     const fieldNames = parseFieldNames(content);
 
+    const existingFieldName = fieldNameById.get(
+      notes.find((note) => note.id === editingNoteId)?.fieldId ?? "",
+    );
+
     void updateNote(editingNoteId, {
       content,
-      field: fieldNames[0] ?? null,
+      field: fieldNames[0] ?? existingFieldName ?? defaultFieldName,
       links: parseNoteLinks(content),
       tags: parseTagNames(content),
     });
