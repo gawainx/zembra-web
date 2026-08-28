@@ -8,8 +8,8 @@ Supabase JavaScript Data API 支持对单行执行带筛选条件的 `update()`�
 
 ## 当前边界
 
-Supabase 直连路径具备实现条件。Backend 数据源目前只有 workspace 读取和选择契约，前端没有发现可复用的 workspace 改名 endpoint；是否同时支持 Backend 模式，需要由需求确认后再查证后端 OpenAPI 或文档。
+本次只支持 Supabase 直连路径。Backend 数据源目前只有 workspace 读取和选择契约，不新增或推断 Backend workspace 改名接口。
 
-## 待确认项
+## 交互与校验
 
-本次功能是否只支持 Supabase 数据源，还是需要同时新增 Backend workspace 改名接口支持。
+workspace 名称右侧的下拉箭头旁展示修改图标。点击后名称进入输入态并全选现有内容；Enter 或失焦提交。名称为空或仅包含空白字符时禁止提交并保持编辑态。更新成功后同步 workspace 下拉展示和浏览器标题。
