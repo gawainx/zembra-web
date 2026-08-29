@@ -1,7 +1,7 @@
 {
   "name": "zembra-web",
   "private": true,
-  "version": "0.3.2",
+  "version": "0.3.3",
   "type": "module",
   "scripts": {
     "dev:backend": "vite --mode backend",
