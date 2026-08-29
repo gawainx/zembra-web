@@ -116,7 +116,7 @@ export function DailyNotesHeatmap({
           return (
             <span
               aria-label={label}
-              className="size-[var(--heatmap-cell-size)] rounded-[var(--radius-control)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-muted)] data-[level='1']:bg-[var(--color-heatmap-level-1)] data-[level='2']:bg-[var(--color-heatmap-level-2)] data-[level='3']:bg-[var(--color-heatmap-level-3)] data-[level='4']:border-[var(--color-accent)] data-[level='4']:bg-[var(--color-accent)]"
+              className="size-[var(--heatmap-cell-size)] rounded-[var(--heatmap-cell-radius)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-muted)] data-[level='1']:bg-[var(--color-heatmap-level-1)] data-[level='2']:bg-[var(--color-heatmap-level-2)] data-[level='3']:bg-[var(--color-heatmap-level-3)] data-[level='4']:border-[var(--color-accent)] data-[level='4']:bg-[var(--color-accent)]"
               data-level={level}
               key={day.date}
               title={label}

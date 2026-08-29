@@ -19,6 +19,7 @@
   --icon-hit-size: calc(var(--icon-size) + var(--icon-hit-inset) * 2);
   --heatmap-cell-size: 16px;
   --heatmap-cell-gap: 4px;
+  --heatmap-cell-radius: 1px;
   --note-card-header-actions-width: calc(var(--icon-hit-size) * 2 + var(--space-2));
   --layout-sidebar-min: 15rem;
   --layout-sidebar-max: 18.75rem;
