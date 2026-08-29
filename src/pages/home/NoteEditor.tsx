@@ -154,12 +154,12 @@ export const NoteEditor = forwardRef<
             </button>
           ) : null}
           <button
-            className="flex h-[34px] min-w-12 items-center justify-center rounded-[10px] bg-[var(--color-accent)] px-3 text-[var(--color-accent-contrast)] shadow-[var(--color-shadow-card)] hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex size-[var(--icon-hit-size)] items-center justify-center text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
             type="submit"
             aria-label={submitLabel}
             disabled={isSubmitting || draft.trim().length === 0}
           >
-            <SendHorizontal className="size-5" aria-hidden="true" />
+            <SendHorizontal className="size-5" fill="currentColor" aria-hidden="true" />
           </button>
         </div>
       </div>

@@ -37,3 +37,4 @@
 - R047 `34d7fb3` 将笔记卡片 Markdown 外链改为 Bonofix 语义红色 `--color-field` 与下划线，保持标签和内部笔记预览不变；`f03f81d` 后续移除外链加粗显示。相关测试和生产构建均通过，用户已验收。
 - R052 `a0ee7c9` 已完成单数据源构建目标：Docker 固定 Backend，Vercel 与 Tauri 固定 Supabase Direct；删除运行时切换，按 Vite alias 分离入口、client 和同步 UI。20 个测试文件、137 项测试及两种构建通过；Docker daemon 未启动，镜像层验证待运行环境恢复。
 - R053 `88f6b05` 移除笔记编辑器普通文本的固定 Medium 字重，使其继承全局 400 并与 Note Card 正文保持一致；Markdown 标题和用户主动加粗保留语义字重。Supabase 模式人工验收、Backend 与 Supabase 两种生产构建均通过，用户已验收。
+- R054 待提交：将创建与编辑笔记共用的发送按钮改为透明点击区域，使用强调色实心发送图标，移除圆角背景和阴影；保留原有点击范围、禁用条件与可访问性名称。20 个测试文件、137 项测试及 Backend、Supabase 两种生产构建均通过，等待用户验收。
