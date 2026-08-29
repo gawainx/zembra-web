@@ -38,4 +38,3 @@
 - R052 `a0ee7c9` 已完成单数据源构建目标：Docker 固定 Backend，Vercel 与 Tauri 固定 Supabase Direct；删除运行时切换，按 Vite alias 分离入口、client 和同步 UI。20 个测试文件、137 项测试及两种构建通过；Docker daemon 未启动，镜像层验证待运行环境恢复。
 - R053 `88f6b05` 移除笔记编辑器普通文本的固定 Medium 字重，使其继承全局 400 并与 Note Card 正文保持一致；Markdown 标题和用户主动加粗保留语义字重。Supabase 模式人工验收、Backend 与 Supabase 两种生产构建均通过，用户已验收。
 - R054 `d6a1e34` 将创建与编辑笔记共用的发送按钮改为透明点击区域，使用强调色实心发送图标，移除圆角背景和阴影；保留原有点击范围、禁用条件与可访问性名称。20 个测试文件、137 项测试及 Backend、Supabase 两种生产构建均通过，用户已验收并归档执行计划。
-- R055 澄清中：侧栏热力图将限于 Supabase 模式，压缩为无文字的 GitHub 风格周列方块矩阵。统计天数由实际格数动态传入 store 与 Supabase 聚合函数；推荐当前 9 列、每列 7 格，即连续 63 天，Backend 不在本次修改范围内。

@@ -25,6 +25,7 @@ import { NoteEditor, type NoteEditorHandle } from "./NoteEditor";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import {
   DailyNotesHeatmap,
+  heatmapDayCount,
   NavItem,
   SidebarSection,
   StatBlock,
@@ -129,7 +130,7 @@ export function HomePage() {
     () => new Set(),
   );
   useEffect(() => {
-    void loadDailyNoteCounts();
+    void loadDailyNoteCounts(heatmapDayCount);
     void loadFields();
     void loadTags();
     void loadRecentNotes();

@@ -38,7 +38,7 @@ export const home = {
     },
   },
   heatmap: {
-    ariaLabel: "Last 30 days note heatmap",
+    ariaLabel: "Last {{count}} days note heatmap",
     dayLabel: "{{date}}: {{count}} notes",
     days: "{{count}} days",
     empty: "No activity stats yet",

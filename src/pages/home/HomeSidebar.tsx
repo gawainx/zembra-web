@@ -5,6 +5,10 @@ import type { DailyNoteCount } from "../../api/types";
 import type { TagTreeNode } from "./homeUtils";
 import { formatHeatmapDate, getHeatmapLevel } from "./homeUtils";
 
+const heatmapWeekColumns = 9;
+const heatmapDaysPerWeek = 7;
+export const heatmapDayCount = heatmapWeekColumns * heatmapDaysPerWeek;
+
 /** Renders a single statistic block in the sidebar. */
 export function StatBlock({ label, value }: { label: string; value: string }) {
   return (
@@ -31,7 +35,7 @@ export function DailyNotesHeatmap({
   if (days.length === 0) {
     return (
       <section
-        aria-label={t("heatmap.ariaLabel")}
+        aria-label={t("heatmap.ariaLabel", { count: days.length })}
         className="hidden w-[300px] rounded-[var(--radius-surface)] border border-dashed border-[var(--color-border)] p-[var(--space-3)] text-sm text-[var(--color-text-muted)] lg:block"
       >
         {t("heatmap.empty")}
@@ -41,7 +45,7 @@ export function DailyNotesHeatmap({
 
   return (
     <section
-      aria-label={t("heatmap.ariaLabel")}
+      aria-label={t("heatmap.ariaLabel", { count: days.length })}
       className="hidden w-[300px] lg:block"
     >
       <div className="mb-[var(--space-2)] flex items-center justify-between gap-[var(--space-3)] text-[13px] text-[var(--color-text-muted)]">
@@ -51,7 +55,7 @@ export function DailyNotesHeatmap({
         </span>
         <span className="shrink-0">{t("heatmap.days", { count: days.length })}</span>
       </div>
-      <div className="grid grid-flow-col grid-rows-5 gap-[var(--space-2)]">
+      <div className="grid grid-flow-col grid-rows-7 gap-[3px]">
         {days.map((day) => {
           const level = getHeatmapLevel(day.count, maxCount);
           const label = t("heatmap.dayLabel", {
@@ -62,19 +66,13 @@ export function DailyNotesHeatmap({
           return (
             <span
               aria-label={label}
-              className="flex h-9 min-w-0 items-center justify-center rounded-[var(--radius-control)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-muted)] text-[10px] font-semibold leading-none text-[var(--color-text-muted)] data-[level='1']:bg-[var(--color-heatmap-level-1)] data-[level='2']:bg-[var(--color-heatmap-level-2)] data-[level='3']:bg-[var(--color-heatmap-level-3)] data-[level='4']:border-[var(--color-accent)] data-[level='4']:bg-[var(--color-accent)] data-[level='4']:text-[var(--color-accent-contrast)]"
+              className="size-3 rounded-[3px] border border-[var(--color-border-subtle)] bg-[var(--color-surface-muted)] data-[level='1']:bg-[var(--color-heatmap-level-1)] data-[level='2']:bg-[var(--color-heatmap-level-2)] data-[level='3']:bg-[var(--color-heatmap-level-3)] data-[level='4']:border-[var(--color-accent)] data-[level='4']:bg-[var(--color-accent)]"
               data-level={level}
               key={day.date}
               title={label}
-            >
-              {Number(day.date.slice(-2))}
-            </span>
+            />
           );
         })}
-      </div>
-      <div className="mt-[var(--space-2)] flex justify-between text-[12px] text-[var(--color-text-muted)]">
-        <span>{formatHeatmapDate(days[0]?.date, locale)}</span>
-        <span>{formatHeatmapDate(days.at(-1)?.date, locale)}</span>
       </div>
     </section>
   );
