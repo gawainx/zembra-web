@@ -1,0 +1,25 @@
+:root {
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --radius-control: 0.5rem;
+  --radius-surface: 0.75rem;
+  --radius-card: 1rem;
+  --control-height: 2.5rem;
+  --control-size: 2.5rem;
+  --icon-size: 1rem;
+  --icon-hit-inset: 1px;
+  --icon-hit-size: calc(var(--icon-size) + var(--icon-hit-inset) * 2);
+  --heatmap-cell-size: 16px;
+  --heatmap-cell-gap: 4px;
+  --heatmap-cell-radius: 1px;
+  --note-card-header-actions-width: calc(var(--icon-hit-size) * 2 + var(--space-2));
+  --layout-sidebar-min: 15rem;
+  --layout-sidebar-max: 18.75rem;
+  --layout-content-min: 30rem;
+  --layout-content-max: 47.5rem;
+  --layout-shell-max: calc(var(--layout-sidebar-max) + var(--space-4) + var(--layout-content-max));
+}

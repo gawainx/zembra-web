@@ -1,0 +1,183 @@
+.note-markdown {
+  overflow-wrap: anywhere;
+}
+
+.note-markdown > * {
+  margin: 0;
+}
+
+.note-markdown > * + * {
+  margin-top: var(--space-2);
+}
+
+.note-tag-chip,
+.live-markdown-editor-content .editor-tag-chip {
+  display: inline-block;
+  border: 0;
+  border-radius: 1em;
+  background: var(--color-tag-chip-background);
+  margin: 2px 0;
+  padding: 0 7px;
+  color: var(--color-tag-chip-text);
+}
+
+.note-markdown h1,
+.note-markdown h2,
+.note-markdown h3,
+.note-markdown h4,
+.note-markdown h5,
+.note-markdown h6 {
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.note-markdown ul,
+.note-markdown ol {
+  padding-left: 1.35rem;
+}
+
+.note-markdown ul,
+.live-markdown-editor-content ul {
+  list-style-type: disc;
+}
+
+.note-markdown ol,
+.live-markdown-editor-content ol {
+  list-style-type: decimal;
+}
+
+.note-markdown li,
+.live-markdown-editor-content li {
+  padding-left: 0.1rem;
+}
+
+.note-markdown li + li {
+  margin-top: var(--space-1);
+}
+
+.note-markdown li > p,
+.live-markdown-editor-content li > p {
+  margin: 0;
+}
+
+.note-markdown blockquote,
+.live-markdown-editor-content blockquote {
+  border-left: 3px solid var(--color-quote-border);
+  padding-left: var(--space-3);
+  color: var(--color-text-secondary);
+}
+
+.note-markdown pre,
+.live-markdown-editor-content pre {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
+  padding: var(--space-3);
+}
+
+.note-markdown :not(pre) > code,
+.live-markdown-editor-content :not(pre) > code {
+  border-radius: var(--space-1);
+  background: var(--color-code-bg);
+  padding: 0.1rem var(--space-1);
+  color: var(--color-code-text);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.85em;
+}
+
+.note-markdown pre code {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.note-markdown table,
+.live-markdown-editor-content table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+.note-markdown table {
+  font-size: 0.92em;
+}
+
+.note-markdown th,
+.note-markdown td,
+.live-markdown-editor-content th,
+.live-markdown-editor-content td {
+  border: 1px solid var(--color-border);
+  padding: var(--space-1) var(--space-2);
+}
+
+.note-markdown th {
+  background: var(--color-surface-muted);
+  font-weight: 700;
+}
+
+.note-markdown hr {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.note-markdown input[type="checkbox"] {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--color-accent);
+  border-radius: 999px;
+  background: transparent;
+  margin-right: 0.35rem;
+  vertical-align: -0.1em;
+}
+
+.note-markdown input[type="checkbox"]:checked {
+  background: var(--color-accent);
+  box-shadow: inset 0 0 0 3px var(--color-surface);
+}
+
+.live-markdown-editor-content {
+  max-height: 142px;
+  min-height: 70px;
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-4) var(--space-2);
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  line-height: 1.5;
+  outline: none;
+  overflow-wrap: anywhere;
+}
+
+.live-markdown-editor-content p,
+.live-markdown-editor-content h1,
+.live-markdown-editor-content h2,
+.live-markdown-editor-content h3,
+.live-markdown-editor-content blockquote,
+.live-markdown-editor-content pre,
+.live-markdown-editor-content ul,
+.live-markdown-editor-content ol {
+  margin: 0;
+}
+
+.live-markdown-editor-content > * + * {
+  margin-top: var(--space-2);
+}
+
+.live-markdown-editor-content h1,
+.live-markdown-editor-content h2,
+.live-markdown-editor-content h3 {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.live-markdown-editor-content ul,
+.live-markdown-editor-content ol {
+  padding-left: 1.35rem;
+}
+
+.live-markdown-editor-content li {
+  margin: 0;
+}

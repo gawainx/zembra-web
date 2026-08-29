@@ -6,15 +6,19 @@
 
 ### 主题色只能从 palette 到语义 token 单向流动
 
-`src/styles/main.css` 中的 `--palette-*` 是亮暗主题唯一允许定义物理颜色的位置；`--color-*` 只能引用 palette 或其他语义 token；组件只能引用 `--color-*`。禁止在组件中写入 `white`、`black`、十六进制、`rgba()` 或 `color-mix()`，禁止将 palette token 直接用于组件。新增主题只覆写 palette，不新增组件级颜色例外。
+`src/styles/themes/zembra-*.css` 中的 `--palette-*` 是亮暗主题唯一允许定义物理颜色的位置；`src/styles/foundations/semantic-tokens.css` 中的 `--color-*` 只能引用 palette 或其他语义 token；组件只能引用 `--color-*`。禁止在组件中写入 `white`、`black`、十六进制、`rgba()` 或 `color-mix()`，禁止将 palette token 直接用于组件。新增主题只覆写 palette，不新增组件级颜色例外。
 
 ### Tag chip 色彩只能消费语义 token
 
-tag chip 的组件选择器只能使用 `--color-tag-chip-background` 与 `--color-tag-chip-text`，禁止直接使用 `--color-accent`、任意十六进制色或在组件内进行 `color-mix()`。主题 pigment 与合成规则统一维护在 `src/styles/main.css` 的亮暗主题 token 区；新增主题只覆写该区 token，禁止为单个组件追加颜色例外。
+tag chip 的组件选择器只能使用 `--color-tag-chip-background` 与 `--color-tag-chip-text`，禁止直接使用 `--color-accent`、任意十六进制色或在组件内进行 `color-mix()`。主题 pigment 维护在 `src/styles/themes/zembra-*.css`，合成规则维护在 `src/styles/foundations/semantic-tokens.css`；新增主题只覆写 palette，不得为单个组件追加颜色例外。
 
 ### 布局间距和边框只能由单一层级负责
 
-页面和区域容器只负责区域间距；列表、表单和工具栏只负责同级元素 gap；card、编辑器、弹窗、菜单和通知等表面只负责自身 padding、圆角与一条真实 border；Markdown 只负责内容块内部节奏。组件不得通过外边距推挤相邻组件，禁止用 inset shadow 模拟第二道边框。间距、圆角和控件尺寸只能消费 `src/styles/main.css` 中的 `--space-*`、`--radius-*` 和 `--control-*` token。
+页面和区域容器只负责区域间距；列表、表单和工具栏只负责同级元素 gap；card、编辑器、弹窗、菜单和通知等表面只负责自身 padding、圆角与一条真实 border；Markdown 只负责内容块内部节奏。组件不得通过外边距推挤相邻组件，禁止用 inset shadow 模拟第二道边框。间距、圆角和控件尺寸只能消费 `src/styles/foundations/layout-tokens.css` 中的 `--space-*`、`--radius-*` 和 `--control-*` token。
+
+### 主题文件边界
+
+`src/styles/index.css` 是唯一的样式入口，只负责加载顺序。主题文件必须以 `zembra-` 开头，避免名称与 Logseq 等第三方产品主题混淆。`themes/` 不得出现结构选择器或 `--color-*`；`semantic-tokens.css` 不得出现物理颜色值；`content/` 不得定义或覆盖 palette、语义 token。新增全局样式必须归入这三个边界之一，禁止恢复单一巨型 CSS 文件。
 
 ### 2026-05-30 Role 图标标识不要擅自升级为 Badge
 
