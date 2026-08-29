@@ -355,7 +355,6 @@ button[data-active="true"] {
   padding: var(--space-3) var(--space-4) var(--space-2);
   color: var(--color-text-primary);
   font-size: 1rem;
-  font-weight: 500;
   line-height: 1.5;
   outline: none;
   overflow-wrap: anywhere;
