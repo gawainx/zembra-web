@@ -1,13 +1,11 @@
 import { CalendarDays, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
-import { MouseEvent, ReactNode } from "react";
+import { MouseEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DailyNoteCount } from "../../api/types";
 import type { TagTreeNode } from "./homeUtils";
 import { formatHeatmapDate, getHeatmapLevel } from "./homeUtils";
 
-const heatmapWeekColumns = 9;
 const heatmapDaysPerWeek = 7;
-export const heatmapDayCount = heatmapWeekColumns * heatmapDaysPerWeek;
 
 /** Renders a single statistic block in the sidebar. */
 export function StatBlock({ label, value }: { label: string; value: string }) {
@@ -25,18 +23,62 @@ export function StatBlock({ label, value }: { label: string; value: string }) {
 export function DailyNotesHeatmap({
   days,
   locale = "zh-CN",
+  onDayCountChange,
 }: {
   days: DailyNoteCount[];
   locale?: string;
+  onDayCountChange: (dayCount: number) => void;
 }) {
   const { t } = useTranslation("home");
+  const heatmapRef = useRef<HTMLElement>(null);
+  const [columnCount, setColumnCount] = useState(0);
   const maxCount = Math.max(0, ...days.map((day) => day.count));
+
+  useEffect(() => {
+    const heatmap = heatmapRef.current;
+
+    if (!heatmap) {
+      return;
+    }
+    const observedHeatmap: HTMLElement = heatmap;
+
+    /** Calculates the complete heatmap columns that fit in the rendered grid width. */
+    function updateColumnCount() {
+      const styles = window.getComputedStyle(observedHeatmap);
+      const cellSize = Number.parseFloat(styles.getPropertyValue("--heatmap-cell-size"));
+      const cellGap = Number.parseFloat(styles.getPropertyValue("--heatmap-cell-gap"));
+      const nextColumnCount = Math.max(
+        1,
+        Math.floor((observedHeatmap.clientWidth + cellGap) / (cellSize + cellGap)),
+      );
+
+      setColumnCount((currentColumnCount) =>
+        currentColumnCount === nextColumnCount ? currentColumnCount : nextColumnCount,
+      );
+    }
+
+    updateColumnCount();
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const observer = new ResizeObserver(updateColumnCount);
+    observer.observe(observedHeatmap);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (columnCount > 0) {
+      onDayCountChange(columnCount * heatmapDaysPerWeek);
+    }
+  }, [columnCount, onDayCountChange]);
 
   if (days.length === 0) {
     return (
       <section
         aria-label={t("heatmap.ariaLabel", { count: days.length })}
         className="hidden w-[300px] rounded-[var(--radius-surface)] border border-dashed border-[var(--color-border)] p-[var(--space-3)] text-sm text-[var(--color-text-muted)] lg:block"
+        ref={heatmapRef}
       >
         {t("heatmap.empty")}
       </section>
@@ -47,6 +89,7 @@ export function DailyNotesHeatmap({
     <section
       aria-label={t("heatmap.ariaLabel", { count: days.length })}
       className="hidden w-[300px] lg:block"
+      ref={heatmapRef}
     >
       <div className="mb-[var(--space-2)] flex items-center justify-between gap-[var(--space-3)] text-[13px] text-[var(--color-text-muted)]">
         <span className="inline-flex min-w-0 items-center gap-1.5">
@@ -55,7 +98,14 @@ export function DailyNotesHeatmap({
         </span>
         <span className="shrink-0">{t("heatmap.days", { count: days.length })}</span>
       </div>
-      <div className="grid grid-flow-col grid-rows-7 gap-[3px]">
+      <div
+        className="grid grid-flow-col grid-rows-7 gap-[var(--heatmap-cell-gap)]"
+        style={
+          columnCount > 0
+            ? { gridTemplateColumns: `repeat(${columnCount}, var(--heatmap-cell-size))` }
+            : undefined
+        }
+      >
         {days.map((day) => {
           const level = getHeatmapLevel(day.count, maxCount);
           const label = t("heatmap.dayLabel", {
@@ -66,7 +116,7 @@ export function DailyNotesHeatmap({
           return (
             <span
               aria-label={label}
-              className="size-3 rounded-[3px] border border-[var(--color-border-subtle)] bg-[var(--color-surface-muted)] data-[level='1']:bg-[var(--color-heatmap-level-1)] data-[level='2']:bg-[var(--color-heatmap-level-2)] data-[level='3']:bg-[var(--color-heatmap-level-3)] data-[level='4']:border-[var(--color-accent)] data-[level='4']:bg-[var(--color-accent)]"
+              className="size-[var(--heatmap-cell-size)] rounded-[var(--radius-control)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-muted)] data-[level='1']:bg-[var(--color-heatmap-level-1)] data-[level='2']:bg-[var(--color-heatmap-level-2)] data-[level='3']:bg-[var(--color-heatmap-level-3)] data-[level='4']:border-[var(--color-accent)] data-[level='4']:bg-[var(--color-accent)]"
               data-level={level}
               key={day.date}
               title={label}

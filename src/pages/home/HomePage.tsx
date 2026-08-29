@@ -25,7 +25,6 @@ import { NoteEditor, type NoteEditorHandle } from "./NoteEditor";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import {
   DailyNotesHeatmap,
-  heatmapDayCount,
   NavItem,
   SidebarSection,
   StatBlock,
@@ -130,7 +129,6 @@ export function HomePage() {
     () => new Set(),
   );
   useEffect(() => {
-    void loadDailyNoteCounts(heatmapDayCount);
     void loadFields();
     void loadTags();
     void loadRecentNotes();
@@ -363,7 +361,11 @@ export function HomePage() {
               <StatBlock label={t("stats.fields")} value={String(fields.length)} />
             </div>
 
-            <DailyNotesHeatmap days={dailyNoteCounts} locale={i18n.resolvedLanguage} />
+            <DailyNotesHeatmap
+              days={dailyNoteCounts}
+              locale={i18n.resolvedLanguage}
+              onDayCountChange={loadDailyNoteCounts}
+            />
           </div>
 
           <div className="hidden min-h-0 flex-1 overflow-y-auto pb-44 pr-1 pt-4 lg:block">
