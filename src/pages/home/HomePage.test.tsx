@@ -65,15 +65,12 @@ test("renders daily note count heatmap from store data", async () => {
   renderHomePage();
 
   expect(
-    await screen.findByRole("region", { name: "最近30天笔记热力图" }),
+    await screen.findByRole("region", { name: "最近63天笔记热力图" }),
   ).not.toBeNull();
   expect(await screen.findByText("最近活跃")).not.toBeNull();
-  expect(await screen.findByText("30 天")).not.toBeNull();
-  expect(
-    screen
-      .getByRole("region", { name: "最近30天笔记热力图" })
-      .querySelector(".grid-rows-5"),
-  ).not.toBeNull();
+  expect(await screen.findByText("63 天")).not.toBeNull();
+  const heatmap = screen.getByRole("region", { name: "最近63天笔记热力图" });
+  expect(heatmap.querySelectorAll("[title]")).toHaveLength(63);
   expect((await screen.findAllByLabelText(/3 条笔记/)).length).toBeGreaterThan(0);
 });
 
@@ -1256,9 +1253,9 @@ function createMockSyncClient(): SyncClient {
 function configureHomeTestStore() {
   const now = Math.floor(Date.now() / 1000);
   useNotesStore.setState({
-    dailyNoteCounts: Array.from({ length: 30 }, (_, index) => ({
+    dailyNoteCounts: Array.from({ length: 63 }, (_, index) => ({
       count: index % 9 === 0 ? 3 : index % 5 === 0 ? 1 : 0,
-      date: new Date((now - (29 - index) * 86_400) * 1000).toISOString().slice(0, 10),
+      date: new Date((now - (62 - index) * 86_400) * 1000).toISOString().slice(0, 10),
     })),
     fields: [
       { id: "field-inbox", name: "inbox", createdAt: 1 },

@@ -141,7 +141,7 @@ describe("createNotesHttpClient", () => {
       workspaceId,
     });
 
-    await expect(client.listDailyNoteCounts()).resolves.toEqual([
+    await expect(client.listDailyNoteCounts(63)).resolves.toEqual([
       { date: "2026-05-20", count: 2 },
       { date: "2026-05-21", count: 0 },
     ]);
@@ -162,7 +162,7 @@ describe("createNotesHttpClient", () => {
       workspaceId: async () => workspaceId,
     });
 
-    await expect(client.listDailyNoteCounts()).resolves.toEqual([]);
+    await expect(client.listDailyNoteCounts(63)).resolves.toEqual([]);
   });
 
   test("lists notes using backend records and note tag endpoints", async () => {

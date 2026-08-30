@@ -38,7 +38,7 @@ export const home = {
     },
   },
   heatmap: {
-    ariaLabel: "最近30天笔记热力图",
+    ariaLabel: "最近{{count}}天笔记热力图",
     dayLabel: "{{date}}：{{count}} 条笔记",
     days: "{{count}} 天",
     empty: "暂无热力统计",

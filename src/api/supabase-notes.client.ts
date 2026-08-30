@@ -57,14 +57,14 @@ export function createSupabaseNotesClient(
       throwSupabaseError(error, "load recent notes");
       return attachTags(client, workspaceId, (data ?? []) as SupabaseNoteRow[]);
     },
-    async listDailyNoteCounts() {
+    async listDailyNoteCounts(dayCount) {
       const { data, error } = await client
         .from("notes")
         .select("created_at")
         .eq("workspace_id", workspaceId)
         .is("deleted_at", null);
       throwSupabaseError(error, "load daily note counts");
-      return createDailyCounts((data ?? []) as Array<{ created_at: number }>);
+      return createDailyCounts((data ?? []) as Array<{ created_at: number }>, dayCount);
     },
     async listNotes(query) {
       const notes = await listAllNotes(client, workspaceId);
@@ -289,17 +289,17 @@ async function createRevision(client: SupabaseClient, workspaceId: string, noteI
   throwSupabaseError(noteError, "update note revision");
 }
 
-/** Builds the fixed thirty-day heatmap contract from stored Unix timestamps. */
-function createDailyCounts(rows: Array<{ created_at: number }>): DailyNoteCount[] {
+/** Builds a requested-length heatmap from stored Unix timestamps. */
+function createDailyCounts(rows: Array<{ created_at: number }>, dayCount: number): DailyNoteCount[] {
   const today = new Date();
   const counts = new Map<string, number>();
   rows.forEach((row) => {
     const date = new Date(row.created_at * 1000).toISOString().slice(0, 10);
     counts.set(date, (counts.get(date) ?? 0) + 1);
   });
-  return Array.from({ length: 30 }, (_, index) => {
+  return Array.from({ length: dayCount }, (_, index) => {
     const date = new Date(today);
-    date.setDate(today.getDate() - (29 - index));
+    date.setDate(today.getDate() - (dayCount - 1 - index));
     const key = date.toISOString().slice(0, 10);
     return { date: key, count: counts.get(key) ?? 0 };
   });

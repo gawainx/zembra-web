@@ -24,6 +24,8 @@ interface NotesState {
   tags: TagDto[];
   /** Daily note counts used by the home activity heatmap. */
   dailyNoteCounts: DailyNoteCount[];
+  /** Number of calendar days represented by the loaded heatmap counts. */
+  dailyNoteCountDays?: number;
   /** Cached notes loaded only for link previews. */
   notePreviewById: Record<string, NoteDto>;
   /** Search keyword entered by the user. */
@@ -44,8 +46,8 @@ interface NotesState {
   setSelectedRole: (role?: string) => Promise<void>;
   /** Loads recent notes from the home feed endpoint. */
   loadRecentNotes: () => Promise<void>;
-  /** Loads visible note counts for the past 30 days. */
-  loadDailyNoteCounts: () => Promise<void>;
+  /** Loads visible note counts for the requested number of calendar days. */
+  loadDailyNoteCounts: (dayCount: number) => Promise<void>;
   /** Creates a note and places it at the top of the recent feed. */
   createNote: (input: CreateNoteInput) => Promise<void>;
   /** Updates a note and moves it to the top of the recent feed. */
@@ -72,6 +74,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   fields: [],
   tags: [],
   dailyNoteCounts: [],
+  dailyNoteCountDays: undefined,
   notePreviewById: {},
   keyword: "",
   selectedTag: undefined,
@@ -108,9 +111,9 @@ export const useNotesStore = create<NotesState>((set, get) => ({
           : state.roleNavigationNotes,
     }));
   },
-  loadDailyNoteCounts: async () => {
-    const dailyNoteCounts = await getNotesClient().listDailyNoteCounts();
-    set({ dailyNoteCounts });
+  loadDailyNoteCounts: async (dayCount) => {
+    const dailyNoteCounts = await getNotesClient().listDailyNoteCounts(dayCount);
+    set({ dailyNoteCounts, dailyNoteCountDays: dayCount });
   },
   createNote: async (input) => {
     const temporaryNote = createTemporaryNote(input, get().fields);
@@ -139,7 +142,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
         message: "noteCreated",
         tone: "success",
       });
-      void refreshNoteMetadata(set);
+      void refreshNoteMetadata(set, get);
     } catch (error) {
       set((state) => ({
         notes: state.notes.filter((note) => note.id !== temporaryNote.id),
@@ -204,7 +207,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
         }
         console.info("[zembra] Updated note", { noteId: note.id });
         notifyMutationCompleted({ duration: 3000, message: "noteUpdated", tone: "success" });
-        void refreshNoteMetadata(set);
+        void refreshNoteMetadata(set, get);
       } catch (error) {
         if (isCurrentMutation(`note:${previousNote.id}`, version)) {
           set((state) => ({
@@ -245,7 +248,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
         await getNotesClient().deleteNote(noteRef);
         console.info("[zembra] Deleted note", { noteId: noteRef });
         notifyMutationCompleted({ duration: 3000, message: "noteDeleted", tone: "success" });
-        void refreshNoteMetadata(set);
+        void refreshNoteMetadata(set, get);
       } catch (error) {
         if (isCurrentMutation(`note:${noteRef}`, version)) {
           set((state) => ({
@@ -410,12 +413,16 @@ function omitNotePreview(
 /** Refreshes navigation metadata after a confirmed remote note mutation. */
 async function refreshNoteMetadata(
   set: (partial: Pick<NotesState, "dailyNoteCounts" | "fields" | "tags">) => void,
+  get: () => NotesState,
 ): Promise<void> {
   try {
+    const dayCount = get().dailyNoteCountDays;
     const [fields, tags, dailyNoteCounts] = await Promise.all([
       getTaxonomyClient().listFields(),
       getTaxonomyClient().listTags(),
-      getNotesClient().listDailyNoteCounts(),
+      dayCount === undefined
+        ? Promise.resolve(get().dailyNoteCounts)
+        : getNotesClient().listDailyNoteCounts(dayCount),
     ]);
     set({ dailyNoteCounts, fields, tags });
   } catch (error) {

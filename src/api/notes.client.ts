@@ -26,8 +26,8 @@ type WorkspaceIdSource = string | (() => string | Promise<string>);
 export interface NotesClient {
   /** Lists recent notes ordered by update time for the home feed. */
   listRecentNotes(query?: RecentNotesQuery): Promise<NoteDto[]>;
-  /** Lists visible note counts for the past 30 server-local calendar days. */
-  listDailyNoteCounts(): Promise<DailyNoteCount[]>;
+  /** Lists visible note counts for the requested number of recent calendar days. */
+  listDailyNoteCounts(dayCount: number): Promise<DailyNoteCount[]>;
   /** Lists notes using the provided query filters. */
   listNotes(query: NotesQuery): Promise<NoteDto[]>;
   /** Reads a single note by full ID or unique prefix. */
@@ -82,7 +82,7 @@ export function createNotesHttpClient(
 
       return notes;
     },
-    async listDailyNoteCounts() {
+    async listDailyNoteCounts(_dayCount) {
       const resolvedBaseUrl = resolveBackendBaseUrl(baseUrl);
       const response = await requestJson<DailyNoteCountsResponse>(
         resolvedBaseUrl,
