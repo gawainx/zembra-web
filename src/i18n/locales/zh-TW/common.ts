@@ -52,6 +52,8 @@ export const common = {
     noteUpdateFailed: "無法儲存，筆記已還原",
     fieldDeleted: "Field 已刪除",
     fieldDeleteFailed: "無法刪除 Field，已還原",
+    tagDeleted: "Tag 已刪除",
+    tagDeleteFailed: "無法刪除 Tag，已還原",
     workspaceRenamed: "Workspace 已改名",
     workspaceRenameFailed: "無法修改 Workspace 名稱，已還原原名稱",
   },

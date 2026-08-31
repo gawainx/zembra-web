@@ -25,6 +25,8 @@ export interface TaxonomyClient {
   listTags(): Promise<TagDto[]>;
   /** Deletes an unused field by stable identifier. */
   deleteField(fieldId: string): Promise<void>;
+  /** Deletes an empty tag subtree from deepest descendant to root. */
+  deleteTagTree(tags: TagDto[]): Promise<void>;
 }
 
 /** Defines configuration for the HTTP taxonomy client. */
@@ -74,6 +76,9 @@ export function createTaxonomyHttpClient(
           } satisfies DeleteFieldRequest,
         },
       );
+    },
+    async deleteTagTree() {
+      throw new Error("Tag deletion is only available with Supabase Direct");
     },
   };
 }

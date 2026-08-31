@@ -104,6 +104,40 @@ test("removes a note before delete completion and restores it on failure", async
   expect(useNotesStore.getState().roleNavigationNotes).toEqual([existingNote]);
 });
 
+/** Verifies an empty tag subtree is removed optimistically and restored on failure. */
+test("deletes an empty tag tree optimistically and restores it on remote failure", async () => {
+  const deferred = createDeferred<void>();
+  clientMocks.taxonomy = {
+    deleteTagTree: vi.fn(() => deferred.promise),
+  };
+  const tags = [
+    { id: "root", name: "root", path: "root", depth: 0, createdAt: 1 },
+    {
+      id: "child",
+      name: "child",
+      parentTagId: "root",
+      path: "root/child",
+      depth: 1,
+      createdAt: 1,
+    },
+  ];
+  useNotesStore.setState({ selectedTag: "root/child", tags });
+
+  let request!: Promise<void>;
+  act(() => {
+    request = useNotesStore.getState().deleteTagTree("root");
+  });
+
+  expect(useNotesStore.getState().tags).toEqual([]);
+  expect(useNotesStore.getState().selectedTag).toBeUndefined();
+
+  deferred.reject(new Error("offline"));
+  await expect(request).resolves.toBeUndefined();
+
+  expect(useNotesStore.getState().tags).toEqual(tags);
+  expect(useNotesStore.getState().selectedTag).toBe("root/child");
+});
+
 /** Verifies an edited note is visible immediately and rolls back on remote failure. */
 test("updates a note before completion and restores it on failure", async () => {
   const deferred = createDeferred<NoteDto>();

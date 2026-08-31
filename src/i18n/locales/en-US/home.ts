@@ -68,6 +68,15 @@ export const home = {
     },
     roleLabel: "Role: {{role}}",
   },
+  tag: {
+    delete: {
+      action: "Delete Tag #{{tag}}",
+      cancel: "Cancel",
+      confirm: "Delete",
+      description: "Delete #{{tag}}?",
+      title: "Delete Tag",
+    },
+  },
   search: {
     placeholder: "Search notes, Fields, Tags",
   },

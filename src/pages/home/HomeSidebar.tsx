@@ -227,7 +227,9 @@ export function TagTreeItem({
   collapsedLabel,
   expanded,
   expandedLabel,
+  getDeleteLabel,
   node,
+  onDelete,
   onSelect,
   onToggle,
   rootCount,
@@ -237,19 +239,24 @@ export function TagTreeItem({
   collapsedLabel: string;
   expanded: boolean;
   expandedLabel: string;
+  getDeleteLabel: (tag: TagTreeNode["tag"], count: number) => string | undefined;
   node: TagTreeNode;
+  onDelete: (tag: TagTreeNode["tag"]) => void;
   onSelect: (path: string) => void;
   onToggle: (path: string) => void;
   rootCount: number;
 }) {
   const hasChildren = node.children.length > 0;
+  const rootDeleteLabel = getDeleteLabel(node.tag, rootCount);
 
   if (!hasChildren) {
     return (
       <NavItem
         active={activePath === node.tag.path}
         count={rootCount}
+        deleteLabel={rootDeleteLabel}
         label={node.tag.name}
+        onDelete={rootDeleteLabel ? () => onDelete(node.tag) : undefined}
         prefix="#"
         onClick={() => onSelect(node.tag.path)}
       />
@@ -287,20 +294,45 @@ export function TagTreeItem({
         >
           {node.tag.name}
         </button>
-        <span className="text-xs text-[var(--color-text-muted)]">{rootCount}</span>
+        <span className="flex min-w-0 items-center justify-end">
+          {rootDeleteLabel ? (
+            <>
+              <span className="text-xs text-[var(--color-text-muted)] group-hover:hidden group-focus-within:hidden">
+                {rootCount}
+              </span>
+              <button
+                aria-label={rootDeleteLabel}
+                className="hidden size-[var(--icon-hit-size)] items-center justify-center rounded-[var(--radius-control)] text-[var(--color-error)] hover:bg-[var(--color-error-soft)] group-hover:flex group-focus-within:flex"
+                type="button"
+                onClick={() => onDelete(node.tag)}
+              >
+                <Trash2 className="size-[var(--icon-size)]" aria-hidden="true" />
+              </button>
+            </>
+          ) : (
+            <span className="text-xs text-[var(--color-text-muted)]">{rootCount}</span>
+          )}
+        </span>
       </div>
       {hasChildren && expanded ? (
         <div className="ml-6 flex flex-col gap-1">
-          {node.children.map((child) => (
-            <NavItem
-              active={activePath === child.path}
-              count={childCounts.get(child.path) ?? childCounts.get(child.name) ?? 0}
-              key={child.path}
-              label={child.name}
-              prefix="#"
-              onClick={() => onSelect(child.path)}
-            />
-          ))}
+          {node.children.map((child) => {
+            const count = childCounts.get(child.path) ?? childCounts.get(child.name) ?? 0;
+            const deleteLabel = getDeleteLabel(child, count);
+
+            return (
+              <NavItem
+                active={activePath === child.path}
+                count={count}
+                deleteLabel={deleteLabel}
+                key={child.path}
+                label={child.name}
+                prefix="#"
+                onDelete={deleteLabel ? () => onDelete(child) : undefined}
+                onClick={() => onSelect(child.path)}
+              />
+            );
+          })}
         </div>
       ) : null}
     </div>

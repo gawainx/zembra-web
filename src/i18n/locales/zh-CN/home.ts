@@ -68,6 +68,15 @@ export const home = {
     },
     roleLabel: "创建角色：{{role}}",
   },
+  tag: {
+    delete: {
+      action: "删除 Tag #{{tag}}",
+      cancel: "取消",
+      confirm: "删除",
+      description: "确认删除 #{{tag}}？",
+      title: "删除 Tag",
+    },
+  },
   search: {
     placeholder: "搜索笔记、Field、Tag",
   },

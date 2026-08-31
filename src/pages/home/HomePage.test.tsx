@@ -645,6 +645,62 @@ test("closes empty field deletion without blocking on the request", async () => 
   expect(screen.queryByRole("dialog", { name: "删除 Field" })).toBeNull();
 });
 
+/** Verifies empty tag trees delete from the sidebar only after confirmation. */
+test("deletes an empty tag tree after confirmation and clears its active filter", async () => {
+  renderHomePage();
+  await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
+  const deleteTagTree = vi.fn(async (path: string) => {
+    useNotesStore.setState((state) => ({
+      selectedTag: state.selectedTag?.startsWith(path) ? undefined : state.selectedTag,
+      tags: state.tags.filter((tag) => tag.path !== path && !tag.path.startsWith(`${path}/`)),
+    }));
+  });
+
+  act(() => {
+    useNotesStore.setState({
+      deleteTagTree,
+      notes: [
+        {
+          id: "note-used-tag",
+          content: "used tag note",
+          role: "Human",
+          createdAt: 1,
+          updatedAt: 1,
+          tags: ["used"],
+        },
+      ],
+      selectedTag: "empty/child",
+      tags: [
+        { id: "empty-root", name: "empty", path: "empty", depth: 0, createdAt: 1 },
+        {
+          id: "empty-child",
+          name: "child",
+          parentTagId: "empty-root",
+          path: "empty/child",
+          depth: 1,
+          createdAt: 1,
+        },
+        { id: "used-root", name: "used", path: "used", depth: 0, createdAt: 1 },
+      ],
+    });
+  });
+
+  expect(screen.queryByRole("button", { name: "删除 Tag #used" })).toBeNull();
+  fireEvent.click(await screen.findByRole("button", { name: "删除 Tag #empty" }));
+  expect(await screen.findByRole("dialog", { name: "删除 Tag" })).not.toBeNull();
+  expect(screen.getByText("确认删除 #empty？")).not.toBeNull();
+
+  fireEvent.click(screen.getByRole("button", { name: "取消" }));
+  expect(deleteTagTree).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByRole("button", { name: "删除 Tag #empty" }));
+  fireEvent.click(await screen.findByRole("button", { name: "删除" }));
+
+  await waitFor(() => expect(deleteTagTree).toHaveBeenCalledWith("empty"));
+  await waitFor(() => expect(screen.queryByText("child")).toBeNull());
+  expect(useNotesStore.getState().selectedTag).toBeUndefined();
+});
+
 /** Verifies role navigation is optional and filters the feed when selected. */
 test("renders optional role navigation and filters fields and tags by role", async () => {
   renderHomePage();

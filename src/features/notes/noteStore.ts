@@ -56,6 +56,8 @@ interface NotesState {
   deleteNote: (noteRef: string) => Promise<void>;
   /** Deletes an unused field and refreshes field navigation state. */
   deleteField: (fieldId: string) => Promise<void>;
+  /** Deletes an empty tag and every empty descendant in its subtree. */
+  deleteTagTree: (path: string) => Promise<void>;
   /** Loads a note for link preview without changing the recent feed. */
   loadNotePreview: (noteRef: string) => Promise<NoteDto>;
   /** Loads fields from the active taxonomy client. */
@@ -294,6 +296,42 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       }
     });
   },
+  deleteTagTree: async (path) => {
+    const current = get();
+    const tagsToDelete = current.tags.filter((tag) => isTagInSubtree(tag.path, path));
+
+    if (tagsToDelete.length === 0) {
+      return;
+    }
+
+    if (current.notes.some((note) => note.tags.some((tag) => isTagInSubtree(tag, path)))) {
+      throw new Error("Cannot delete a tag that is used by notes");
+    }
+
+    const version = nextMutationVersion(`tag:${path}`);
+    const previousTags = current.tags;
+    const previousSelectedTag = current.selectedTag;
+    set((state) => ({
+      selectedTag: state.selectedTag && isTagInSubtree(state.selectedTag, path)
+        ? undefined
+        : state.selectedTag,
+      tags: state.tags.filter((tag) => !isTagInSubtree(tag.path, path)),
+    }));
+
+    return enqueueRemoteMutation(`tag:${path}`, async () => {
+      try {
+        await getTaxonomyClient().deleteTagTree(tagsToDelete);
+        console.info("[zembra] Deleted tag tree", { path, tagCount: tagsToDelete.length });
+        notifyMutationCompleted({ duration: 3000, message: "tagDeleted", tone: "success" });
+      } catch (error) {
+        if (isCurrentMutation(`tag:${path}`, version)) {
+          set({ selectedTag: previousSelectedTag, tags: previousTags });
+        }
+        console.warn("[zembra] Failed to delete tag tree", { error, path });
+        notifyMutationCompleted({ duration: 10000, message: "tagDeleteFailed", tone: "error" });
+      }
+    });
+  },
   loadNotePreview: async (noteRef) => {
     const state = get();
     const feedNote = state.notes.find((note) => note.id === noteRef);
@@ -408,6 +446,11 @@ function omitNotePreview(
   const { [noteId]: _removed, ...remainingPreviews } = notePreviewById;
 
   return remainingPreviews;
+}
+
+/** Returns whether a tag path is the requested root or one of its descendants. */
+function isTagInSubtree(tagPath: string, rootPath: string): boolean {
+  return tagPath === rootPath || tagPath.startsWith(`${rootPath}/`);
 }
 
 /** Refreshes navigation metadata after a confirmed remote note mutation. */
