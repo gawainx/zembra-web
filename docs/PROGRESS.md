@@ -2,6 +2,7 @@
 
 ## 项目流程记录
 
+- R059 `93d5968c` 将创建和编辑笔记共用的输入区高度改为最小两行、最大十行，继续复用既有自动扩展和内部滚动；Backend 与 Supabase 两种生产构建、`git diff --check` 均通过，等待用户验收。
 - R058 `eb9d449` 完成 Supabase Direct 空 Tag 子树删除：聚合数为 0 的 Tag 悬停或聚焦时显示垃圾桶，确认句为“确认删除 #路径？”，父 Tag 按深度倒序连同空后代删除；store 乐观移除、失败回滚并清空受影响筛选。21 个测试文件、140 项测试及两种生产构建通过，用户已验收并归档，版本升至 `0.3.4`。
 - R057 `6093225` 将首页 note card 编辑入口从双击展示态迁移至右上角三点菜单；复用既有菜单与单草稿锁定，新增三语言“编辑笔记”文案和菜单语义，覆盖双击无效、菜单编辑、锁定与 Mention 回归测试。定向 31 项测试及 Backend、Supabase 两种生产构建均通过，等待用户验收。
 - R001 `aa038b50` 完成 agent 基础设施初始化，记录前端技术栈澄清，引入 `vendor/zembra-schema` 共享数据库契约 submodule，并固定到 `v0.1.0`。`4ded053` 根据当前 OpenAPI 将 HTTP 模式 note CRUD、recent、daily-counts 和 note tags 请求统一增加 `workspace_id` scope，默认优先读取 `VITE_ZEMBRA_WORKSPACE_ID`，未配置时从 `/workspaces` 取第一项并缓存，不保留旧接口兼容逻辑。
