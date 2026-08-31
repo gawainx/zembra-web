@@ -50,6 +50,7 @@ export const home = {
     delete: "刪除",
     deleting: "刪除中",
     edit: {
+      action: "編輯筆記",
       cancel: "取消",
       saving: "儲存中",
       warningMultipleFields: "偵測到多個 Field，本次只使用 @{{field}}",

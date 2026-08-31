@@ -50,6 +50,7 @@ export const home = {
     delete: "Delete",
     deleting: "Deleting",
     edit: {
+      action: "Edit note",
       cancel: "Cancel",
       saving: "Saving",
       warningMultipleFields: "Multiple fields detected. Only @{{field}} will be used.",

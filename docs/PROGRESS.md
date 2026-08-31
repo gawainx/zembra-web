@@ -2,6 +2,7 @@
 
 ## 项目流程记录
 
+- R057 `6093225` 将首页 note card 编辑入口从双击展示态迁移至右上角三点菜单；复用既有菜单与单草稿锁定，新增三语言“编辑笔记”文案和菜单语义，覆盖双击无效、菜单编辑、锁定与 Mention 回归测试。定向 31 项测试及 Backend、Supabase 两种生产构建均通过，等待用户验收。
 - R001 `aa038b50` 完成 agent 基础设施初始化，记录前端技术栈澄清，引入 `vendor/zembra-schema` 共享数据库契约 submodule，并固定到 `v0.1.0`。`4ded053` 根据当前 OpenAPI 将 HTTP 模式 note CRUD、recent、daily-counts 和 note tags 请求统一增加 `workspace_id` scope，默认优先读取 `VITE_ZEMBRA_WORKSPACE_ID`，未配置时从 `/workspaces` 取第一项并缓存，不保留旧接口兼容逻辑。
 - R002 `aa038b50` 完成数据库契约相关依赖约束初始化，记录前端允许、条件允许和默认禁止依赖，明确不引入 SQLite driver、ORM 或组件内 Supabase 直连。
 - R003 `aa038b50` 初始化前端工程，建立 Vite、React、TypeScript、Tailwind CSS v4、TanStack Router、Zustand、Vitest 基础结构，补充 Docker 静态部署和 Vercel SPA rewrite，验证 `npm run test` 与 `npm run build` 通过。

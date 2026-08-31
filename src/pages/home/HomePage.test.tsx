@@ -81,8 +81,8 @@ test("sets the browser title from the active workspace", () => {
   expect(document.title).toBe("Test workspace - Zembra");
 });
 
-/** Verifies that inline note editing parses the first field and locks other cards. */
-test("edits one note inline and warns when multiple fields are present", async () => {
+/** Opens inline editing from a card menu, without retaining double-click editing. */
+test("edits one note inline from its action menu and warns when multiple fields are present", async () => {
   renderHomePage();
 
   const firstNoteText = await screen.findByText(/今天先把卡片笔记/);
@@ -90,6 +90,14 @@ test("edits one note inline and warns when multiple fields are present", async (
   expect(firstCard).not.toBeNull();
 
   fireEvent.doubleClick(firstCard as HTMLElement);
+  expect(within(firstCard as HTMLElement).queryByRole("textbox")).toBeNull();
+
+  fireEvent.click(
+    within(firstCard as HTMLElement).getByRole("button", { name: "笔记操作" }),
+  );
+  fireEvent.click(
+    within(firstCard as HTMLElement).getByRole("menuitem", { name: "编辑笔记" }),
+  );
 
   const editor = await within(firstCard as HTMLElement).findByRole("textbox");
   expect(markdownValue(editor)).toContain("今天先把卡片笔记");
@@ -98,7 +106,14 @@ test("edits one note inline and warns when multiple fields are present", async (
   const secondCard = secondNoteText.closest("article");
   expect(secondCard).not.toBeNull();
 
-  fireEvent.doubleClick(secondCard as HTMLElement);
+  fireEvent.click(
+    within(secondCard as HTMLElement).getByRole("button", { name: "笔记操作" }),
+  );
+  expect(
+    within(secondCard as HTMLElement)
+      .getByRole("menuitem", { name: "编辑笔记" })
+      .hasAttribute("disabled"),
+  ).toBe(true);
   expect(within(secondCard as HTMLElement).queryByRole("textbox")).toBeNull();
 
   changeMarkdownEditor(editor, "@project @archive edited content #api #ui");
@@ -144,7 +159,8 @@ test("preserves the existing field when editing without an inline field", async 
   const noteText = await screen.findByText("project note");
   const card = noteText.closest("article");
   expect(card).not.toBeNull();
-  fireEvent.doubleClick(card as HTMLElement);
+  fireEvent.click(within(card as HTMLElement).getByRole("button", { name: "笔记操作" }));
+  fireEvent.click(within(card as HTMLElement).getByRole("menuitem", { name: "编辑笔记" }));
 
   const editor = await within(card as HTMLElement).findByRole("textbox");
   changeMarkdownEditor(editor, "edited project note");
@@ -902,7 +918,7 @@ test("mentions note links and previews linked note content", async () => {
     within(sourceCard as HTMLElement).getByRole("button", { name: "笔记操作" }),
   );
   fireEvent.click(
-    within(sourceCard as HTMLElement).getByRole("button", { name: "Mention" }),
+    within(sourceCard as HTMLElement).getByRole("menuitem", { name: "Mention" }),
   );
 
   expect(markdownValue(await findComposerEditor())).toBe(`[[${sourceNoteId}]]`);
@@ -952,12 +968,17 @@ test("mentions note links into the active edit draft", async () => {
   expect(editableCard).not.toBeNull();
   expect(targetCard).not.toBeNull();
 
-  fireEvent.doubleClick(editableCard as HTMLElement);
+  fireEvent.click(
+    within(editableCard as HTMLElement).getByRole("button", { name: "笔记操作" }),
+  );
+  fireEvent.click(
+    within(editableCard as HTMLElement).getByRole("menuitem", { name: "编辑笔记" }),
+  );
   fireEvent.click(
     within(targetCard as HTMLElement).getByRole("button", { name: "笔记操作" }),
   );
   fireEvent.click(
-    within(targetCard as HTMLElement).getByRole("button", { name: "Mention" }),
+    within(targetCard as HTMLElement).getByRole("menuitem", { name: "Mention" }),
   );
 
   expect(markdownValue(await within(editableCard as HTMLElement).findByRole("textbox")))
@@ -1015,7 +1036,12 @@ test("submits parsed note links when creating and editing notes", async () => {
   const editableCard = editableText.closest("article");
   expect(editableCard).not.toBeNull();
 
-  fireEvent.doubleClick(editableCard as HTMLElement);
+  fireEvent.click(
+    within(editableCard as HTMLElement).getByRole("button", { name: "笔记操作" }),
+  );
+  fireEvent.click(
+    within(editableCard as HTMLElement).getByRole("menuitem", { name: "编辑笔记" }),
+  );
   const editor = within(editableCard as HTMLElement).getByRole("textbox");
   changeMarkdownEditor(editor, `edited [[${targetNoteId}]]`);
   fireEvent.click(within(editableCard as HTMLElement).getByRole("button", { name: "发送" }));
