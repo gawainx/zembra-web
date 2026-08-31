@@ -61,4 +61,4 @@
 
 运行定向测试、完整测试和 `npm run build:supabase`。开发完成后补充实际改动、验证结果与 Conventional Commit；未经用户验收不归档本计划。
 
-**执行记录：** `npm test` 通过 21 个测试文件、140 项测试；`npm run build:backend` 与 `npm run build:supabase` 均通过，所有 JavaScript chunk 低于 500 kB。等待用户验收，不归档本计划。
+**执行记录：** `npm test` 通过 21 个测试文件、140 项测试；`npm run build:backend` 与 `npm run build:supabase` 均通过，所有 JavaScript chunk 低于 500 kB。用户已于 2026-08-31 验收通过，本计划归档至 `docs/exec-plans/completed/home-ui/`。
