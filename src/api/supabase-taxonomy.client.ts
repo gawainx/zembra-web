@@ -24,6 +24,18 @@ export function createSupabaseTaxonomyClient(client: SupabaseClient, workspaceId
       const { error } = await client.from("fields").delete().eq("workspace_id", workspaceId).eq("id", fieldId);
       throwSupabaseError(error, "delete field");
     },
+    async deleteTagTree(tags) {
+      const orderedTags = [...tags].sort((left, right) => right.depth - left.depth);
+
+      for (const tag of orderedTags) {
+        const { error } = await client
+          .from("tags")
+          .delete()
+          .eq("workspace_id", workspaceId)
+          .eq("id", tag.id);
+        throwSupabaseError(error, "delete tag");
+      }
+    },
   };
 }
 

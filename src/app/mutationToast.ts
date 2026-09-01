@@ -13,6 +13,8 @@ export type MutationToastMessage =
   | "noteUpdateFailed"
   | "fieldDeleted"
   | "fieldDeleteFailed"
+  | "tagDeleted"
+  | "tagDeleteFailed"
   | "workspaceRenamed"
   | "workspaceRenameFailed";
 

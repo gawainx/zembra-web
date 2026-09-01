@@ -52,6 +52,8 @@ export const common = {
     noteUpdateFailed: "未能保存，已恢复笔记",
     fieldDeleted: "Field 已删除",
     fieldDeleteFailed: "未能删除 Field，已恢复",
+    tagDeleted: "Tag 已删除",
+    tagDeleteFailed: "未能删除 Tag，已恢复",
     workspaceRenamed: "Workspace 已改名",
     workspaceRenameFailed: "未能修改 Workspace 名称，已恢复原名称",
   },

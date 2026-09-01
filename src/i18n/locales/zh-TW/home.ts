@@ -50,6 +50,7 @@ export const home = {
     delete: "刪除",
     deleting: "刪除中",
     edit: {
+      action: "編輯筆記",
       cancel: "取消",
       saving: "儲存中",
       warningMultipleFields: "偵測到多個 Field，本次只使用 @{{field}}",
@@ -66,6 +67,15 @@ export const home = {
       unavailable: "無法載入引用內容",
     },
     roleLabel: "建立角色：{{role}}",
+  },
+  tag: {
+    delete: {
+      action: "刪除 Tag #{{tag}}",
+      cancel: "取消",
+      confirm: "刪除",
+      description: "確認刪除 #{{tag}}？",
+      title: "刪除 Tag",
+    },
   },
   search: {
     placeholder: "搜尋筆記、Field、Tag",

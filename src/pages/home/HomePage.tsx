@@ -19,7 +19,7 @@ import {
   SourceToolbarActions,
 } from "@zembra/source-home-controls";
 import { useNotesStore } from "../../features/notes/noteStore";
-import type { FieldDto, NoteDto } from "../../api/types";
+import type { FieldDto, NoteDto, TagDto } from "../../api/types";
 import { NoteCard } from "./NoteCard";
 import { NoteEditor, type NoteEditorHandle } from "./NoteEditor";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
@@ -56,6 +56,7 @@ export function HomePage() {
   const [editingNoteId, setEditingNoteId] = useState<string>();
   const [editDraft, setEditDraft] = useState("");
   const [pendingDeleteField, setPendingDeleteField] = useState<FieldDto>();
+  const [pendingDeleteTag, setPendingDeleteTag] = useState<TagDto>();
 
   useEffect(() => {
     document.title = `${workspace.title} - Zembra`;
@@ -83,6 +84,7 @@ export function HomePage() {
     loadTags,
     deleteNote,
     deleteField,
+    deleteTagTree,
     updateNote,
   } = useNotesStore();
 
@@ -320,6 +322,26 @@ export function HomePage() {
     setPendingDeleteField(undefined);
   }
 
+  /** Opens the in-app confirmation dialog for deleting an empty tag subtree. */
+  function handleTagDeleteRequest(tag: TagDto) {
+    setPendingDeleteTag(tag);
+  }
+
+  /** Closes the tag deletion dialog. */
+  function handleTagDeleteCancel() {
+    setPendingDeleteTag(undefined);
+  }
+
+  /** Optimistically removes the pending empty tag subtree and queues deletion. */
+  function handleTagDeleteConfirm() {
+    if (!pendingDeleteTag) {
+      return;
+    }
+
+    void deleteTagTree(pendingDeleteTag.path);
+    setPendingDeleteTag(undefined);
+  }
+
   return (
     <SourceHomeControlsProvider>
     <main className="h-screen overflow-hidden bg-[var(--color-app-bg)] text-[var(--color-text-primary)]">
@@ -449,6 +471,9 @@ export function HomePage() {
                   expandedLabel={t("sidebar.collapseTag", {
                     tag: node.tag.name,
                   })}
+                  getDeleteLabel={(tag, count) =>
+                    count === 0 ? t("tag.delete.action", { tag: tag.path }) : undefined
+                  }
                   key={node.tag.path}
                   node={node}
                   rootCount={Math.max(
@@ -462,6 +487,7 @@ export function HomePage() {
                         0,
                       ),
                   )}
+                  onDelete={handleTagDeleteRequest}
                   onSelect={(path) => void handleTagSelect(path)}
                   onToggle={handleTagRootToggle}
                 />
@@ -562,9 +588,67 @@ export function HomePage() {
             onConfirm={() => void handleFieldDeleteConfirm()}
           />
         ) : null}
+        {pendingDeleteTag ? (
+          <TagDeleteDialog
+            tag={pendingDeleteTag}
+            t={t}
+            onCancel={handleTagDeleteCancel}
+            onConfirm={handleTagDeleteConfirm}
+          />
+        ) : null}
       </div>
     </main>
     </SourceHomeControlsProvider>
+  );
+}
+
+/** Renders the in-app confirmation dialog for deleting an empty tag subtree. */
+function TagDeleteDialog({
+  tag,
+  onCancel,
+  onConfirm,
+  t,
+}: {
+  tag: TagDto;
+  onCancel: () => void;
+  onConfirm: () => void;
+  t: (key: string, options?: Record<string, string>) => string;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] px-4">
+      <section
+        aria-labelledby="tag-delete-title"
+        aria-modal="true"
+        className="w-full max-w-sm rounded-[14px] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 shadow-[var(--color-shadow-float)]"
+        role="dialog"
+      >
+        <h2
+          className="text-base font-semibold text-[var(--color-text-primary)]"
+          id="tag-delete-title"
+        >
+          {t("tag.delete.title")}
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
+          {t("tag.delete.description", { tag: tag.path })}
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            className="h-9 rounded-[10px] px-3 text-sm font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
+            type="button"
+            onClick={onCancel}
+          >
+            {t("tag.delete.cancel")}
+          </button>
+          <button
+            className="h-9 rounded-[10px] bg-[var(--color-error)] px-3 text-sm font-semibold text-[var(--color-error-contrast)] hover:opacity-90"
+            type="button"
+            onClick={onConfirm}
+          >
+            {t("tag.delete.confirm")}
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }
 

@@ -100,11 +100,13 @@ export function NoteCard({
     setIsActionsOpen(false);
   }
 
-  /** Enters edit mode when this card is allowed to own the draft. */
-  function handleDoubleClick() {
+  /** Enters edit mode from the card action menu when this card can own the draft. */
+  function handleEditClick() {
     if (!isEditing && canStartEditing) {
       onEditStart(note);
     }
+
+    setIsActionsOpen(false);
   }
 
   /** Changes this note to the selected field and closes the metadata menu. */
@@ -119,10 +121,7 @@ export function NoteCard({
   }
 
   return (
-    <article
-      className="relative flex flex-col gap-[var(--space-1)] rounded-[var(--radius-card)] border border-[var(--color-border-subtle)] bg-[var(--color-surface)] px-[var(--space-3)] py-[var(--space-2)]"
-      onDoubleClick={handleDoubleClick}
-    >
+    <article className="relative flex flex-col gap-[var(--space-1)] rounded-[var(--radius-card)] border border-[var(--color-border-subtle)] bg-[var(--color-surface)] px-[var(--space-3)] py-[var(--space-2)]">
       <div className="flex items-start justify-between gap-[var(--space-3)] text-[13px] text-[var(--color-text-muted)]">
         <div className="min-w-0 pr-[var(--note-card-header-actions-width)]">
           {formatNoteTimestamp(note.createdAt, locale)}
@@ -184,6 +183,7 @@ export function NoteCard({
             <div className="relative shrink-0">
             <button
               aria-expanded={isActionsOpen}
+              aria-haspopup="menu"
               aria-label={t("note.actions")}
               className="flex size-[var(--icon-hit-size)] items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
               onClick={() => setIsActionsOpen((current) => !current)}
@@ -192,10 +192,23 @@ export function NoteCard({
               <MoreHorizontal className="size-[var(--icon-size)]" aria-hidden="true" />
             </button>
             {isActionsOpen ? (
-              <div className="absolute right-0 top-9 z-30 min-w-28 overflow-hidden rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--color-shadow-float)]">
+              <div
+                className="absolute right-0 top-9 z-30 min-w-28 overflow-hidden rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--color-shadow-float)]"
+                role="menu"
+              >
+                <button
+                  className="block w-full px-3 py-2 text-left text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={!canStartEditing}
+                  onClick={handleEditClick}
+                  role="menuitem"
+                  type="button"
+                >
+                  {t("note.edit.action")}
+                </button>
                 <button
                   className="block w-full px-3 py-2 text-left text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)]"
                   onClick={handleMentionClick}
+                  role="menuitem"
                   type="button"
                 >
                   {t("note.mention")}
@@ -203,6 +216,7 @@ export function NoteCard({
                 <button
                   className="block w-full px-3 py-2 text-left text-sm text-[var(--color-error)] hover:bg-[var(--color-error-soft)] disabled:cursor-not-allowed disabled:opacity-60"
                   onClick={handleDeleteClick}
+                  role="menuitem"
                   type="button"
                 >
                   {t("note.delete")}

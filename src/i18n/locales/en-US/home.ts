@@ -50,6 +50,7 @@ export const home = {
     delete: "Delete",
     deleting: "Deleting",
     edit: {
+      action: "Edit note",
       cancel: "Cancel",
       saving: "Saving",
       warningMultipleFields: "Multiple fields detected. Only @{{field}} will be used.",
@@ -66,6 +67,15 @@ export const home = {
       unavailable: "Preview unavailable",
     },
     roleLabel: "Role: {{role}}",
+  },
+  tag: {
+    delete: {
+      action: "Delete Tag #{{tag}}",
+      cancel: "Cancel",
+      confirm: "Delete",
+      description: "Delete #{{tag}}?",
+      title: "Delete Tag",
+    },
   },
   search: {
     placeholder: "Search notes, Fields, Tags",

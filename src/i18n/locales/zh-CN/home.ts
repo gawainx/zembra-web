@@ -50,6 +50,7 @@ export const home = {
     delete: "删除",
     deleting: "删除中",
     edit: {
+      action: "编辑笔记",
       cancel: "取消",
       saving: "保存中",
       warningMultipleFields: "检测到多个 Field，本次只使用 @{{field}}",
@@ -66,6 +67,15 @@ export const home = {
       unavailable: "无法加载引用内容",
     },
     roleLabel: "创建角色：{{role}}",
+  },
+  tag: {
+    delete: {
+      action: "删除 Tag #{{tag}}",
+      cancel: "取消",
+      confirm: "删除",
+      description: "确认删除 #{{tag}}？",
+      title: "删除 Tag",
+    },
   },
   search: {
     placeholder: "搜索笔记、Field、Tag",
