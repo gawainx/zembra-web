@@ -7,4 +7,3 @@ dist
 AGENTS.local.md
 coverage
 *.tsbuildinfo
-src-tauri/target
