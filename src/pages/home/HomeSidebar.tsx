@@ -80,7 +80,7 @@ export function DailyNotesHeatmap({
     return (
       <section
         aria-label={t("heatmap.ariaLabel", { count: days.length })}
-        className="hidden w-[300px] rounded-[var(--radius-surface)] border border-dashed border-[var(--color-border)] p-[var(--space-3)] text-sm text-[var(--color-text-muted)] lg:block"
+        className="w-full rounded-[var(--radius-surface)] border border-dashed border-[var(--color-border)] p-[var(--space-3)] text-sm text-[var(--color-text-muted)]"
         ref={heatmapRef}
       >
         {t("heatmap.empty")}
@@ -91,7 +91,7 @@ export function DailyNotesHeatmap({
   return (
     <section
       aria-label={t("heatmap.ariaLabel", { count: days.length })}
-      className="hidden w-[300px] lg:block"
+      className="w-full"
       ref={heatmapRef}
     >
       <div className="mb-[var(--space-2)] flex items-center justify-between gap-[var(--space-3)] text-[13px] text-[var(--color-text-muted)]">

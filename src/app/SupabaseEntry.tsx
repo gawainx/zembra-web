@@ -218,21 +218,19 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[var(--color-app-bg)] px-5 text-[var(--color-text-primary)]">
-      <section className="w-full max-w-[420px]">
-        <div className="mb-8">
-          <div className="mb-3 text-2xl font-bold">Zembra</div>
-          <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-            {t("dataSource.supabase")}
-          </p>
-        </div>
-        <form className="space-y-4" onSubmit={handleSupabaseEntry}>
+    <main className="flex min-h-screen items-center justify-center bg-[var(--color-app-bg)] p-[var(--space-5)] text-[var(--color-text-primary)]">
+      <section className="flex w-full max-w-[var(--layout-entry-max)] flex-col gap-[var(--space-5)]">
+        <header className="flex items-baseline gap-[var(--space-3)] whitespace-nowrap">
+          <h1 aria-label="Zembra" className="whitespace-nowrap text-lg font-semibold"><span aria-hidden="true">ℤembra</span></h1>
+          <span className="text-sm text-[var(--color-text-muted)]">{t("dataSource.supabase")}</span>
+        </header>
+        <form className="flex flex-col gap-[var(--space-3)]" onSubmit={handleSupabaseEntry}>
           {hasSession ? (
-            <label className="block text-sm font-medium text-[var(--color-text-primary)]">
-              <span>{t("dataSource.workspaceLabel")}</span>
+            <label className="block min-w-0 text-sm font-normal text-[var(--color-text-primary)]">
+
               <select
                 aria-label={t("dataSource.workspaceLabel")}
-                className="mt-2 h-11 w-full rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-border-strong)]"
+                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-border-strong)]"
                 disabled={isLoading || isSending || workspaces.length === 0}
                 required
                 value={selectedWorkspaceId}
@@ -247,12 +245,13 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
               </select>
             </label>
           ) : (
-            <label className="block text-sm font-medium text-[var(--color-text-primary)]">
-              <span>{t("dataSource.emailLabel")}</span>
+            <label className="block min-w-0 text-sm font-normal text-[var(--color-text-primary)]">
+
               <input
                 aria-label={t("dataSource.emailLabel")}
-                className="mt-2 h-11 w-full rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)]"
+                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-border-strong)]"
                 disabled={isLoading || isSending}
+                autoComplete="email"
                 placeholder={t("dataSource.emailPlaceholder")}
                 required
                 type="email"
@@ -265,7 +264,7 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
             </label>
           )}
           <button
-            className="h-11 w-full rounded-[8px] bg-[var(--color-accent)] px-4 text-sm font-semibold text-[var(--color-accent-contrast)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] bg-[var(--color-accent)] px-[var(--space-4)] whitespace-nowrap text-sm font-medium text-[var(--color-accent-contrast)] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isLoading || (hasSession ? !selectedWorkspaceId : !email.trim())}
             type="submit"
           >
@@ -279,13 +278,13 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
           </button>
         </form>
         {message ? (
-          <p className="mt-3 text-sm text-[var(--color-text-secondary)]" role="status">
+          <p className="text-sm text-[var(--color-text-secondary)]" role="status">
             {message}
           </p>
         ) : null}
         {error ? (
           <p
-            className="mt-3 rounded-[8px] border border-[var(--color-error-border)] bg-[var(--color-error-soft)] px-3 py-2 text-sm text-[var(--color-error)]"
+            className="rounded-[var(--radius-control)] border border-[var(--color-error-border)] bg-[var(--color-error-soft)] px-[var(--space-3)] py-[var(--space-2)] text-sm text-[var(--color-error)]"
             role="alert"
           >
             {error}

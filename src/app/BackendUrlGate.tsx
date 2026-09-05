@@ -219,25 +219,19 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[var(--color-app-bg)] px-5 text-[var(--color-text-primary)]">
-      <section className="w-full max-w-[420px]">
-        <div className="mb-8">
-          <div className="mb-3 text-2xl font-bold">Zembra</div>
-          <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-            {t("backend.login.description")}
-          </p>
-        </div>
-
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="text-sm font-medium text-[var(--color-text-primary)]">
-            Backend
-          </div>
-          <div className="grid grid-cols-[1fr_116px] gap-3">
-            <label className="block text-sm font-medium">
+    <main className="flex min-h-screen items-center justify-center bg-[var(--color-app-bg)] p-[var(--space-5)] text-[var(--color-text-primary)]">
+      <section className="flex w-full max-w-[var(--layout-entry-max)] flex-col gap-[var(--space-5)]">
+        <header className="flex items-baseline gap-[var(--space-3)] whitespace-nowrap">
+          <h1 aria-label="Zembra" className="whitespace-nowrap text-lg font-semibold"><span aria-hidden="true">ℤembra</span></h1>
+          <span className="text-sm text-[var(--color-text-muted)]">{t("dataSource.backend")}</span>
+        </header>
+        <form className="flex flex-col gap-[var(--space-3)]" onSubmit={handleSubmit}>
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,0.6fr)] gap-[var(--space-3)]">
+            <label className="block min-w-0 text-sm font-normal">
               <span className="sr-only">{t("backend.login.hostLabel")}</span>
               <input
                 aria-label={t("backend.login.hostLabel")}
-                className="h-11 w-full rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] transition focus:border-[var(--color-border-strong)]"
+                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] transition focus:border-[var(--color-border-strong)]"
                 name="backend-host"
                 onChange={(event) => setBackendHost(event.target.value)}
                 placeholder={t("backend.login.hostPlaceholder", {
@@ -246,11 +240,11 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
                 value={backendHost}
               />
             </label>
-            <label className="block text-sm font-medium">
+            <label className="block min-w-0 text-sm font-normal">
               <span className="sr-only">{t("backend.login.portLabel")}</span>
               <input
                 aria-label={t("backend.login.portLabel")}
-                className="h-11 w-full rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] transition focus:border-[var(--color-border-strong)]"
+                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] transition focus:border-[var(--color-border-strong)]"
                 inputMode="numeric"
                 name="backend-port"
                 onChange={(event) => setBackendPort(event.target.value)}
@@ -262,17 +256,14 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
             </label>
           </div>
 
-          <div className="text-sm font-medium text-[var(--color-text-primary)]">
-            {t("backend.login.workspaceLabel")}
-          </div>
-          <div className="grid grid-cols-[1fr_44px] gap-3">
-            <label className="block text-sm font-medium">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-[var(--space-3)]">
+            <label className="block min-w-0 text-sm font-normal">
               <span className="sr-only">
                 {t("backend.login.workspaceLabel")}
               </span>
               <select
                 aria-label={t("backend.login.workspaceLabel")}
-                className="h-11 w-full rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-border-strong)] disabled:text-[var(--color-text-muted)]"
+                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-border-strong)] disabled:text-[var(--color-text-muted)]"
                 disabled={workspaces.length === 0 || isLoadingWorkspaces}
                 name="workspace"
                 onChange={(event) => setSelectedWorkspaceId(event.target.value)}
@@ -312,7 +303,7 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
 
           {error ? (
             <p
-              className="rounded-[8px] border border-[var(--color-error-border)] bg-[var(--color-error-soft)] px-3 py-2 text-sm text-[var(--color-error)]"
+              className="rounded-[var(--radius-control)] border border-[var(--color-error-border)] bg-[var(--color-error-soft)] px-[var(--space-3)] py-[var(--space-2)] text-sm text-[var(--color-error)]"
               role="alert"
             >
               {error}
@@ -320,7 +311,7 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
           ) : null}
 
           <button
-            className="h-11 w-full rounded-[8px] bg-[var(--color-accent)] px-4 text-sm font-semibold text-[var(--color-accent-contrast)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] bg-[var(--color-accent)] px-[var(--space-4)] whitespace-nowrap text-sm font-medium text-[var(--color-accent-contrast)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={
               isSubmitting ||
               status === "checking" ||

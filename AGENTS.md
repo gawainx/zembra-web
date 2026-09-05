@@ -75,6 +75,11 @@
 
 `deploy` 是供 Vercel 构建的稳定分支。禁止在 `deploy` 分支进行日常开发、调试或临时修改；只有用户明确要求修改 `deploy` 时，才允许切换到该分支并提交变更。常规开发在功能分支完成验证和提交后，再由用户明确指示将已验证提交同步到 `deploy`。
 
+### 个人远端与合并流程
+
+- 开发完成后，先将个人 `master` 分支推送到 `origin/master`。
+- 当用户要求合并到 `deploy` 时，默认合入个人仓库的 `origin/deploy`；只有用户明确指定时，才操作其他远端或组织仓库的 `deploy` 分支。
+
 ### 共享数据库契约
 - 本项目群的数据表契约来自 `vendor/zembra-schema` submodule，远程仓库为 `https://github.com/gawainx/zembra-schema.git`。
 - 数据表说明、SQLite DDL、JSON Schema 和 migration 以 `vendor/zembra-schema` 为准，本仓库禁止复制维护数据表设计正文。

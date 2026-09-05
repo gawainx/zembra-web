@@ -3,7 +3,7 @@ export const common = {
     backend: "Backend",
     configured: "此部署尚未設定 Supabase。",
     emailLabel: "電子郵件地址",
-    emailPlaceholder: "you@example.com",
+    emailPlaceholder: "輸入電子郵件地址",
     enter: "進入 Zembra",
     magicLinkSent: "請在電子郵件中開啟登入連結。",
     magicLinkSendSuccess: "傳送成功",

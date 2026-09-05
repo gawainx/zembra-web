@@ -81,6 +81,11 @@ export const home = {
     placeholder: "搜索笔记、Field、Tag",
   },
   sidebar: {
+    title: "侧边栏",
+    open: "打开侧边栏",
+    close: "关闭侧边栏",
+    closeOutside: "点击外部关闭侧边栏",
+
     all: "全部",
     allNotes: "全部笔记",
     collapseTag: "折叠 {{tag}}",
