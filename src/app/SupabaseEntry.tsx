@@ -221,7 +221,7 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
     <main className="flex min-h-screen items-center justify-center bg-[var(--color-app-bg)] p-[var(--space-5)] text-[var(--color-text-primary)]">
       <section className="flex w-full max-w-[var(--layout-entry-max)] flex-col gap-[var(--space-5)]">
         <header className="flex items-baseline gap-[var(--space-3)] whitespace-nowrap">
-          <h1 className="flex items-baseline gap-[var(--space-2)] text-lg font-semibold"><span aria-hidden="true">ℤ</span> Zembra</h1>
+          <h1 aria-label="Zembra" className="whitespace-nowrap text-lg font-semibold"><span aria-hidden="true">ℤembra</span></h1>
           <span className="text-sm text-[var(--color-text-muted)]">{t("dataSource.supabase")}</span>
         </header>
         <form className="flex flex-col gap-[var(--space-3)]" onSubmit={handleSupabaseEntry}>
