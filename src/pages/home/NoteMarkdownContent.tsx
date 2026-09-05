@@ -207,7 +207,7 @@ function createMarkdownComponents(
       }
 
       if (href?.startsWith(tagUrlPrefix)) {
-        return <span className="note-tag-chip">#{href.slice(tagUrlPrefix.length)}</span>;
+        return <span className="note-tag-chip">#{children}</span>;
       }
 
       return (
