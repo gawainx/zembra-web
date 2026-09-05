@@ -22,6 +22,7 @@ import { useNotesStore } from "../../features/notes/noteStore";
 import type { FieldDto, NoteDto, TagDto } from "../../api/types";
 import { NoteCard } from "./NoteCard";
 import { NoteEditor, type NoteEditorHandle } from "./NoteEditor";
+import { ResponsiveSidebar } from "./ResponsiveSidebar";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import {
   DailyNotesHeatmap,
@@ -345,9 +346,8 @@ export function HomePage() {
   return (
     <SourceHomeControlsProvider>
     <main className="h-screen overflow-hidden bg-[var(--color-app-bg)] text-[var(--color-text-primary)]">
-      <div className="mx-auto grid h-full w-full max-w-[var(--layout-shell-max)] grid-cols-1 gap-[var(--space-4)] px-[var(--space-5)] pt-[var(--space-1)] lg:grid-cols-[minmax(var(--layout-sidebar-min),var(--layout-sidebar-max))_minmax(var(--layout-content-min),var(--layout-content-max))] lg:px-0">
-        <aside className="flex min-h-0 min-w-0 flex-col lg:min-h-0">
-          <div className="shrink-0">
+      <div className="mx-auto grid h-full w-full max-w-[var(--layout-shell-max)] grid-cols-1 grid-rows-[auto_minmax(0,1fr)] lg:grid-rows-1 gap-[var(--space-4)] px-[var(--space-5)] pt-[var(--space-1)] lg:grid-cols-[minmax(var(--layout-sidebar-min),var(--layout-sidebar-max))_minmax(var(--layout-content-min),var(--layout-content-max))] lg:px-0">
+        <ResponsiveSidebar header={<>
             <div className="mb-[var(--space-3)] flex items-center justify-between gap-[var(--space-3)]">
               <div className="flex min-w-0 items-center gap-[var(--space-2)] text-lg font-bold">
                 <span className="text-[2em] leading-none">ℤ</span>
@@ -377,7 +377,9 @@ export function HomePage() {
 
             <SourceStatusFeedback />
 
-            <div className="mb-5 hidden grid-cols-3 gap-4 lg:grid">
+          </>}>
+          <div className="shrink-0">
+            <div className="mb-5 grid grid-cols-3 gap-4">
               <StatBlock label={t("stats.notes")} value={String(notes.length)} />
               <StatBlock label={t("stats.tags")} value={String(tags.length)} />
               <StatBlock label={t("stats.fields")} value={String(fields.length)} />
@@ -391,7 +393,7 @@ export function HomePage() {
             />
           </div>
 
-          <div className="hidden min-h-0 flex-1 overflow-y-auto pb-44 pr-1 pt-4 lg:block">
+          <div className="min-h-0 flex-1 overflow-y-auto pb-4 pr-1 pt-4 lg:pb-44">
             <NavItem
               active={
                 selectedRole === undefined &&
@@ -495,7 +497,7 @@ export function HomePage() {
               ))}
             </SidebarSection>
           </div>
-        </aside>
+        </ResponsiveSidebar>
 
         <section className="flex min-h-0 min-w-0 flex-col">
           <header className="mb-4 flex min-h-11 shrink-0 items-center justify-end lg:mb-3">

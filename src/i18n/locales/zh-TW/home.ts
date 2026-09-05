@@ -81,6 +81,11 @@ export const home = {
     placeholder: "搜尋筆記、Field、Tag",
   },
   sidebar: {
+    title: "側邊欄",
+    open: "開啟側邊欄",
+    close: "關閉側邊欄",
+    closeOutside: "點擊外部關閉側邊欄",
+
     all: "全部",
     allNotes: "全部筆記",
     collapseTag: "收合 {{tag}}",

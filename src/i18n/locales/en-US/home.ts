@@ -81,6 +81,11 @@ export const home = {
     placeholder: "Search notes, Fields, Tags",
   },
   sidebar: {
+    title: "Sidebar",
+    open: "Open sidebar",
+    close: "Close sidebar",
+    closeOutside: "Close sidebar from outside",
+
     all: "All",
     allNotes: "All notes",
     collapseTag: "Collapse {{tag}}",
