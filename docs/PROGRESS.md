@@ -2,10 +2,6 @@
 
 ## 项目流程记录
 
-- R062 `edc56031` 统一 Supabase 与 Backend 紧凑登录入口：品牌和模式同行，hint 替代可见标签，复用 Bonofix token 并收窄表单，保留认证与工作区流程。143 项测试及两种构建通过，Supabase 窄屏浏览器检查通过，品牌依反馈修正为 ℤembra，用户已验收并归档。
-
-- R061 `2aad4bfe` 完成窄屏汉堡侧栏：复用现有工具栏、统计与导航，支持左侧浮层、外部点击、关闭按钮、Esc 和断点状态清理，补齐三语言文案。143 项测试及两种生产构建通过；本地服务器启动权限被拒绝，用户已验收并归档。
-
 - R001 `aa038b50` 完成 agent 基础设施初始化，记录前端技术栈澄清，引入 `vendor/zembra-schema` 共享数据库契约 submodule，并固定到 `v0.1.0`。`4ded053` 根据当前 OpenAPI 将 HTTP 模式 note CRUD、recent、daily-counts 和 note tags 请求统一增加 `workspace_id` scope，默认优先读取 `VITE_ZEMBRA_WORKSPACE_ID`，未配置时从 `/workspaces` 取第一项并缓存，不保留旧接口兼容逻辑。
 - R002 `aa038b50` 完成数据库契约相关依赖约束初始化，记录前端允许、条件允许和默认禁止依赖，明确不引入 SQLite driver、ORM 或组件内 Supabase 直连。
 - R003 `aa038b50` 初始化前端工程，建立 Vite、React、TypeScript、Tailwind CSS v4、TanStack Router、Zustand、Vitest 基础结构，补充 Docker 静态部署和 Vercel SPA rewrite，验证 `npm run test` 与 `npm run build` 通过。
@@ -49,8 +45,5 @@
 - R058 `eb9d449` 完成 Supabase Direct 空 Tag 子树删除：聚合数为 0 的 Tag 悬停或聚焦时显示垃圾桶，确认句为“确认删除 #路径？”，父 Tag 按深度倒序连同空后代删除；store 乐观移除、失败回滚并清空受影响筛选。21 个测试文件、140 项测试及两种生产构建通过，用户已验收并归档，版本升至 `0.3.4`。
 - R059 `c2f91bd` 将创建和编辑笔记共用的输入区高度改为最小两行、最大十行，继续复用既有自动扩展和内部滚动；Backend 与 Supabase 两种生产构建、`git diff --check` 均通过，等待用户验收。
 - R060 `026b735` 将首页热力图统计绑定到当前 workspace：切换时沿用侧栏宽度计算出的相同日数重新加载每日统计，不改变网格列数或日期范围；无笔记 workspace 的同数量格子均按 0 计数呈现为空白。22 个测试文件、141 项测试和 Backend、Supabase 两种生产构建均通过，等待用户验收。
-
-## 归档索引
-
-- R061：[窄屏侧边栏浮层](exec-plans/completed/home-ui/r061-responsive-sidebar-drawer.md)，用户已验收。
-- R062：[紧凑登录入口](exec-plans/completed/auth/r062-compact-login.md)，用户已验收。
+- R061 `2aad4bfe` 完成窄屏汉堡侧栏：复用现有工具栏、统计与导航，支持左侧浮层、外部点击、关闭按钮、Esc 和断点状态清理，补齐三语言文案。143 项测试及两种生产构建通过；本地服务器启动权限被拒绝，用户已验收并归档。
+- R062 `edc56031` 统一 Supabase 与 Backend 紧凑登录入口：品牌和模式同行，hint 替代可见标签，复用 Bonofix token 并收窄表单，保留认证与工作区流程。143 项测试及两种构建通过，Supabase 窄屏浏览器检查通过，品牌依反馈修正为 ℤembra，用户已验收并归档。
