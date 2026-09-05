@@ -17,6 +17,7 @@
   --heatmap-cell-gap: 4px;
   --heatmap-cell-radius: 1px;
   --note-card-header-actions-width: calc(var(--icon-hit-size) * 2 + var(--space-2));
+  --layout-entry-max: 22rem;
   --layout-sidebar-min: 15rem;
   --layout-sidebar-max: 18.75rem;
   --layout-content-min: 30rem;

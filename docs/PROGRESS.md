@@ -2,6 +2,8 @@
 
 ## 项目流程记录
 
+- R062 `edc56031` 统一 Supabase 与 Backend 紧凑登录入口：品牌和模式同行，hint 替代可见标签，复用 Bonofix token 并收窄表单，保留认证与工作区流程。143 项测试及两种构建通过，Supabase 窄屏浏览器检查通过，等待用户验收。
+
 - R061 `2aad4bfe` 完成窄屏汉堡侧栏：复用现有工具栏、统计与导航，支持左侧浮层、外部点击、关闭按钮、Esc 和断点状态清理，补齐三语言文案。143 项测试及两种生产构建通过；本地服务器启动权限被拒绝，浏览器视觉检查待用户验收。
 
 - R001 `aa038b50` 完成 agent 基础设施初始化，记录前端技术栈澄清，引入 `vendor/zembra-schema` 共享数据库契约 submodule，并固定到 `v0.1.0`。`4ded053` 根据当前 OpenAPI 将 HTTP 模式 note CRUD、recent、daily-counts 和 note tags 请求统一增加 `workspace_id` scope，默认优先读取 `VITE_ZEMBRA_WORKSPACE_ID`，未配置时从 `/workspaces` 取第一项并缓存，不保留旧接口兼容逻辑。

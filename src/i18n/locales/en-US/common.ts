@@ -3,7 +3,7 @@ export const common = {
     backend: "Backend",
     configured: "Supabase is not configured for this deployment.",
     emailLabel: "Email address",
-    emailPlaceholder: "you@example.com",
+    emailPlaceholder: "Enter your email address",
     enter: "Enter Zembra",
     magicLinkSent: "Check your email for the sign-in link.",
     magicLinkSendSuccess: "Send Success",
