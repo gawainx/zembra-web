@@ -77,7 +77,6 @@
 
 ### 个人远端与合并流程
 
-- `origin` 必须指向个人仓库 `https://github.com/gawainx/zembra-web.git`，不得默认指向组织仓库。
 - 开发完成后，先将个人 `master` 分支推送到 `origin/master`。
 - 当用户要求合并到 `deploy` 时，默认合入个人仓库的 `origin/deploy`；只有用户明确指定时，才操作其他远端或组织仓库的 `deploy` 分支。
 
