@@ -39,8 +39,6 @@
 - 遗留问题和明确未解决事项写入 docs/exec-plans/tech-debt-tracker.md。
 - 工具或脚本生成的摘要写入 docs/generated/。
 - 开发活动中，禁止出于任何目的修改历史需求的任何文档，如果当前需求与历史需求的决策存在冲突，则在当前开发需求的文档中，以独立章节进行关系说明。
-
-### 模块化文档落点
 - docs/request-clarify/、docs/design-docs/、docs/exec-plans/active/ 和 docs/exec-plans/completed/ 支持按模块建立子目录。
 - 模块子目录命名应与代码模块、业务域或长期维护边界一致。
 - 同一需求的澄清、设计、计划文档应使用同名文件，分别落入对应文档层。
@@ -71,14 +69,13 @@
 4. 用户明确要求需求澄清时，先以多轮交互确认范围，再新建 docs/request-clarify/ 文档；随后完成设计并写入 docs/design-docs/，制定执行计划并写入 docs/exec-plans/active/，在用户审阅后再开发。设计文档中禁止堆砌代码，涉及接口设计、字段设计等内容时，以表格形式清晰说明即可，必要时可使用函数签名，但不要列举实现代码。
 5. 所有项目文档默认使用 Markdown 格式撰写，语言为简体中文；关键术语、函数接口、代码标识符和第三方工具名可保留英文。除非用户明确指定其他语言，新增或更新 docs/、AGENTS.md、ARCHITECTURE.md 等文档时必须使用简体中文。
 
-### 发布分支
+### Git 使用规范
 
-`deploy` 是供 Vercel 构建的稳定分支。禁止在 `deploy` 分支进行日常开发、调试或临时修改；只有用户明确要求修改 `deploy` 时，才允许切换到该分支并提交变更。常规开发在功能分支完成验证和提交后，再由用户明确指示将已验证提交同步到 `deploy`。
-
-### 个人远端与合并流程
-
-- 开发完成后，先将个人 `master` 分支推送到 `origin/master`。
-- 当用户要求合并到 `deploy` 时，默认合入个人仓库的 `origin/deploy`；只有用户明确指定时，才操作其他远端或组织仓库的 `deploy` 分支。
+- 进行开发前，首先检查和remote是否存在分裂，如果存在，必须首先 pull origin 再进行开发。如果无法正常合并，总结差异并汇报，不要静默处理冲突
+- 原子提交：基于开发计划，完成每个任务后进行原子化提交。
+- 批量推送：开发完成并完成commit后，必须 push 到 remote
+- 用户验收通过后，完成收尾流程后必须推送到remote。不允许出现任何只存在在本地的代码提交。
+- 当用户要求合并到 `deploy` 时，默认合入个人仓库的 `origin/deploy`
 
 ### 共享数据库契约
 - 本项目群的数据表契约来自 `vendor/zembra-schema` submodule，远程仓库为 `https://github.com/gawainx/zembra-schema.git`。
