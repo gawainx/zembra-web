@@ -1,4 +1,5 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
 import { i18next } from "../../i18n";
 import { ResponsiveSidebar } from "./ResponsiveSidebar";
@@ -20,9 +21,9 @@ test("opens the sidebar, keeps inside clicks open, and closes from outside with 
   expect(screen.getByRole("dialog", { name: "Sidebar" })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "All notes" }));
   expect(screen.getByRole("dialog")).toBeTruthy();
-  fireEvent.click(screen.getByRole("button", { name: "Close sidebar from outside" }));
+  await userEvent.click(document.querySelector('[data-slot="sheet-overlay"]') as HTMLElement);
   expect(screen.queryByRole("dialog")).toBeNull();
-  expect(document.activeElement).toBe(screen.getByRole("button", { name: "Open sidebar" }));
+  await waitFor(() => expect(document.activeElement).toBe(screen.getByRole("button", { name: "Open sidebar" })));
 });
 
 test("closes with Escape and the toggle, and clears drawer state on desktop resize", async () => {

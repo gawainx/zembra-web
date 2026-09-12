@@ -1,3 +1,6 @@
+import { Switch } from "../../components/ui/switch";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import {
   CheckCircle2,
   Loader2,
@@ -218,7 +221,7 @@ export function SupabaseSettingsSection({ client }: SupabaseSettingsSectionProps
       <form className="min-w-0" onSubmit={handleSave}>
         <div className="border-t border-[var(--color-border-subtle)]">
           <SettingsFieldRow label={t("supabase.url")}>
-            <input
+            <Input
               className={settingsLineInputClassName}
               placeholder="https://project.supabase.co"
               value={formState.supabaseUrl}
@@ -232,7 +235,7 @@ export function SupabaseSettingsSection({ client }: SupabaseSettingsSectionProps
           </SettingsFieldRow>
 
           <SettingsFieldRow label={t("supabase.secretKey")}>
-            <input
+            <Input
               className={settingsLineInputClassName}
               type="password"
               value={secretKeyDisplayValue}
@@ -256,7 +259,7 @@ export function SupabaseSettingsSection({ client }: SupabaseSettingsSectionProps
             error={intervalValidation}
             label={t("supabase.intervalSeconds")}
           >
-            <input
+            <Input
               className={settingsNumberInputClassName}
               inputMode="numeric"
               min="0"
@@ -273,21 +276,9 @@ export function SupabaseSettingsSection({ client }: SupabaseSettingsSectionProps
           </SettingsFieldRow>
 
           <SettingsFieldRow label={t("supabase.enableSync")}>
-            <label className="relative inline-flex h-7 w-12 shrink-0 items-center justify-self-end">
-              <input
-                checked={syncEnabled}
-                className="peer sr-only"
-                disabled={isLoading || isTogglingEnabled}
-                role="switch"
-                type="checkbox"
-                aria-label={t("supabase.enableSync")}
-                onChange={(event) =>
-                  void handleSyncEnabledChange(event.target.checked)
-                }
-              />
-              <span className="absolute inset-0 rounded-full bg-[var(--color-border)] transition peer-checked:bg-[var(--color-accent)] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--color-accent)]" />
-              <span className="absolute left-1 size-5 rounded-full bg-[var(--color-control-thumb)] shadow-sm transition peer-checked:translate-x-5" />
-            </label>
+            <Switch checked={syncEnabled} disabled={isLoading || isTogglingEnabled}
+              aria-label={t("supabase.enableSync")}
+              onCheckedChange={(checked) => void handleSyncEnabledChange(checked)} />
           </SettingsFieldRow>
         </div>
 
@@ -399,7 +390,7 @@ function ActionButton({
   type: "button" | "submit";
 }) {
   return (
-    <button
+    <Button variant="plain" size="content"
       className="inline-flex min-h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[9px] px-3 py-2 text-sm font-semibold text-[var(--color-accent)] hover:bg-[var(--color-surface-muted)] disabled:cursor-not-allowed disabled:opacity-50"
       disabled={busy || disabled}
       type={type}
@@ -411,7 +402,7 @@ function ActionButton({
         icon
       )}
       {label}
-    </button>
+    </Button>
   );
 }
 

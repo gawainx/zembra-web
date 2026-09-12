@@ -1,3 +1,4 @@
+import { Button } from "../components/ui/button";
 import { Moon, Sun } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "./ThemeProvider";
@@ -13,7 +14,7 @@ export function ThemeToggle() {
     preference === "dark" ? t("theme.switchToLight") : t("theme.switchToDark");
 
   return (
-    <button
+    <Button variant="plain" size="content"
       className="inline-flex size-[var(--icon-hit-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
       type="button"
       aria-label={label}
@@ -24,6 +25,6 @@ export function ThemeToggle() {
         className="size-[var(--icon-size)] text-[var(--color-accent)]"
         aria-hidden="true"
       />
-    </button>
+    </Button>
   );
 }

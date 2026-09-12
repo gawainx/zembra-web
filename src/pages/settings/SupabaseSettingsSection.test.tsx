@@ -60,9 +60,8 @@ describe("SupabaseSettingsSection", () => {
     expect(screen.getByDisplayValue("120")).not.toBeNull();
     expect(screen.getByDisplayValue("••••••••")).not.toBeNull();
     expect(
-      (screen.getByRole("switch", { name: "Enable sync" }) as HTMLInputElement)
-        .checked,
-    ).toBe(true);
+      screen.getByRole("switch", { name: "Enable sync" }).getAttribute("aria-checked"),
+    ).toBe("true");
     expect(screen.queryByText(/Configured|Not configured/)).toBeNull();
   });
 
@@ -152,7 +151,7 @@ describe("SupabaseSettingsSection", () => {
         supabaseUrl: "https://project.supabase.co",
       });
     });
-    expect((switchInput as HTMLInputElement).checked).toBe(true);
+    expect(switchInput.getAttribute("aria-checked")).toBe("true");
   });
 
   test("rolls back Enable sync when persistence fails", async () => {
@@ -166,11 +165,11 @@ describe("SupabaseSettingsSection", () => {
     renderSupabaseSection();
 
     const switchInput = await screen.findByRole("switch", { name: "Enable sync" });
-    expect((switchInput as HTMLInputElement).checked).toBe(true);
+    expect(switchInput.getAttribute("aria-checked")).toBe("true");
 
     fireEvent.click(switchInput);
 
     expect(await screen.findByText("Save failed")).not.toBeNull();
-    expect((switchInput as HTMLInputElement).checked).toBe(true);
+    expect(switchInput.getAttribute("aria-checked")).toBe("true");
   });
 });

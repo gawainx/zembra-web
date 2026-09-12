@@ -21,6 +21,7 @@ export default defineConfig(({ command, mode }) => {
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
+      "@": resolve(__dirname, "src"),
       "@zembra/data-source-runtime": resolve(
         __dirname,
         `src/api/runtime/${dataSourceTarget}.ts`,
@@ -42,6 +43,10 @@ export default defineConfig(({ command, mode }) => {
         manualChunks(id) {
           if (!id.includes("node_modules")) {
             return undefined;
+          }
+
+          if (id.includes("/node_modules/@radix-ui/") || id.includes("/node_modules/radix-ui/") || id.includes("/node_modules/@floating-ui/")) {
+            return "ui-primitives";
           }
 
           if (id.includes("/node_modules/@tiptap/")) {

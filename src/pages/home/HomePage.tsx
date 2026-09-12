@@ -1,9 +1,10 @@
+import { createComposerTools } from "./homeComposerTools";
+import { FieldDeleteDialog, TagDeleteDialog } from "./TaxonomyDeleteDialogs";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import {
-  AtSign,
-  Bold,
   Bot,
   CircleHelp,
-  Hash,
   List,
   Search,
   User,
@@ -31,7 +32,6 @@ import {
   StatBlock,
   TagTreeItem,
 } from "./HomeSidebar";
-import type { ComposerTool } from "./homeTypes";
 import { normalizeMarkdownSource } from "./liveMarkdownEditorUtils";
 import {
   buildTagFilterMatch,
@@ -359,7 +359,7 @@ export function HomePage() {
                 />
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <button
+                <Button variant="plain" size="content"
                   className="flex size-[var(--icon-hit-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
                   type="button"
                   aria-label={t("composer.help")}
@@ -369,7 +369,7 @@ export function HomePage() {
                     className="size-[var(--icon-size)] text-[var(--color-accent)]"
                     aria-hidden="true"
                   />
-                </button>
+                </Button>
                 <SourceToolbarActions />
                 <ThemeToggle />
               </div>
@@ -503,7 +503,7 @@ export function HomePage() {
           <header className="mb-4 flex min-h-11 shrink-0 items-center justify-end lg:mb-3">
             <label className="flex h-[var(--control-height)] w-full items-center gap-[var(--space-2)] rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-4)] text-sm text-[var(--color-text-muted)] lg:max-w-80">
               <Search className="size-4" aria-hidden="true" />
-              <input
+              <Input
                 className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-[var(--color-text-muted)]"
                 placeholder={t("search.placeholder")}
                 value={keyword}
@@ -603,154 +603,4 @@ export function HomePage() {
     </main>
     </SourceHomeControlsProvider>
   );
-}
-
-/** Renders the in-app confirmation dialog for deleting an empty tag subtree. */
-function TagDeleteDialog({
-  tag,
-  onCancel,
-  onConfirm,
-  t,
-}: {
-  tag: TagDto;
-  onCancel: () => void;
-  onConfirm: () => void;
-  t: (key: string, options?: Record<string, string>) => string;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] px-4">
-      <section
-        aria-labelledby="tag-delete-title"
-        aria-modal="true"
-        className="w-full max-w-sm rounded-[14px] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 shadow-[var(--color-shadow-float)]"
-        role="dialog"
-      >
-        <h2
-          className="text-base font-semibold text-[var(--color-text-primary)]"
-          id="tag-delete-title"
-        >
-          {t("tag.delete.title")}
-        </h2>
-        <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
-          {t("tag.delete.description", { tag: tag.path })}
-        </p>
-        <div className="mt-5 flex justify-end gap-2">
-          <button
-            className="h-9 rounded-[10px] px-3 text-sm font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
-            type="button"
-            onClick={onCancel}
-          >
-            {t("tag.delete.cancel")}
-          </button>
-          <button
-            className="h-9 rounded-[10px] bg-[var(--color-error)] px-3 text-sm font-semibold text-[var(--color-error-contrast)] hover:opacity-90"
-            type="button"
-            onClick={onConfirm}
-          >
-            {t("tag.delete.confirm")}
-          </button>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-/** Renders the in-app confirmation dialog for deleting an unused field. */
-function FieldDeleteDialog({
-  error,
-  field,
-  isDeleting,
-  onCancel,
-  onConfirm,
-  t,
-}: {
-  error?: string;
-  field: FieldDto;
-  isDeleting: boolean;
-  onCancel: () => void;
-  onConfirm: () => void;
-  t: (key: string, options?: Record<string, string>) => string;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] px-4">
-      <section
-        aria-modal="true"
-        className="w-full max-w-sm rounded-[14px] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 shadow-[var(--color-shadow-float)]"
-        role="dialog"
-        aria-labelledby="field-delete-title"
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h2
-              className="text-base font-semibold text-[var(--color-text-primary)]"
-              id="field-delete-title"
-            >
-              {t("field.delete.title")}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
-              {t("field.delete.description", { field: field.name })}
-            </p>
-          </div>
-        </div>
-        {error ? (
-          <div className="mt-4 rounded-[10px] border border-[var(--color-error-border)] bg-[var(--color-error-soft)] px-3 py-2 text-sm text-[var(--color-error)]">
-            {error}
-          </div>
-        ) : null}
-        <div className="mt-5 flex justify-end gap-2">
-          <button
-            className="h-9 rounded-[10px] px-3 text-sm font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={isDeleting}
-            type="button"
-            onClick={onCancel}
-          >
-            {t("field.delete.cancel")}
-          </button>
-          <button
-            className="h-9 rounded-[10px] bg-[var(--color-error)] px-3 text-sm font-semibold text-[var(--color-error-contrast)] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={isDeleting}
-            type="button"
-            onClick={onConfirm}
-          >
-            {isDeleting ? t("field.delete.deleting") : t("field.delete.confirm")}
-          </button>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-/** Creates toolbar definitions for the composer insertion buttons. */
-function createComposerTools(t: (key: string) => string): ComposerTool[] {
-  return [
-    {
-      id: "tag",
-      label: t("composer.tools.tag"),
-      icon: <Hash className="size-5" aria-hidden="true" />,
-      before: "#",
-      cursorOffset: 1,
-    },
-    {
-      id: "field",
-      label: t("composer.tools.field"),
-      icon: <AtSign className="size-5" aria-hidden="true" />,
-      before: "@",
-      cursorOffset: 1,
-    },
-    {
-      id: "bold",
-      label: t("composer.tools.bold"),
-      icon: <Bold className="size-4" aria-hidden="true" />,
-      before: "**",
-      after: "**",
-      cursorOffset: 2,
-    },
-    {
-      id: "list",
-      label: t("composer.tools.list"),
-      icon: <List className="size-5" aria-hidden="true" />,
-      before: "- ",
-      cursorOffset: 2,
-    },
-  ];
 }

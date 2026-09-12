@@ -1,3 +1,4 @@
+import { Button } from "../../components/ui/button";
 import { CalendarDays, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import { MouseEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -188,7 +189,7 @@ export function NavItem({
       data-active={active}
       data-disabled={disabled}
     >
-      <button
+      <Button variant="plain" size="content"
         className="col-span-2 grid min-w-0 grid-cols-[24px_1fr] items-center gap-[var(--space-2)] text-left disabled:cursor-default"
         disabled={disabled}
         type="button"
@@ -198,14 +199,14 @@ export function NavItem({
           {prefix}
         </span>
         <span className="min-w-0 truncate">{label}</span>
-      </button>
+      </Button>
       <span className="flex min-w-0 items-center justify-end">
         {canDelete ? (
           <>
             <span className="text-xs text-[var(--color-text-muted)] group-hover/nav:hidden group-focus-within/nav:hidden">
               {count}
             </span>
-            <button
+            <Button variant="plain" size="content"
               aria-label={deleteLabel}
               className="hidden size-[var(--icon-hit-size)] items-center justify-center rounded-[var(--radius-control)] text-[var(--color-error)] hover:bg-[var(--color-error-soft)] disabled:cursor-not-allowed disabled:opacity-60 group-hover/nav:flex group-focus-within/nav:flex"
               disabled={deleteDisabled}
@@ -213,7 +214,7 @@ export function NavItem({
               onClick={handleDeleteClick}
             >
               <Trash2 className="size-[var(--icon-size)]" aria-hidden="true" />
-            </button>
+            </Button>
           </>
         ) : (
           <span className="text-xs text-[var(--color-text-muted)]">{count}</span>
@@ -272,7 +273,7 @@ export function TagTreeItem({
         className="group grid min-h-9 grid-cols-[24px_1fr_auto] items-center gap-[var(--space-2)] rounded-[var(--radius-control)] px-[var(--space-3)] py-[var(--space-2)] text-left text-[15px] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] data-[active=true]:bg-[var(--color-accent-soft)] data-[active=true]:text-[var(--color-text-primary)]"
         data-active={activePath === node.tag.path}
       >
-        <button
+        <Button variant="plain" size="content"
           aria-expanded={expanded}
           aria-label={expanded ? expandedLabel : collapsedLabel}
           className="flex min-w-0 items-center justify-center rounded-[7px] text-[var(--color-accent)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
@@ -289,28 +290,28 @@ export function TagTreeItem({
               <ChevronRight className="size-4" aria-hidden="true" />
             )}
           </span>
-        </button>
-        <button
+        </Button>
+        <Button variant="plain" size="content"
           className="min-w-0 truncate text-left"
           type="button"
           onClick={() => onSelect(node.tag.path)}
         >
           {node.tag.name}
-        </button>
+        </Button>
         <span className="flex min-w-0 items-center justify-end">
           {rootDeleteLabel ? (
             <>
               <span className="text-xs text-[var(--color-text-muted)] group-hover:hidden group-focus-within:hidden">
                 {rootCount}
               </span>
-              <button
+              <Button variant="plain" size="content"
                 aria-label={rootDeleteLabel}
                 className="hidden size-[var(--icon-hit-size)] items-center justify-center rounded-[var(--radius-control)] text-[var(--color-error)] hover:bg-[var(--color-error-soft)] group-hover:flex group-focus-within:flex"
                 type="button"
                 onClick={() => onDelete(node.tag)}
               >
                 <Trash2 className="size-[var(--icon-size)]" aria-hidden="true" />
-              </button>
+              </Button>
             </>
           ) : (
             <span className="text-xs text-[var(--color-text-muted)]">{rootCount}</span>

@@ -1,3 +1,4 @@
+import { NativeSelect } from "../components/ui/native-select";
 import { Languages } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -28,7 +29,7 @@ export function LanguageMenu() {
     >
       <Languages className="size-4 text-[var(--color-accent)]" aria-hidden="true" />
       <span className="sr-only">{t("language.label")}</span>
-      <select
+      <NativeSelect
         aria-label={t("language.label")}
         className="max-w-24 bg-transparent text-xs font-semibold outline-none"
         value={currentLocale}
@@ -39,7 +40,7 @@ export function LanguageMenu() {
             {option.label}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     </label>
   );
 }

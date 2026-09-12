@@ -1,3 +1,4 @@
+import { Button } from "../../../components/ui/button";
 import { Loader2, RefreshCw } from "lucide-react";
 import { createContext, ReactNode, useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -55,7 +56,7 @@ export function SourceToolbarActions() {
 
   return (
     <>
-      <button
+      <Button variant="plain" size="content"
         aria-label={t("actions.sync")}
         className="flex size-[var(--icon-hit-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isSyncing}
@@ -64,7 +65,7 @@ export function SourceToolbarActions() {
         onClick={() => void runSync()}
       >
         {isSyncing ? <Loader2 className="size-[var(--icon-size)] animate-spin text-[var(--color-accent)]" aria-hidden="true" /> : <RefreshCw className="size-[var(--icon-size)] text-[var(--color-accent)]" aria-hidden="true" />}
-      </button>
+      </Button>
       <SettingsModule client={getSyncClient()} />
     </>
   );

@@ -1,4 +1,13 @@
-import { Bot, Check, ChevronDown, MoreHorizontal, User } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "../../components/ui/dropdown-menu";
+import { Button } from "../../components/ui/button";
+import { Bot, ChevronDown, MoreHorizontal, User } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -12,10 +21,7 @@ import type { FieldDto, NoteDto, TagDto } from "../../api/types";
 import { NoteEditor } from "./NoteEditor";
 import { NoteMarkdownContent } from "./NoteMarkdownContent";
 import type { ComposerTool } from "./homeTypes";
-import {
-  formatNoteTimestamp,
-  stripRenderedFieldMarker,
-} from "./homeUtils";
+import { formatNoteTimestamp, stripRenderedFieldMarker } from "./homeUtils";
 
 /** Renders one recent note in the home feed. */
 export function NoteCard({
@@ -60,8 +66,6 @@ export function NoteCard({
   const { t } = useTranslation("home");
   const [expanded, setExpanded] = useState(false);
   const [hasOverflow, setHasOverflow] = useState(false);
-  const [isActionsOpen, setIsActionsOpen] = useState(false);
-  const [isFieldMenuOpen, setIsFieldMenuOpen] = useState(false);
   const displayRole = note.role || t("sidebar.unknownRole");
   const displayContent = useMemo(
     () => stripRenderedFieldMarker(note.content, fieldName),
@@ -91,13 +95,11 @@ export function NoteCard({
   /** Starts deletion immediately and lets the store restore the note on failure. */
   function handleDeleteClick() {
     void onDelete(note.id).catch(() => undefined);
-    setIsActionsOpen(false);
   }
 
   /** Inserts this note as a valid mention into the active note draft. */
   function handleMentionClick() {
     onMention(note.id);
-    setIsActionsOpen(false);
   }
 
   /** Enters edit mode from the card action menu when this card can own the draft. */
@@ -105,19 +107,15 @@ export function NoteCard({
     if (!isEditing && canStartEditing) {
       onEditStart(note);
     }
-
-    setIsActionsOpen(false);
   }
 
   /** Changes this note to the selected field and closes the metadata menu. */
   function handleFieldSelect(nextFieldName: string) {
     if (nextFieldName === fieldName) {
-      setIsFieldMenuOpen(false);
       return;
     }
 
     onFieldChange(note, nextFieldName);
-    setIsFieldMenuOpen(false);
   }
 
   return (
@@ -126,44 +124,36 @@ export function NoteCard({
         <div className="min-w-0 pr-[var(--note-card-header-actions-width)]">
           {formatNoteTimestamp(note.createdAt, locale)}
           {fieldName ? (
-            <span className="relative ml-1 inline-flex">
-              <button
-                aria-expanded={isFieldMenuOpen}
-                aria-label={t("note.fieldMenu.switch", { field: fieldName })}
-                className="inline-flex items-center gap-0.5 rounded-[6px] font-bold text-[var(--color-field)] hover:bg-[var(--color-field-soft)] disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={isEditing || fields.length === 0}
-                onClick={() => setIsFieldMenuOpen((current) => !current)}
-                type="button"
-              >
-                @{fieldName}
-                <ChevronDown className="size-3" aria-hidden="true" />
-              </button>
-              {isFieldMenuOpen ? (
-                <div
-                  className="absolute left-0 top-6 z-40 inline-flex w-max flex-col overflow-hidden rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] p-1 shadow-[var(--color-shadow-float)]"
-                  role="menu"
-                >
-                  {fields.map((field) => {
-                    const selected = field.name === fieldName;
-
-                    return (
-                      <button
-                        aria-checked={selected}
-                        className="flex self-stretch items-center justify-between gap-2 whitespace-nowrap rounded-[6px] px-1.5 py-1 text-left text-[13px] font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] disabled:cursor-not-allowed disabled:opacity-60"
-                        key={field.id}
-                        onClick={() => handleFieldSelect(field.name)}
-                        role="menuitemradio"
-                        type="button"
-                      >
-                        <span>@{field.name}</span>
-                        {selected ? (
-                          <Check className="size-4 text-[var(--color-field)]" aria-hidden="true" />
-                        ) : null}
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
+            <span className="ml-1 inline-flex">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="plain"
+                    size="content"
+                    aria-label={t("note.fieldMenu.switch", {
+                      field: fieldName,
+                    })}
+                    className="inline-flex items-center gap-0.5 rounded-[var(--radius-control)] font-bold text-[var(--color-field)] hover:bg-[var(--color-field-soft)]"
+                    disabled={isEditing || fields.length === 0}
+                    type="button"
+                  >
+                    @{fieldName}
+                    <ChevronDown className="size-3" aria-hidden="true" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuRadioGroup
+                    value={fieldName}
+                    onValueChange={handleFieldSelect}
+                  >
+                    {fields.map((field) => (
+                      <DropdownMenuRadioItem key={field.id} value={field.name}>
+                        @{field.name}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </span>
           ) : null}
         </div>
@@ -174,56 +164,51 @@ export function NoteCard({
             title={displayRole}
           >
             {note.role === "Human" ? (
-              <User className="size-[var(--icon-size)] shrink-0" aria-hidden="true" />
+              <User
+                className="size-[var(--icon-size)] shrink-0"
+                aria-hidden="true"
+              />
             ) : (
-              <Bot className="size-[var(--icon-size)] shrink-0" aria-hidden="true" />
+              <Bot
+                className="size-[var(--icon-size)] shrink-0"
+                aria-hidden="true"
+              />
             )}
           </span>
           {!isEditing ? (
-            <div className="relative shrink-0">
-            <button
-              aria-expanded={isActionsOpen}
-              aria-haspopup="menu"
-              aria-label={t("note.actions")}
-              className="flex size-[var(--icon-hit-size)] items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
-              onClick={() => setIsActionsOpen((current) => !current)}
-              type="button"
-            >
-              <MoreHorizontal className="size-[var(--icon-size)]" aria-hidden="true" />
-            </button>
-            {isActionsOpen ? (
-              <div
-                className="absolute right-0 top-9 z-30 min-w-28 overflow-hidden rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--color-shadow-float)]"
-                role="menu"
-              >
-                <button
-                  className="block w-full px-3 py-2 text-left text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={!canStartEditing}
-                  onClick={handleEditClick}
-                  role="menuitem"
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="plain"
+                  size="icon"
                   type="button"
+                  aria-label={t("note.actions")}
+                  className="text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
+                >
+                  <MoreHorizontal
+                    className="size-[var(--icon-size)]"
+                    aria-hidden="true"
+                  />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  disabled={!canStartEditing}
+                  onSelect={handleEditClick}
                 >
                   {t("note.edit.action")}
-                </button>
-                <button
-                  className="block w-full px-3 py-2 text-left text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)]"
-                  onClick={handleMentionClick}
-                  role="menuitem"
-                  type="button"
-                >
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleMentionClick}>
                   {t("note.mention")}
-                </button>
-                <button
-                  className="block w-full px-3 py-2 text-left text-sm text-[var(--color-error)] hover:bg-[var(--color-error-soft)] disabled:cursor-not-allowed disabled:opacity-60"
-                  onClick={handleDeleteClick}
-                  role="menuitem"
-                  type="button"
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onSelect={handleDeleteClick}
                 >
                   {t("note.delete")}
-                </button>
-              </div>
-            ) : null}
-          </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : null}
         </div>
       </div>
@@ -260,13 +245,15 @@ export function NoteCard({
             />
           </div>
           {hasOverflow || expanded ? (
-            <button
+            <Button
+              variant="plain"
+              size="content"
               className="self-start text-sm font-semibold text-[var(--color-accent)]"
               type="button"
               onClick={() => setExpanded((current) => !current)}
             >
               {expanded ? t("note.collapse") : t("note.expand")}
-            </button>
+            </Button>
           ) : null}
         </>
       )}

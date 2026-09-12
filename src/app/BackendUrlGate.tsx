@@ -1,3 +1,6 @@
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { NativeSelect } from "../components/ui/native-select";
 import { FormEvent, ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2, RefreshCw } from "lucide-react";
@@ -229,7 +232,7 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
           <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,0.6fr)] gap-[var(--space-3)]">
             <label className="block min-w-0 text-sm font-normal">
               <span className="sr-only">{t("backend.login.hostLabel")}</span>
-              <input
+              <Input
                 aria-label={t("backend.login.hostLabel")}
                 className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] transition focus:border-[var(--color-border-strong)]"
                 name="backend-host"
@@ -242,7 +245,7 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
             </label>
             <label className="block min-w-0 text-sm font-normal">
               <span className="sr-only">{t("backend.login.portLabel")}</span>
-              <input
+              <Input
                 aria-label={t("backend.login.portLabel")}
                 className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] transition focus:border-[var(--color-border-strong)]"
                 inputMode="numeric"
@@ -261,7 +264,7 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
               <span className="sr-only">
                 {t("backend.login.workspaceLabel")}
               </span>
-              <select
+              <NativeSelect
                 aria-label={t("backend.login.workspaceLabel")}
                 className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-border-strong)] disabled:text-[var(--color-text-muted)]"
                 disabled={workspaces.length === 0 || isLoadingWorkspaces}
@@ -280,9 +283,9 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
                     {formatWorkspaceOption(workspace)}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
-            <button
+            <Button variant="plain" size="content"
               aria-label={
                 hasLoadedWorkspaces
                   ? t("backend.login.refreshWorkspacesAction")
@@ -298,7 +301,7 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
               ) : (
                 <RefreshCw className="size-[var(--icon-size)]" aria-hidden="true" />
               )}
-            </button>
+            </Button>
           </div>
 
           {error ? (
@@ -310,7 +313,7 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
             </p>
           ) : null}
 
-          <button
+          <Button variant="plain" size="content"
             className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] bg-[var(--color-accent)] px-[var(--space-4)] whitespace-nowrap text-sm font-medium text-[var(--color-accent-contrast)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={
               isSubmitting ||
@@ -323,7 +326,7 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
             {status === "checking" || isSubmitting
               ? t("backend.login.checking")
               : t("backend.login.enterAction")}
-          </button>
+          </Button>
         </form>
       </section>
     </main>

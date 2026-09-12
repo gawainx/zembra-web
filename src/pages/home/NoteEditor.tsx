@@ -1,3 +1,5 @@
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "../../components/ui/tooltip";
+import { Button } from "../../components/ui/button";
 import { SendHorizontal } from "lucide-react";
 import {
   forwardRef,
@@ -123,20 +125,18 @@ export const NoteEditor = forwardRef<
       ) : null}
       <div className="flex items-end justify-between gap-[var(--space-3)] px-[var(--space-4)] pb-[var(--space-3)]">
         <div className="min-w-0">
-          <div className="flex items-center gap-4 text-[var(--color-text-secondary)]">
+          <TooltipProvider delayDuration={400}><div className="flex items-center gap-4 text-[var(--color-text-secondary)]">
             {tools.map((tool) => (
-              <button
+              <Tooltip key={tool.id}><TooltipTrigger asChild><Button variant="plain" size="content"
                 className="flex size-[var(--icon-hit-size)] items-center justify-center rounded-[var(--radius-control)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
-                key={tool.id}
                 type="button"
                 aria-label={tool.label}
-                title={tool.label}
                 onClick={(event) => handleToolClick(event, tool)}
               >
                 {tool.icon}
-              </button>
+              </Button></TooltipTrigger><TooltipContent>{tool.label}</TooltipContent></Tooltip>
             ))}
-          </div>
+          </div></TooltipProvider>
           {meta ? (
             <div className="mt-1.5 truncate text-xs text-[var(--color-text-muted)]">
               {meta}
@@ -145,22 +145,22 @@ export const NoteEditor = forwardRef<
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {onCancel ? (
-            <button
+            <Button variant="plain" size="content"
               className="h-[34px] rounded-[10px] px-3 text-sm font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
               type="button"
               onClick={onCancel}
             >
               {t("note.edit.cancel")}
-            </button>
+            </Button>
           ) : null}
-          <button
+          <Button variant="plain" size="content"
             className="flex size-[var(--icon-hit-size)] items-center justify-center text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
             type="submit"
             aria-label={submitLabel}
             disabled={isSubmitting || draft.trim().length === 0}
           >
             <SendHorizontal className="size-5" fill="currentColor" aria-hidden="true" />
-          </button>
+          </Button>
         </div>
       </div>
     </div>

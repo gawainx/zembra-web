@@ -1,5 +1,6 @@
+import { Button } from "../../components/ui/button";
 import { Settings } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { SyncClient } from "../../api/sync.client";
 import { SettingsModal } from "./SettingsModal";
@@ -17,12 +18,13 @@ interface SettingsModuleProps {
  */
 export function SettingsModule({ client }: SettingsModuleProps) {
   const { t } = useTranslation("settings");
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const title = t("form.settings.title");
 
   return (
     <>
-      <button
+      <Button ref={triggerRef} variant="plain" size="content"
         className="flex size-[var(--icon-hit-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
         title={title}
         type="button"
@@ -33,9 +35,9 @@ export function SettingsModule({ client }: SettingsModuleProps) {
           className="size-[var(--icon-size)] text-[var(--color-accent)]"
           aria-hidden="true"
         />
-      </button>
+      </Button>
       {isOpen ? (
-        <SettingsModal client={client} onClose={() => setIsOpen(false)} />
+        <SettingsModal client={client} onClose={() => { setIsOpen(false); triggerRef.current?.focus(); }} />
       ) : null}
     </>
   );

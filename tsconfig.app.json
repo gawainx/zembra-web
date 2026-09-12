@@ -18,6 +18,7 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
+      "@/*": ["src/*"],
       "@zembra/data-source-runtime": ["src/api/runtime/backend.ts"],
       "@zembra/source-entry": ["src/app/source-entry/backend.tsx"],
       "@zembra/source-home-controls": ["src/pages/home/source-home-controls/backend.tsx"]
