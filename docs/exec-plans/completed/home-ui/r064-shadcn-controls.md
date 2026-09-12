@@ -11,11 +11,11 @@
 - [x] 按官方 registry 引入必要组件，将颜色与尺寸适配现有语义 token。
 - [x] 迁移通用表单控件、菜单、设置弹窗、删除确认和侧栏抽屉，保留现有业务回调。
 - [x] 完成行为测试及 Backend、Supabase 两种生产构建，核对包体和 diff。
-- [x] 补充实际实现文档；代码与文档统一提交推送，等待用户验收，不自动归档。
+- [x] 补充实际实现文档；代码与文档统一提交推送，用户验收通过，归档至 completed。
 
 ## 验证边界
 
-自动化验证覆盖菜单键盘操作与关闭、弹窗焦点、抽屉断点、现有业务回归。当前未获本地 Browser/Computer Use 验证授权，界面视觉验收由用户完成。
+自动化验证覆盖菜单键盘操作与关闭、弹窗焦点、抽屉断点、现有业务回归。界面视觉验收由用户在本地 Supabase 服务完成，用户已明确确认验收通过。
 
 ## 实际验证结果
 
@@ -23,4 +23,8 @@
 - `npm run build:backend` 与 `npm run build:supabase`：均通过，无超过 500 kB 的 JavaScript chunk 警告。
 - Radix / Floating UI 分离至 `ui-primitives` chunk；保留 Tiptap、ProseMirror、React、router、i18n、Supabase 的原有分包边界。
 - `git diff --check`：通过。主题 palette、共享 schema、历史需求文档未修改；临时 registry、测试及构建日志均存于 `/tmp`，未进入仓库。
-- 尚未执行本地浏览器视觉检查，等待用户验收；执行计划保持 active。
+- 用户已完成本地界面验收并确认通过；执行计划归档至 completed。
+
+## 验收与归档
+
+用户确认 R064 验收通过，授权归档并合并到 origin/deploy 后推送。验收代码为 e5e639f，沿用已通过的 149 项测试与两种生产构建结果；本次收尾仅更新文档及分支整合。
