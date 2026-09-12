@@ -10,6 +10,9 @@
   --radius-card: 1rem;
   --control-height: 2.5rem;
   --control-size: 2.5rem;
+  --switch-height: 1.75rem;
+  --switch-width: 3rem;
+  --switch-thumb: 1.25rem;
   --icon-size: 1rem;
   --icon-hit-inset: 1px;
   --icon-hit-size: calc(var(--icon-size) + var(--icon-hit-inset) * 2);

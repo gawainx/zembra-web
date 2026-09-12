@@ -1,3 +1,6 @@
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { NativeSelect } from "../components/ui/native-select";
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { activateDataSource } from "../api/client";
@@ -228,7 +231,7 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
           {hasSession ? (
             <label className="block min-w-0 text-sm font-normal text-[var(--color-text-primary)]">
 
-              <select
+              <NativeSelect
                 aria-label={t("dataSource.workspaceLabel")}
                 className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-border-strong)]"
                 disabled={isLoading || isSending || workspaces.length === 0}
@@ -242,12 +245,12 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
                     {workspace.name || t("dataSource.unnamedWorkspace")}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
           ) : (
             <label className="block min-w-0 text-sm font-normal text-[var(--color-text-primary)]">
 
-              <input
+              <Input
                 aria-label={t("dataSource.emailLabel")}
                 className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-border-strong)]"
                 disabled={isLoading || isSending}
@@ -263,7 +266,7 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
               />
             </label>
           )}
-          <button
+          <Button variant="plain" size="content"
             className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] bg-[var(--color-accent)] px-[var(--space-4)] whitespace-nowrap text-sm font-medium text-[var(--color-accent-contrast)] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isLoading || (hasSession ? !selectedWorkspaceId : !email.trim())}
             type="submit"
@@ -275,7 +278,7 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
                 : message
                   ? t("dataSource.magicLinkSendSuccess")
                   : t("dataSource.sendMagicLink")}
-          </button>
+          </Button>
         </form>
         {message ? (
           <p className="text-sm text-[var(--color-text-secondary)]" role="status">

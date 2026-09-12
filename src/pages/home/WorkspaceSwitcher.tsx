@@ -1,9 +1,18 @@
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "../../components/ui/dropdown-menu";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import { Check, ChevronDown, Pencil } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { ActiveWorkspace } from "../../app/workspace-context";
 
-/** Renders a text-width workspace selector with a native disclosure menu. */
+/** Renders a text-width workspace selector with a shadcn dropdown menu. */
 export function WorkspaceSwitcher({
   workspace,
   workspaces,
@@ -20,7 +29,7 @@ export function WorkspaceSwitcher({
   onWorkspaceRename?: (workspaceId: string, name: string) => Promise<void>;
 }) {
   const { t } = useTranslation("home");
-  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [draftName, setDraftName] = useState(workspace.title);
   const [isEditing, setIsEditing] = useState(false);
@@ -35,15 +44,15 @@ export function WorkspaceSwitcher({
     setDraftName(workspace.title);
   }, [isEditing, workspace.title]);
 
-  /** Activates the selected workspace and closes the native disclosure. */
+  /** Activates the selected workspace and closes the menu. */
   function handleWorkspaceClick(workspaceId: string) {
     onWorkspaceChange(workspaceId);
-    detailsRef.current?.removeAttribute("open");
+    setMenuOpen(false);
   }
 
   /** Opens the active workspace name in an all-selected input field. */
   function handleRenameStart() {
-    detailsRef.current?.removeAttribute("open");
+    setMenuOpen(false);
     setDraftName(workspace.title);
     setIsEditing(true);
   }
@@ -63,7 +72,7 @@ export function WorkspaceSwitcher({
   return (
     <div className="flex min-w-0 items-center gap-[var(--space-1)]">
       {isEditing ? (
-        <input
+        <Input
           aria-invalid={!draftName.trim()}
           aria-label={t("workspace.nameInput")}
           className="min-w-0 border-0 bg-transparent p-0 text-lg font-bold text-[var(--color-text-primary)] outline-none"
@@ -79,29 +88,39 @@ export function WorkspaceSwitcher({
           }}
         />
       ) : (
-        <details className="relative w-fit" ref={detailsRef}>
-          <summary className="flex cursor-pointer list-none items-center gap-0 text-lg font-bold text-[var(--color-text-primary)] [&::-webkit-details-marker]:hidden">
-            <span>{workspace.name}</span>
-            <ChevronDown className="size-[var(--icon-size)]" aria-hidden="true" />
-          </summary>
-          <div className="absolute left-0 top-full z-40 mt-[var(--space-1)] min-w-full w-max overflow-hidden rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] py-[var(--space-1)] shadow-[var(--color-shadow-float)]">
-            {workspaces.map((option) => (
-              <button
-                className={`block w-full whitespace-nowrap px-[var(--space-2)] py-[var(--space-1)] text-left text-base text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] ${
-                  option.id === workspace.id ? "font-bold" : "font-normal"
-                }`}
-                key={option.id}
-                type="button"
-                onClick={() => handleWorkspaceClick(option.id)}
-              >
-                {option.name}
-              </button>
-            ))}
-          </div>
-        </details>
+        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="plain"
+              size="content"
+              type="button"
+              className="gap-0 text-lg font-bold text-[var(--color-text-primary)]"
+            >
+              <span>{workspace.name}</span>
+              <ChevronDown
+                className="size-[var(--icon-size)]"
+                aria-hidden="true"
+              />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuRadioGroup
+              value={workspace.id}
+              onValueChange={handleWorkspaceClick}
+            >
+              {workspaces.map((option) => (
+                <DropdownMenuRadioItem key={option.id} value={option.id}>
+                  {option.name}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
       {onWorkspaceRename ? (
-        <button
+        <Button
+          variant="plain"
+          size="content"
           aria-label={isEditing ? t("workspace.save") : t("workspace.rename")}
           className="flex size-[var(--icon-hit-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
           type="button"
@@ -119,7 +138,7 @@ export function WorkspaceSwitcher({
           ) : (
             <Pencil className="size-[var(--icon-size)]" aria-hidden="true" />
           )}
-        </button>
+        </Button>
       ) : null}
     </div>
   );

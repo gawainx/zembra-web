@@ -1,3 +1,4 @@
+import { Button } from "../../components/ui/button";
 import Link from "@tiptap/extension-link";
 import Mention from "@tiptap/extension-mention";
 import { Table } from "@tiptap/extension-table";
@@ -332,7 +333,7 @@ export const LiveMarkdownEditor = forwardRef<
           }}
         >
           {tagMenu.options.map((option) => (
-            <button
+            <Button variant="plain" size="content"
               className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)]"
               key={`${option.type}-${option.path}`}
               role="option"
@@ -347,7 +348,7 @@ export const LiveMarkdownEditor = forwardRef<
                   ? t("composer.tagSuggestion.create", { tag: option.path })
                   : option.label}
               </span>
-            </button>
+            </Button>
           ))}
         </div>
       ) : null}
