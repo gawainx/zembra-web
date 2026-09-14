@@ -292,7 +292,7 @@ export function TagTreeItem({
           </span>
         </Button>
         <Button variant="plain" size="content"
-          className="min-w-0 truncate text-left"
+          className="min-w-0 justify-start truncate text-left"
           type="button"
           onClick={() => onSelect(node.tag.path)}
         >

@@ -5,3 +5,8 @@
 body {
   margin: 0;
 }
+
+/* Keep native focus outlines from replacing the removed component rings. */
+:focus {
+  outline: none;
+}

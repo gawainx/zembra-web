@@ -233,7 +233,7 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
 
               <NativeSelect
                 aria-label={t("dataSource.workspaceLabel")}
-                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-border-strong)]"
+                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none transition"
                 disabled={isLoading || isSending || workspaces.length === 0}
                 required
                 value={selectedWorkspaceId}
@@ -252,7 +252,7 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
 
               <Input
                 aria-label={t("dataSource.emailLabel")}
-                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-border-strong)]"
+                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
                 disabled={isLoading || isSending}
                 autoComplete="email"
                 placeholder={t("dataSource.emailPlaceholder")}

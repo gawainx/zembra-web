@@ -5,7 +5,7 @@ import { cn } from "../../lib/utils";
 import { Slot } from "radix-ui";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap transition-all outline-none focus-visible:border-[var(--color-accent)] focus-visible:ring-[3px] focus-visible:ring-[var(--color-accent)] disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-[var(--color-error)] aria-invalid:ring-[var(--color-error)]  [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex items-center justify-center whitespace-nowrap transition-all outline-none disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-[var(--color-error)]  [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -13,7 +13,7 @@ const buttonVariants = cva(
         default:
           "bg-[var(--color-accent)] text-[var(--color-accent-contrast)] hover:bg-[var(--color-accent-hover)]",
         destructive:
-          "bg-[var(--color-error)] text-[var(--color-error-contrast)] hover:bg-[var(--color-error)] focus-visible:ring-[var(--color-error)]",
+          "bg-[var(--color-error)] text-[var(--color-error-contrast)] hover:bg-[var(--color-error)]",
         outline:
           "border border-[var(--color-border)] bg-[var(--color-surface)] shadow-xs hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]",
         secondary:

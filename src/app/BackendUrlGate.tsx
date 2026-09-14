@@ -234,7 +234,7 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
               <span className="sr-only">{t("backend.login.hostLabel")}</span>
               <Input
                 aria-label={t("backend.login.hostLabel")}
-                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] transition focus:border-[var(--color-border-strong)]"
+                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] transition"
                 name="backend-host"
                 onChange={(event) => setBackendHost(event.target.value)}
                 placeholder={t("backend.login.hostPlaceholder", {
@@ -247,7 +247,7 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
               <span className="sr-only">{t("backend.login.portLabel")}</span>
               <Input
                 aria-label={t("backend.login.portLabel")}
-                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] transition focus:border-[var(--color-border-strong)]"
+                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] transition"
                 inputMode="numeric"
                 name="backend-port"
                 onChange={(event) => setBackendPort(event.target.value)}
@@ -266,7 +266,7 @@ export function BackendUrlGate({ children }: BackendUrlGateProps) {
               </span>
               <NativeSelect
                 aria-label={t("backend.login.workspaceLabel")}
-                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-border-strong)] disabled:text-[var(--color-text-muted)]"
+                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none transition disabled:text-[var(--color-text-muted)]"
                 disabled={workspaces.length === 0 || isLoadingWorkspaces}
                 name="workspace"
                 onChange={(event) => setSelectedWorkspaceId(event.target.value)}
