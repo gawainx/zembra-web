@@ -35,9 +35,9 @@ const initialFormState: SupabaseSettingsFormState = {
 };
 
 const settingsLineInputClassName =
-  "h-10 w-full max-w-[320px] border-0 border-b border-[var(--color-border)] bg-transparent px-0 text-left text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-border-strong)]";
+  "h-10 w-full max-w-[320px] border-0 border-b border-[var(--color-border)] bg-transparent px-0 text-left text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]";
 const settingsNumberInputClassName =
-  "h-10 w-[60px] border-0 border-b border-[var(--color-border)] bg-transparent px-0 text-right text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-border-strong)]";
+  "h-10 w-[60px] border-0 border-b border-[var(--color-border)] bg-transparent px-0 text-right text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]";
 
 /** Renders the Supabase synchronization section inside the Settings modal. */
 export function SupabaseSettingsSection({ client }: SupabaseSettingsSectionProps) {

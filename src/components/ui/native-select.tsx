@@ -13,8 +13,7 @@ function NativeSelect({
       data-size={size}
       className={cn(
         "min-w-0 bg-transparent outline-none disabled:cursor-not-allowed disabled:opacity-50",
-        "focus-visible:border-[var(--color-accent)] focus-visible:ring-[3px] focus-visible:ring-[var(--color-accent)]",
-        "aria-invalid:border-[var(--color-error)] aria-invalid:ring-[var(--color-error)]",
+        "aria-invalid:border-[var(--color-error)]",
         className,
       )}
       {...props}
