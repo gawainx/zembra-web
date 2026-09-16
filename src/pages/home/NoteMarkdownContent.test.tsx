@@ -27,3 +27,15 @@ test("keeps ASCII tag labels readable", () => {
 
   expect(screen.getByText("#automation")).not.toBeNull();
 });
+
+
+/** Inline code is rendered as literal code, including Markdown and tag characters. */
+test("renders inline code without converting its contents to tags or emphasis", () => {
+  const { container } = render(
+    <NoteMarkdownContent content="Use `#literal **text**` now" onLoadNotePreview={vi.fn()} />,
+  );
+  const code = container.querySelector("code");
+  expect(code?.textContent).toBe("#literal **text**");
+  expect(code?.children.length).toBe(0);
+  expect(container.textContent).toBe("Use #literal **text** now");
+});

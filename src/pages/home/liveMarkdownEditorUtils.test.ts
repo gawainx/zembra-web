@@ -1,3 +1,4 @@
+import { splitInlineCodePaste } from "./liveMarkdownEditorUtils";
 import { describe, expect, test } from "vitest";
 import {
   findActiveTagQuery,
@@ -109,4 +110,27 @@ describe("normalizeMarkdownSource", () => {
 
     expect(normalizeMarkdownSource(markdown)).toBe(markdown);
   });
+});
+
+
+describe("splitInlineCodePaste", () => {
+  test("recognizes inline code while leaving surrounding Markdown literal", () => {
+    expect(splitInlineCodePaste("**text** `const x = 1` end")).toEqual([
+      { text: "**text** ", code: false },
+      { text: "const x = 1", code: true },
+      { text: " end", code: false },
+    ]);
+  });
+
+  test.each(["`unfinished", "``literal``", "`two\nlines`", "\\`escaped`", "```js\n`literal`\n```"])(
+    "keeps unsupported or escaped delimiters literal: %s", (text) => {
+      expect(splitInlineCodePaste(text)).toEqual([{ text, code: false }]);
+    },
+  );
+});
+
+
+test("repairs paired escaped inline code without changing unmatched delimiters", () => {
+  expect(normalizeMarkdownSource("\\`test\\`")).toBe("`test`");
+  expect(normalizeMarkdownSource("\\`unfinished")).toBe("\\`unfinished");
 });

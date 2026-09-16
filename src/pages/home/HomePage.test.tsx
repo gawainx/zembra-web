@@ -1411,3 +1411,40 @@ function renderHomePage(syncClient = createMockSyncClient()) {
     </ThemeProvider>,
   );
 }
+
+
+/** Exercises real clipboard insertion and Markdown round-trip through the editor. */
+test("pastes inline code and preserves code literals in Markdown output", async () => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  await act(async () => {
+    fireEvent.paste(composer, {
+      clipboardData: { getData: (format: string) => format === "text/plain" ? "Use `#literal **text** ` now" : "<b>ignored</b>" },
+    });
+  });
+  await waitFor(() => expect(composer.querySelector("code")?.textContent).toBe("#literal **text** "));
+  expect(composer.querySelector("code span")).toBeNull();
+  const saved = markdownValue(composer);
+  expect(saved).toContain("`#literal **text**`");
+
+});
+
+
+/** Previously escaped code must recover both in cards and when opened for editing. */
+test("renders previously escaped inline code in cards and edit drafts", async () => {
+  renderHomePage();
+  act(() => {
+    useNotesStore.setState({ notes: [{
+      id: "escaped-code-note", content: "\\`test\\`", role: "Human",
+      createdAt: 1779382320, updatedAt: 1779382320, tags: [],
+    }] });
+  });
+  const text = await screen.findByText("test");
+  expect(text.tagName).toBe("CODE");
+  const card = text.closest("article")!;
+  fireEvent.keyDown(within(card).getByRole("button", { name: "笔记操作" }), { key: "Enter" });
+  fireEvent.click(await screen.findByRole("menuitem", { name: "编辑笔记" }));
+  const editor = await within(card).findByRole("textbox");
+  expect(editor.querySelector("code")?.textContent).toBe("test");
+  expect(markdownValue(editor)).toBe("`test`");
+});
