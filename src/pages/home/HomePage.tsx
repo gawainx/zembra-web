@@ -1,3 +1,4 @@
+import { useComposerField } from "./useComposerField";
 import { createComposerTools } from "./homeComposerTools";
 import { FieldDeleteDialog, TagDeleteDialog } from "./TaxonomyDeleteDialogs";
 import { Button } from "../../components/ui/button";
@@ -53,6 +54,11 @@ export function HomePage() {
   const { i18n, t } = useTranslation("home");
   const composerRef = useRef<NoteEditorHandle>(null);
   const { workspace, workspaces, switchWorkspace, renameWorkspace } = useWorkspace();
+  const workspaceScope = useMemo(() => ({ active: true }), [workspace.id]);
+  useEffect(() => {
+    workspaceScope.active = true;
+    return () => { workspaceScope.active = false; };
+  }, [workspaceScope]);
   const [draft, setDraft] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<string>();
   const [editDraft, setEditDraft] = useState("");
@@ -66,6 +72,7 @@ export function HomePage() {
   const {
     notes,
     roleNavigationNotes,
+    notePreviewById,
     dailyNoteCounts,
     fields,
     tags,
@@ -97,6 +104,10 @@ export function HomePage() {
     () => new Map(fields.map((field) => [field.id, field.name])),
     [fields],
   );
+  const composerField = useComposerField({
+    draft, fields, notes, cachedNotes: notePreviewById, selectedField,
+    workspaceId: workspace.id, loadNote: loadNotePreview,
+  });
   const tagUsage = useMemo(() => countTags(notes), [notes]);
   const tagTree = useMemo(() => buildTagTree(tags), [tags]);
   const selectedTagMatch = useMemo(
@@ -163,13 +174,16 @@ export function HomePage() {
       return;
     }
 
-    const fieldNames = parseFieldNames(content);
-    const field =
-      fieldNames[0] ??
-      fields.find((item) => item.id === selectedField)?.name ??
-      defaultFieldName;
     const tags = parseTagNames(content);
     const links = parseNoteLinks(content);
+    const fieldPromise = composerField.resolveField();
+    setDraft("");
+    composerRef.current?.clear();
+    const field = await fieldPromise;
+    if (!workspaceScope.active) {
+      console.info("[zembra] Cancelled note creation after leaving workspace", { workspaceId: workspace.id });
+      return;
+    }
 
     void createNote({
       content,
@@ -178,8 +192,6 @@ export function HomePage() {
       role: "Human",
       tags,
     }).catch(() => undefined);
-    setDraft("");
-    composerRef.current?.clear();
   }
 
   /** Toggles one root tag branch in the sidebar tree. */
@@ -568,9 +580,7 @@ export function HomePage() {
               draft={draft}
               isSubmitting={false}
               meta={t("composer.saveTo", {
-                field:
-                  fields.find((field) => field.id === selectedField)?.name ??
-                  "Inbox",
+                field: composerField.field,
               })}
               placeholder={t("composer.placeholder")}
               submitLabel={t("composer.send")}

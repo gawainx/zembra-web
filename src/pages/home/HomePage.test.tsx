@@ -1448,3 +1448,93 @@ test("renders previously escaped inline code in cards and edit drafts", async ()
   expect(editor.querySelector("code")?.textContent).toBe("test");
   expect(markdownValue(editor)).toBe("`test`");
 });
+
+
+/** Keeps the visible destination and creation payload aligned with reference order. */
+test.each([
+  ["[[first]]", "research"],
+  ["[[first]] [[second]]", "research"],
+  ["[[second]] [[first]]", "ideas"],
+  ["@personal [[first]] [[second]]", "personal"],
+  ["[[unassigned]] [[second]]", "inbox"],
+])("inherits the first referenced field for %s", async (draft, field) => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  const createNote = vi.fn(async () => undefined);
+  act(() => useNotesStore.setState({
+    createNote, selectedField: "selected",
+    fields: [
+      { id: "selected", name: "sidebar", createdAt: 1 },
+      { id: "research", name: "research", createdAt: 1 },
+      { id: "ideas", name: "ideas", createdAt: 1 },
+    ],
+    notes: [
+      { id: "second", content: "second source", fieldId: "ideas", role: "Human", tags: [], createdAt: 1, updatedAt: 1 },
+      { id: "first", content: "first source", fieldId: "research", role: "Human", tags: [], createdAt: 1, updatedAt: 1 },
+      { id: "unassigned", content: "no field", role: "Human", tags: [], createdAt: 1, updatedAt: 1 },
+    ],
+  }));
+  changeMarkdownEditor(composer, draft);
+  expect(screen.getByText(`Default field for note is @${field}`)).not.toBeNull();
+  fireEvent.submit(composer.closest("form")!);
+  await waitFor(() => expect(createNote).toHaveBeenCalledWith(expect.objectContaining({ field })));
+  expect(useNotesStore.getState().selectedField).toBe("selected");
+});
+
+/** Removing the first reference recomputes the default without remembering stale mentions. */
+test("recomputes the destination after removing references", async () => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  act(() => useNotesStore.setState({
+    selectedField: undefined,
+    fields: [ { id: "research", name: "research", createdAt: 1 }, { id: "ideas", name: "ideas", createdAt: 1 } ],
+    notes: [
+      { id: "first", content: "first source", fieldId: "research", role: "Human", tags: [], createdAt: 1, updatedAt: 1 },
+      { id: "second", content: "second source", fieldId: "ideas", role: "Human", tags: [], createdAt: 1, updatedAt: 1 },
+    ],
+  }));
+  changeMarkdownEditor(composer, "[[first]] [[second]]");
+  expect(screen.getByText("Default field for note is @research")).not.toBeNull();
+  changeMarkdownEditor(composer, "[[second]]");
+  expect(screen.getByText("Default field for note is @ideas")).not.toBeNull();
+  changeMarkdownEditor(composer, "no references");
+  expect(screen.getByText("Default field for note is @inbox")).not.toBeNull();
+});
+
+/** An unresolved reference must not silently use the sidebar field on an immediate submit. */
+test("resolves an unloaded reference without clearing subsequent typing", async () => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  let resolveNote!: (note: import("../../api/types").NoteDto) => void;
+  const getNote = vi.fn(() => new Promise<import("../../api/types").NoteDto>((resolve) => { resolveNote = resolve; }));
+  clientMocks.notes.getNote = getNote;
+  const createNote = vi.fn(async () => undefined);
+  act(() => useNotesStore.setState({ createNote, fields: [{ id: "research", name: "research", createdAt: 1 }] }));
+  changeMarkdownEditor(composer, "[[remote-note]]");
+  await waitFor(() => expect(getNote).toHaveBeenCalledTimes(1));
+  fireEvent.submit(composer.closest("form")!);
+  changeMarkdownEditor(composer, "next draft");
+  await act(async () => resolveNote({ id: "remote-note", content: "remote", fieldId: "research", role: "Human", tags: [], createdAt: 1, updatedAt: 1 }));
+  await waitFor(() => expect(createNote).toHaveBeenCalledWith(expect.objectContaining({ field: "research", content: "[[remote-note]]" })));
+  expect(getNote).toHaveBeenCalledTimes(1);
+  expect(markdownValue(composer)).toBe("next draft");
+});
+
+
+/** A failed first reference falls back rather than inheriting the second reference. */
+test("falls back to the sidebar when the first reference cannot be read", async () => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  const warning = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+  clientMocks.notes.getNote = vi.fn(async () => { throw new Error("Not found"); });
+  const createNote = vi.fn(async () => undefined);
+  act(() => useNotesStore.setState({
+    createNote, selectedField: "selected",
+    fields: [{ id: "selected", name: "sidebar", createdAt: 1 }, { id: "ideas", name: "ideas", createdAt: 1 }],
+    notes: [{ id: "second", content: "source", fieldId: "ideas", role: "Human", tags: [], createdAt: 1, updatedAt: 1 }],
+  }));
+  changeMarkdownEditor(composer, "[[missing]] [[second]]");
+  fireEvent.submit(composer.closest("form")!);
+  await waitFor(() => expect(createNote).toHaveBeenCalledWith(expect.objectContaining({ field: "sidebar" })));
+  expect(warning).toHaveBeenCalled();
+});
