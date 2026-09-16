@@ -29,6 +29,7 @@ import {
   findActiveTagQuery,
   getTagSuggestions,
   normalizeMarkdownSource,
+  splitInlineCodePaste,
   type TagSuggestion,
 } from "./liveMarkdownEditorUtils";
 
@@ -367,7 +368,19 @@ function handlePlainTextPaste(view: EditorView, event: ClipboardEvent): boolean 
   event.preventDefault();
   const plainText = clipboardData.getData("text/plain");
   const { from, to } = view.state.selection;
-  const transaction = view.state.tr.insertText(plainText, from, to).scrollIntoView();
+  const parts = splitInlineCodePaste(plainText);
+  const codeMark = view.state.schema.marks.code;
+  const transaction = view.state.tr;
+
+  if (codeMark && parts.some((part) => part.code)) {
+    const marks = view.state.storedMarks ?? view.state.selection.$from.marks();
+    const nodes = parts.map((part) =>
+      view.state.schema.text(part.text, part.code ? [codeMark.create()] : marks),
+    );
+    transaction.replaceWith(from, to, nodes).scrollIntoView();
+  } else {
+    transaction.insertText(plainText, from, to).scrollIntoView();
+  }
 
   view.dispatch(transaction);
   return true;
@@ -386,7 +399,7 @@ function tagChipDecorationExtension() {
               const decorations: Decoration[] = [];
 
               state.doc.descendants((node, position) => {
-                if (!node.isText || !node.text) {
+                if (!node.isText || !node.text || node.marks.some((mark) => mark.type.spec.code)) {
                   return;
                 }
 

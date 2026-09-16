@@ -43,7 +43,7 @@ export function getTagSuggestions(
 
 /** Converts supported escaped Markdown source into the note content format expected by parsers. */
 export function normalizeMarkdownSource(markdown: string): string {
-  return markdown
+  return normalizeEscapedInlineCode(markdown)
     .replace(/\\#([^\s#@]+)/g, "#$1")
     .replace(
       /\\\[([^\]\n]+)\\\]\((https?:\/\/[^\s)]+)\)/g,
@@ -84,4 +84,30 @@ function tagMatchesQuery(tag: TagDto, query: string): boolean {
     tag.path.toLowerCase().includes(query) ||
     tag.name.toLowerCase().includes(query)
   );
+}
+
+/** Splits plain clipboard text into literal text and single-line inline code. */
+export function splitInlineCodePaste(text: string): { text: string; code: boolean }[] {
+  // Leave fenced snippets to the existing plain-text paste behavior.
+  if (/^ {0,3}(?:`{3,}|~{3,})/m.test(text)) {
+    return [{ text, code: false }];
+  }
+
+  const parts: { text: string; code: boolean }[] = [];
+  let cursor = 0;
+  for (const match of text.matchAll(/(?<![\\`])`([^`\r\n]+)`(?!`)/g)) {
+    const start = match.index;
+    if (start > cursor) parts.push({ text: text.slice(cursor, start), code: false });
+    parts.push({ text: match[1], code: true });
+    cursor = start + match[0].length;
+  }
+  if (cursor < text.length) parts.push({ text: text.slice(cursor), code: false });
+  return parts;
+}
+
+
+/** Repairs paired code delimiters escaped by the previous plain-text editor path. */
+function normalizeEscapedInlineCode(markdown: string): string {
+  if (/^ {0,3}(?:`{3,}|~{3,})/m.test(markdown)) return markdown;
+  return markdown.replace(/(?<![\\`])\\`([^`\r\n]+?)\\`(?!`)/g, "`$1`");
 }
