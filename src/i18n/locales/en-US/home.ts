@@ -9,7 +9,6 @@ export const home = {
   },
   composer: {
     editorLoading: "Loading editor",
-    help: "Help",
     placeholder: "What are you thinking now?",
     saveTo: "Default field for note is @{{field}}",
     send: "Send",

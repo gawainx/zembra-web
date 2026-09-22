@@ -9,7 +9,6 @@ export const home = {
   },
   composer: {
     editorLoading: "正在載入編輯器",
-    help: "說明",
     placeholder: "現在的想法是...",
     saveTo: "Default field for note is @{{field}}",
     send: "傳送",
