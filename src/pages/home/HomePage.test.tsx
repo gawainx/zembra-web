@@ -567,62 +567,8 @@ test("renders actual note counts for global all-notes and field navigation", asy
   expect(await sidebarNavCount("empty")).toBe("0");
 });
 
-/** Verifies empty fields expose an in-app delete confirmation flow. */
-test("deletes an empty field from the sidebar after in-app confirmation", async () => {
-  renderHomePage();
-  await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
-  const deleteField = vi.fn(async (fieldId: string) => {
-    useNotesStore.setState((state) => ({
-      fields: state.fields.filter((field) => field.id !== fieldId),
-      selectedField:
-        state.selectedField === fieldId ? undefined : state.selectedField,
-    }));
-  });
-
-  act(() => {
-    useNotesStore.setState({
-      deleteField,
-      fields: [
-        { id: "used-field", name: "used", createdAt: 1_779_382_320 },
-        { id: "empty-field", name: "empty", createdAt: 1_779_382_320 },
-      ],
-      notes: [
-        {
-          id: "note-1",
-          content: "used note",
-          role: "Human",
-          createdAt: 1_779_382_320,
-          updatedAt: 1_779_382_320,
-          fieldId: "used-field",
-          tags: [],
-        },
-      ],
-      selectedField: "empty-field",
-    });
-  });
-
-  expect(screen.queryByRole("button", { name: "删除 Field @used" })).toBeNull();
-  fireEvent.click(await screen.findByRole("button", { name: "删除 Field @empty" }));
-
-  expect(await screen.findByRole("alertdialog", { name: "删除 Field" })).not.toBeNull();
-
-  fireEvent.click(screen.getByRole("button", { name: "取消" }));
-  await waitFor(() =>
-    expect(screen.queryByRole("dialog", { name: "删除 Field" })).toBeNull(),
-  );
-  expect(deleteField).not.toHaveBeenCalled();
-  expect(await screen.findByText("empty")).not.toBeNull();
-
-  fireEvent.click(screen.getByRole("button", { name: "删除 Field @empty" }));
-  fireEvent.click(await screen.findByRole("button", { name: "删除" }));
-
-  await waitFor(() => expect(deleteField).toHaveBeenCalledWith("empty-field"));
-  await waitFor(() => expect(screen.queryByText("empty")).toBeNull());
-  expect(useNotesStore.getState().selectedField).toBeUndefined();
-});
-
-/** Verifies field deletion closes its dialog before the background result returns. */
-test("closes empty field deletion without blocking on the request", async () => {
+/** Verifies fields remain selectable without exposing deletion interactions. */
+test("keeps empty and used fields as navigation without delete actions", async () => {
   renderHomePage();
   await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
   const deleteField = vi.fn(async () => undefined);
@@ -630,17 +576,27 @@ test("closes empty field deletion without blocking on the request", async () => 
   act(() => {
     useNotesStore.setState({
       deleteField,
-      fields: [{ id: "empty-field", name: "empty", createdAt: 1_779_382_320 }],
-      notes: [],
+      fields: [
+        { id: "used-field", name: "used", createdAt: 1 },
+        { id: "empty-field", name: "empty", createdAt: 1 },
+      ],
+      notes: [{ id: "note-1", content: "used note", role: "Human", createdAt: 1, updatedAt: 1, fieldId: "used-field", tags: [] }],
     });
   });
 
-  fireEvent.click(await screen.findByRole("button", { name: "删除 Field @empty" }));
-  fireEvent.click(await screen.findByRole("button", { name: "删除" }));
-
-  await waitFor(() => expect(deleteField).toHaveBeenCalledWith("empty-field"));
-  expect(await screen.findByText("empty")).not.toBeNull();
-  expect(screen.queryByRole("dialog", { name: "删除 Field" })).toBeNull();
+  expect(await sidebarNavCount("used")).toBe("1");
+  expect(await sidebarNavCount("empty")).toBe("0");
+  for (const name of ["used", "empty"]) {
+    const button = screen.getByText(name, { exact: true }).closest("button")!;
+    fireEvent.mouseOver(button);
+    fireEvent.focus(button);
+    expect(screen.queryByRole("button", { name: /删除 Field/ })).toBeNull();
+    await act(async () => { fireEvent.click(button); });
+    expect(useNotesStore.getState().selectedField).toBe(name + "-field");
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+  }
+  expect(await sidebarNavCount("empty")).toBe("0");
+  expect(deleteField).not.toHaveBeenCalled();
 });
 
 /** Verifies empty tag trees delete from the sidebar only after confirmation. */

@@ -1,6 +1,6 @@
 import { useComposerField } from "./useComposerField";
 import { createComposerTools } from "./homeComposerTools";
-import { FieldDeleteDialog, TagDeleteDialog } from "./TaxonomyDeleteDialogs";
+import { TagDeleteDialog } from "./TaxonomyDeleteDialogs";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import {
@@ -21,7 +21,7 @@ import {
   SourceToolbarActions,
 } from "@zembra/source-home-controls";
 import { useNotesStore } from "../../features/notes/noteStore";
-import type { FieldDto, NoteDto, TagDto } from "../../api/types";
+import type { NoteDto, TagDto } from "../../api/types";
 import { NoteCard } from "./NoteCard";
 import { NoteEditor, type NoteEditorHandle } from "./NoteEditor";
 import { ResponsiveSidebar } from "./ResponsiveSidebar";
@@ -62,7 +62,6 @@ export function HomePage() {
   const [draft, setDraft] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<string>();
   const [editDraft, setEditDraft] = useState("");
-  const [pendingDeleteField, setPendingDeleteField] = useState<FieldDto>();
   const [pendingDeleteTag, setPendingDeleteTag] = useState<TagDto>();
 
   useEffect(() => {
@@ -91,7 +90,6 @@ export function HomePage() {
     loadRecentNotes,
     loadTags,
     deleteNote,
-    deleteField,
     deleteTagTree,
     updateNote,
   } = useNotesStore();
@@ -315,26 +313,6 @@ export function HomePage() {
     });
   }
 
-  /** Opens the in-app confirmation dialog for deleting an unused field. */
-  function handleFieldDeleteRequest(field: FieldDto) {
-    setPendingDeleteField(field);
-  }
-
-  /** Closes the field deletion dialog. */
-  function handleFieldDeleteCancel() {
-    setPendingDeleteField(undefined);
-  }
-
-  /** Optimistically removes the pending unused field and queues deletion. */
-  function handleFieldDeleteConfirm() {
-    if (!pendingDeleteField) {
-      return;
-    }
-
-    void deleteField(pendingDeleteField.id);
-    setPendingDeleteField(undefined);
-  }
-
   /** Opens the in-app confirmation dialog for deleting an empty tag subtree. */
   function handleTagDeleteRequest(tag: TagDto) {
     setPendingDeleteTag(tag);
@@ -445,20 +423,9 @@ export function HomePage() {
                 <NavItem
                   active={selectedField === field.id}
                   count={fieldUsage.get(field.id) ?? 0}
-                  deleteDisabled={false}
-                  deleteLabel={
-                    (fieldUsage.get(field.id) ?? 0) === 0
-                      ? t("field.delete.action", { field: field.name })
-                      : undefined
-                  }
                   key={field.id}
                   label={field.name}
                   prefix="@"
-                  onDelete={
-                    (fieldUsage.get(field.id) ?? 0) === 0
-                      ? () => handleFieldDeleteRequest(field)
-                      : undefined
-                  }
                   onClick={() => void handleFieldSelect(field.id)}
                 />
               ))}
@@ -591,16 +558,6 @@ export function HomePage() {
             />
           </div>
         </form>
-        {pendingDeleteField ? (
-          <FieldDeleteDialog
-            error={undefined}
-            field={pendingDeleteField}
-            isDeleting={false}
-            t={t}
-            onCancel={handleFieldDeleteCancel}
-            onConfirm={() => void handleFieldDeleteConfirm()}
-          />
-        ) : null}
         {pendingDeleteTag ? (
           <TagDeleteDialog
             tag={pendingDeleteTag}
