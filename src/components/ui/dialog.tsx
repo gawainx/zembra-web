@@ -1,4 +1,4 @@
-// Adapted from shadcn/ui new-york-v4 (MIT); see docs/references/shadcn-ui.md.
+// Adapted from shadcn/ui new-york-v4 (MIT).
 "use client";
 
 import * as React from "react";

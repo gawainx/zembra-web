@@ -1,4 +1,4 @@
-// Adapted from shadcn/ui new-york-v4 (MIT); see docs/references/shadcn-ui.md.
+// Adapted from shadcn/ui new-york-v4 (MIT).
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../lib/utils";

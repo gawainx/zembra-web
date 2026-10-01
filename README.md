@@ -77,3 +77,7 @@ npm run build:supabase
 ```
 
 构建产物位于 `dist/`，可部署到任意可托管静态网站的环境。Backend 模式需要部署环境中的浏览器能够访问所配置的 Backend；Supabase 模式需要在构建环境提供对应的公开配置变量。
+
+## 项目文档
+
+架构、设计、需求、执行计划及维护参考统一在 DEVONthink 的 zembra-web 项目中维护。文档结构、访问方式和维护流程见 [AGENTS.md](AGENTS.md)。
