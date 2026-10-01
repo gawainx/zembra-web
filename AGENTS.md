@@ -4,11 +4,11 @@
 
 ### 维护位置与入口
 
-项目文档统一在 DEVONthink 的 zembra-web 项目 group 下维护，docs 子 group 保存文档正文及分类层级。仓库中的 README.md 提供项目使用说明，AGENTS.md 记录开发规范和文档工作流，本机 AGENTS.env.md 提供环境相关的项目定位信息。
+项目文档的正文和分类层级统一保存在 DEVONthink 的 zembra-web 项目 group 下，由 docs 子 group 管理。仓库不再维护 docs 目录和 ARCHITECTURE.md 副本。README.md 提供项目使用说明，AGENTS.md 记录开发规范和文档工作流，本机 AGENTS.env.md 提供项目定位信息。
 
-文档的读取、创建、修订、进度追加和归档均通过 DEVONthink MCP 完成。先根据本机环境信息定位项目 group，再在 docs 内查找目标记录；写入前检查已有记录，修订时复用原记录。无法访问时报告受影响的操作并确认替代位置，不自动在仓库建立文档副本。
+文档的读取、创建、修订、进度追加和归档均通过 DEVONthink MCP 完成。按本机 AGENTS.env.md 提供的定位信息访问项目 group，并复用其现有 docs 子 group。文档内容在 DEVONthink 中维护，仓库入口和开发规范的修改继续通过 Git 提交管理。
 
-下文及开发规范中的 docs/ 路径均表示 DEVONthink 内的逻辑层级，不代表仓库目录。Markdown 记录在 DEVONthink 中通常显示不含 .md 后缀的名称。原仓库根目录的 ARCHITECTURE.md 现位于 docs 根 group；历史文档中的相对路径按原层级定位对应记录。
+下文及开发规范中的 docs/ 路径均表示 DEVONthink 内的逻辑层级，不代表文件系统路径。例如 docs/references/dependency-constraints.md 对应 docs → references 分组中的 dependency-constraints Markdown 记录；ARCHITECTURE.md 对应 docs 根 group 中的 ARCHITECTURE 记录。查找时同时核对记录名称和所属分组，区分不同模块及不同文档层中的同名记录。
 
 ### 文档结构与职责
 
@@ -35,7 +35,8 @@
 
 ### 阅读规则
 
-- 开始任何任务时先读仓库 AGENTS.md，再通过 DEVONthink MCP 读取任务相关记录。
+- 开始任何任务时先读仓库 AGENTS.md，再定位 DEVONthink 项目 group，按文档层和模块查找、读取相关记录正文。
+- 名称用于定位，记录内容用于判断；不能仅凭搜索摘要、标题或历史会话替代正文。历史文档中的相对引用按 docs 的现有层级查找。
 - 涉及结构、分层、依赖或模块边界时，读取 ARCHITECTURE 和相关 design-docs 记录；涉及需求范围时读取 request-clarify，涉及目标、流程或验收条件时读取 product-specs。
 - 涉及外部依赖、框架或协议时，读取 references 中的相关记录；新增、升级或移除依赖前，读取 references/dependency-constraints。
 - 涉及数据表、SQLite、JSON Schema 或迁移时，读取 references/shared-schema，并查阅仓库 vendor/zembra-schema 中的共享契约。
@@ -43,12 +44,14 @@
 
 ### 写回与进度维护
 
+- 写入前读取目标分组及已有记录。修订复用原记录，新增前检查名称和需求编号，避免重复创建；缺少模块分组时，在对应文档层下建立。
 - 需求澄清、技术设计和执行计划分别维护在 request-clarify、design-docs 和 exec-plans/active；具体编写时机遵循下文开发流程。
 - 模块子 group 名称与代码模块、业务域或长期维护边界保持一致。同一需求分层维护的记录使用相同名称；已将澄清、设计和计划合并的记录继续在原记录中维护相应章节。
 - 当前任务的阶段进度和决策写入对应执行计划；遗留事项写入 exec-plans/tech-debt-tracker；自动生成的摘要由工具写入 generated。
 - PROGRESS 延续已有章节结构。每个需求使用一个条目，记录需求编号、Git HEAD 前八位和不超过 200 字的连续简体中文说明；同一需求的后续进展追加至该需求记录。写入仅在文档末尾追加，不重排章节或改写已有内容。
 - 历史需求文档保留原内容。当前需求与历史决策存在冲突时，在当前需求记录中单独说明关系。
-- 文档间交叉引用通过 DEVONthink 记录建立；迁移保留的原始相对引用按现有分组和记录名称查找。
+- 文档间交叉引用在 DEVONthink 中维护。写入或移动后，核对记录正文、名称和所属分组，确认内容及归档位置与本次任务一致。
+- DEVONthink 操作失败时，报告具体受影响的读取或写入，并确认替代保存位置；不自动恢复仓库中的 docs 副本。
 
 ### 命名与格式
 
