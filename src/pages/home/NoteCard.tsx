@@ -34,6 +34,7 @@ export function NoteCard({
   locale,
   note,
   onDelete,
+  onArchiveChange,
   onEditCancel,
   onEditDraftChange,
   onEditStart,
@@ -54,6 +55,7 @@ export function NoteCard({
   locale?: string;
   note: NoteDto;
   onDelete: (noteId: string) => Promise<void>;
+  onArchiveChange?: (noteId: string, archived: boolean) => Promise<void>;
   onEditCancel: () => void;
   onEditDraftChange: (draft: string) => void;
   onEditStart: (note: NoteDto) => void;
@@ -66,6 +68,7 @@ export function NoteCard({
   tools: ComposerTool[];
 }) {
   const { t } = useTranslation("home");
+  const archiveSelected = useRef(false);
   const [expanded, setExpanded] = useState(false);
   const [hasOverflow, setHasOverflow] = useState(false);
   const displayRole = note.role || t("sidebar.unknownRole");
@@ -193,7 +196,7 @@ export function NoteCard({
                   />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" onCloseAutoFocus={(event) => { if (archiveSelected.current) event.preventDefault(); }}>
                 <DropdownMenuItem
                   disabled={!canStartEditing}
                   onSelect={handleEditClick}
@@ -203,6 +206,14 @@ export function NoteCard({
                 <DropdownMenuItem onSelect={handleMentionClick}>
                   {t("note.mention")}
                 </DropdownMenuItem>
+                {onArchiveChange && !note.id.startsWith("pending-") ? (
+                  <DropdownMenuItem onSelect={() => {
+                    archiveSelected.current = true;
+                    void onArchiveChange(note.id, note.archivedAt == null).catch(() => undefined);
+                  }}>
+                    {t(note.archivedAt == null ? "note.archive" : "note.unarchive")}
+                  </DropdownMenuItem>
+                ) : null}
                 <DropdownMenuItem
                   variant="destructive"
                   onSelect={handleDeleteClick}

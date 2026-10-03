@@ -165,7 +165,7 @@ export function NavItem({
   prefix,
 }: {
   active: boolean;
-  count: number;
+  count?: number;
   deleteDisabled?: boolean;
   deleteLabel?: string;
   disabled?: boolean;

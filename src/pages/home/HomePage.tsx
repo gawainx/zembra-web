@@ -6,7 +6,7 @@ import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "../../app/ThemeToggle";
 import { useWorkspace } from "../../app/workspace-context";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { defaultFieldName } from "../../api/defaultField";
 import {
   SourceHomeControlsProvider,
@@ -56,6 +56,8 @@ export function HomePage() {
 
   const {
     notes,
+    archivedNotes, noteView, supportsArchiving, archiveLoading, archiveError,
+    connectWorkspace, setNoteView, loadArchivedNotes, setNoteArchived,
     roleNavigationNotes,
     notePreviewById,
     dailyNoteCounts,
@@ -80,6 +82,15 @@ export function HomePage() {
     updateNote,
   } = useNotesStore();
 
+  useLayoutEffect(() => {
+    connectWorkspace();
+    setDraft("");
+    setEditingNoteId(undefined);
+    setEditDraft("");
+    setPendingDeleteTag(undefined);
+  }, [connectWorkspace, workspace.id]);
+  const displayNotes = noteView === "archived" ? archivedNotes : notes;
+
   const composerTools = useMemo(
     () => createComposerTools(t),
     [t],
@@ -100,14 +111,14 @@ export function HomePage() {
   const visibleNotes = useMemo(
     () =>
       sortNotesByCreatedAt(
-        filterVisibleNotes(notes, {
+        filterVisibleNotes(displayNotes, {
           fieldId: selectedField,
           keyword,
           tag: selectedTag,
           tagMatch: selectedTagMatch,
         }),
       ),
-    [keyword, notes, selectedField, selectedTag, selectedTagMatch],
+    [keyword, displayNotes, selectedField, selectedTag, selectedTagMatch],
   );
   const editFieldNames = useMemo(() => parseFieldNames(editDraft), [editDraft]);
   const editWarning =
@@ -149,16 +160,18 @@ export function HomePage() {
 
   /** Clears every sidebar classification filter and restores all recent notes. */
   async function handleAllNotesSelect() {
+    setNoteView("active");
     setSelectedField(undefined);
     setSelectedTag(undefined);
 
-    if (selectedRole !== undefined) {
+    if (selectedRole !== undefined || noteView === "archived") {
       await setSelectedRole(undefined);
     }
   }
 
   /** Selects one role and removes active field and tag filters. */
   async function handleRoleSelect(role: string) {
+    setNoteView("active");
     setSelectedField(undefined);
     setSelectedTag(undefined);
     await setSelectedRole(role);
@@ -166,20 +179,22 @@ export function HomePage() {
 
   /** Selects one field and removes active role and tag filters. */
   async function handleFieldSelect(fieldId: string) {
+    setNoteView("active");
     setSelectedTag(undefined);
     setSelectedField(fieldId);
 
-    if (selectedRole !== undefined) {
+    if (selectedRole !== undefined || noteView === "archived") {
       await setSelectedRole(undefined);
     }
   }
 
   /** Selects one tag and removes active role and field filters. */
   async function handleTagSelect(path: string) {
+    setNoteView("active");
     setSelectedField(undefined);
     setSelectedTag(path);
 
-    if (selectedRole !== undefined) {
+    if (selectedRole !== undefined || noteView === "archived") {
       await setSelectedRole(undefined);
     }
   }
@@ -231,7 +246,7 @@ export function HomePage() {
     const fieldNames = parseFieldNames(content);
 
     const existingFieldName = fieldNameById.get(
-      notes.find((note) => note.id === editingNoteId)?.fieldId ?? "",
+      displayNotes.find((note) => note.id === editingNoteId)?.fieldId ?? "",
     );
 
     void updateNote(editingNoteId, {
@@ -313,6 +328,7 @@ export function HomePage() {
           </div>
 
           <HomeNavigation
+            archived={noteView === "archived"} onArchiveSelect={supportsArchiving ? () => setNoteView("archived") : undefined}
             notes={notes} roleNavigationNotes={roleNavigationNotes} fields={fields} tags={tags}
             selectedRole={selectedRole} selectedField={selectedField} selectedTag={selectedTag}
             handleAllNotesSelect={handleAllNotesSelect} handleRoleSelect={handleRoleSelect}
@@ -336,9 +352,11 @@ export function HomePage() {
           </header>
 
           <HomeNoteFeed
+            archived={noteView === "archived"} loading={archiveLoading} failed={archiveError}
+            hasKeyword={Boolean(keyword.trim())} onRetry={() => void loadArchivedNotes(true)}
             visibleNotes={visibleNotes} editingNoteId={editingNoteId} editDraft={editDraft}
             editWarning={editWarning} fieldNameById={fieldNameById}
-            cardProps={{ fields, tags, tools: composerTools, locale: i18n.resolvedLanguage,
+            cardProps={{ onArchiveChange: supportsArchiving ? setNoteArchived : undefined, fields, tags, tools: composerTools, locale: i18n.resolvedLanguage,
               onDelete: deleteNote, onEditCancel: handleEditCancel, onEditDraftChange: setEditDraft,
               onEditStart: handleEditStart, onEditSubmit: handleEditSubmit, onFieldChange: handleNoteFieldChange,
               onLoadNotePreview: loadNotePreview, onMention: handleMentionNote,

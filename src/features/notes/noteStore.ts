@@ -173,18 +173,9 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   setSelectedField: (selectedField) => set({ selectedField }),
   setSelectedRole: async (selectedRole) => {
     set({ selectedRole });
-    await get().loadRecentNotes();
+    await loadRecentForRole(set, get);
   },
-  loadRecentNotes: async () => {
-    const client = getNotesClient();
-    const version = ++readVersion;
-    const since = mutationEpoch;
-    const selectedRole = get().selectedRole;
-    const result = await client.listRecentNotes({ limit: 50, role: selectedRole });
-    if (!isActiveClient(client) || version !== readVersion) return;
-    const notes = overlayNotes(result, noteMutations.get(client), since).filter((note) => isActiveNote(note) && (!selectedRole || note.role === selectedRole)).slice(0, 50);
-    set((state) => ({ notes, roleNavigationNotes: selectedRole === undefined || state.roleNavigationNotes.length === 0 ? notes : state.roleNavigationNotes }));
-  },
+  loadRecentNotes: () => loadRecentForRole(set, get),
   loadDailyNoteCounts: async (dayCount) => {
     const client = getNotesClient();
     const version = ++metadataReadVersion;
@@ -512,4 +503,16 @@ async function mutateNote(
   });
   current.queue = operation;
   return operation;
+}
+
+/** Loads the selected role without depending on a replaceable initial-load action. */
+async function loadRecentForRole(set: (value: (state: NotesState) => Partial<NotesState>) => void, get: () => NotesState): Promise<void> {
+  const client = getNotesClient();
+  const version = ++readVersion;
+  const since = mutationEpoch;
+  const selectedRole = get().selectedRole;
+  const result = await client.listRecentNotes({ limit: 50, role: selectedRole });
+  if (!isActiveClient(client) || version !== readVersion) return;
+  const notes = overlayNotes(result, noteMutations.get(client), since).filter((note) => isActiveNote(note) && (!selectedRole || note.role === selectedRole)).slice(0, 50);
+  set((state) => ({ notes, roleNavigationNotes: selectedRole === undefined || state.roleNavigationNotes.length === 0 ? notes : state.roleNavigationNotes }));
 }

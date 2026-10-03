@@ -43,6 +43,15 @@ export const home = {
     title: "最近活躍",
   },
   note: {
+    archive: "封存",
+    unarchive: "取消封存",
+    archiveEmpty: "尚無已封存筆記",
+    archiveNoMatch: "沒有符合的已封存筆記",
+    archiveLoading: "正在載入已封存筆記…",
+    archiveLoadFailed: "載入已封存筆記失敗",
+    archiveRetry: "重試",
+    list: "筆記列表",
+
     actions: "筆記操作",
     collapse: "收起",
     delete: "刪除",
@@ -79,6 +88,7 @@ export const home = {
     placeholder: "搜尋筆記、Field、Tag",
   },
   sidebar: {
+    archived: "已封存",
     title: "側邊欄",
     open: "開啟側邊欄",
     close: "關閉側邊欄",

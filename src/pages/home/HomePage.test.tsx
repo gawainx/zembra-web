@@ -1354,10 +1354,11 @@ function configureHomeTestStore() {
 }
 
 /** Renders HomePage with the providers required by its header controls. */
-function renderHomePage(syncClient = createMockSyncClient()) {
+function renderHomePage(syncClient = createMockSyncClient(), setup?: () => void) {
   act(() => {
     configureHomeTestStore();
     clientMocks.sync = syncClient;
+    setup?.();
   });
   const rootRoute = createRootRoute();
   const homeRoute = createRoute({
@@ -1605,4 +1606,89 @@ test("mention insertion preserves ownership of navigation prefill", async () => 
   act(() => useNotesStore.setState({ selectedField: undefined, selectedTag: "books" }));
   expect(markdownValue(composer)).toMatch(/^#books .*\[\[/);
   expect(markdownValue(composer)).not.toContain("@project");
+});
+
+/** Supplies Supabase's optional capabilities while keeping a separate persisted fixture. */
+function enableArchiveCapabilities() {
+  let server = useNotesStore.getState().notes.map((note) => ({ ...note, archivedAt: null as number | null }));
+  const listArchivedNotes = vi.fn(async () => ({ notes: server.filter((note) => note.archivedAt !== null) }));
+  const setNoteArchived = vi.fn(async (id: string, archived: boolean) => {
+    server = server.map((note) => note.id === id ? { ...note, archivedAt: archived ? 100 : null } : note);
+    const note = server.find((note) => note.id === id)!;
+    return { id, archivedAt: note.archivedAt, updatedAt: note.updatedAt };
+  });
+  Object.assign(clientMocks.notes, {
+    listArchivedNotes, setNoteArchived,
+    listRecentNotes: async () => server.filter((note) => note.archivedAt === null),
+    updateNote: async (id: string, input: { content: string }) => {
+      server = server.map((note) => note.id === id ? { ...note, content: input.content } : note);
+      return server.find((note) => note.id === id)!;
+    },
+  });
+  return { listArchivedNotes, setNoteArchived };
+}
+
+function openCardActions(card: HTMLElement) {
+  fireEvent.keyDown(within(card).getByRole("button", { name: "笔记操作" }), { key: "Enter" });
+}
+
+test("archives and restores through Supabase menus while preserving the card content", async () => {
+  let api!: ReturnType<typeof enableArchiveCapabilities>;
+  renderHomePage(undefined, () => { api = enableArchiveCapabilities(); });
+  const text = await screen.findByText(/今天先把卡片笔记/);
+  openCardActions(text.closest("article")!);
+  fireEvent.click(await screen.findByRole("menuitem", { name: "归档" }));
+  await waitFor(() => expect(screen.queryByText(/今天先把卡片笔记/)).toBeNull());
+  await waitFor(() => expect(api.setNoteArchived).toHaveBeenCalledWith("note-human", true));
+  fireEvent.click(screen.getByRole("button", { name: "已归档" }));
+  const restoredText = await screen.findByText(/今天先把卡片笔记/);
+  expect(screen.queryByText(/数据库契约来自/)).toBeNull();
+  openCardActions(restoredText.closest("article")!);
+  expect(screen.queryByRole("menuitem", { name: "归档" })).toBeNull();
+  expect(screen.getByRole("menuitem", { name: "编辑笔记" })).not.toBeNull();
+  expect(screen.getByRole("menuitem", { name: "删除" })).not.toBeNull();
+  fireEvent.click(screen.getByRole("menuitem", { name: "取消归档" }));
+  expect(await screen.findByText("暂无已归档笔记")).not.toBeNull();
+  expect(document.activeElement).toBe(screen.getByRole("region", { name: "已归档" }));
+  fireEvent.click(screen.getByRole("button", { name: /全部笔记/ }));
+  expect(await screen.findByText(/今天先把卡片笔记/)).not.toBeNull();
+  expect(api.setNoteArchived).toHaveBeenLastCalledWith("note-human", false);
+});
+
+test("does not expose archive navigation or card actions to Backend", async () => {
+  renderHomePage();
+  expect(screen.queryByRole("button", { name: "已归档" })).toBeNull();
+  openCardActions((await screen.findByText(/今天先把卡片笔记/)).closest("article")!);
+  expect(screen.queryByRole("menuitem", { name: "归档" })).toBeNull();
+});
+
+test("clears classification and search on archive entry and retries local loading failures", async () => {
+  let api!: ReturnType<typeof enableArchiveCapabilities>;
+  renderHomePage(undefined, () => { api = enableArchiveCapabilities(); });
+  await screen.findByText(/今天先把卡片笔记/);
+  act(() => useNotesStore.setState({ selectedTag: "产品", keyword: "no match" }));
+  api.listArchivedNotes.mockRejectedValueOnce(new Error("offline"));
+  fireEvent.click(screen.getByRole("button", { name: "已归档" }));
+  expect(await screen.findByText("加载已归档笔记失败")).not.toBeNull();
+  expect(useNotesStore.getState().selectedTag).toBeUndefined();
+  expect(useNotesStore.getState().keyword).toBe("");
+  fireEvent.click(screen.getByRole("button", { name: "重试" }));
+  expect(await screen.findByText("暂无已归档笔记")).not.toBeNull();
+  expect(await findComposerEditor()).not.toBeNull();
+});
+
+test("edits archived notes without restoring them to the active feed", async () => {
+  renderHomePage(undefined, enableArchiveCapabilities);
+  await screen.findByText(/今天先把卡片笔记/);
+  await act(async () => { await useNotesStore.getState().setNoteArchived("note-human", true); });
+  fireEvent.click(screen.getByRole("button", { name: "已归档" }));
+  const card = (await screen.findByText(/今天先把卡片笔记/)).closest("article")!;
+  openCardActions(card);
+  fireEvent.click(screen.getByRole("menuitem", { name: "编辑笔记" }));
+  const editor = await within(card).findByRole("textbox");
+  changeMarkdownEditor(editor, "archived edited content");
+  fireEvent.submit(editor.closest("form")!);
+  expect(await screen.findByText("archived edited content")).not.toBeNull();
+  expect(useNotesStore.getState().archivedNotes[0].archivedAt).not.toBeNull();
+  expect(useNotesStore.getState().notes.some((note) => note.id === "note-human")).toBe(false);
 });
