@@ -18,6 +18,7 @@ interface SupabaseNoteRow {
   field_id: string | null;
   created_at: number;
   updated_at: number;
+  archived_at: number | null;
 }
 
 interface SupabaseTagRow {
@@ -40,12 +41,50 @@ export function createSupabaseNotesClient(
   workspaceId: string,
 ): NotesClient {
   return {
+    async listArchivedNotes(cursor) {
+      console.info("[zembra] Loading archive page", { workspaceId, hasCursor: Boolean(cursor) });
+      let request = client.from("notes")
+        .select("id, content, role, field_id, created_at, updated_at, archived_at")
+        .eq("workspace_id", workspaceId).is("deleted_at", null).not("archived_at", "is", null)
+        .order("created_at", { ascending: false }).order("id", { ascending: false }).limit(200);
+      if (cursor) {
+        request = request.or(`created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${JSON.stringify(cursor.id)})`);
+      }
+      const { data, error } = await request;
+      throwSupabaseError(error, "load archive page");
+      const rows = (data ?? []) as SupabaseNoteRow[];
+      const last = rows.at(-1);
+      if (last && cursor && last.id === cursor.id && last.created_at === cursor.createdAt) {
+        throw new Error("Archive cursor did not advance");
+      }
+      const notes = await attachTags(client, workspaceId, rows);
+      console.info("[zembra] Loaded archive page", { workspaceId, count: notes.length });
+      return { notes, nextCursor: last ? { id: last.id, createdAt: last.created_at } : undefined };
+    },
+    async setNoteArchived(noteId, archived) {
+      console.info("[zembra] Updating note archive state", { workspaceId, noteId, archived });
+      const { data: existing, error: readError } = await client.from("notes")
+        .select("created_at, updated_at").eq("workspace_id", workspaceId).eq("id", noteId)
+        .is("deleted_at", null).single();
+      throwSupabaseError(readError, "read archive target");
+      if (!existing) throw new Error("Archive target was not found");
+      const now = Math.max(currentUnixSeconds(), existing.created_at, existing.updated_at);
+      const { data, error } = await client.from("notes")
+        .update({ archived_at: archived ? now : null, updated_at: now })
+        .eq("workspace_id", workspaceId).eq("id", noteId).is("deleted_at", null)
+        .select("id, archived_at, updated_at").single();
+      throwSupabaseError(error, "set note archive state");
+      if (!data) throw new Error("Archive update did not affect a note");
+      console.info("[zembra] Updated note archive state", { workspaceId, noteId, archived });
+      return { id: data.id, archivedAt: data.archived_at, updatedAt: data.updated_at };
+    },
     async listRecentNotes(query = {}) {
       let request = client
         .from("notes")
-        .select("id, content, role, field_id, created_at, updated_at")
+        .select("id, content, role, field_id, created_at, updated_at, archived_at")
         .eq("workspace_id", workspaceId)
         .is("deleted_at", null)
+        .is("archived_at", null)
         .order("created_at", { ascending: false })
         .limit(query.limit ?? 50);
 
@@ -62,7 +101,8 @@ export function createSupabaseNotesClient(
         .from("notes")
         .select("created_at")
         .eq("workspace_id", workspaceId)
-        .is("deleted_at", null);
+        .is("deleted_at", null)
+        .is("archived_at", null);
       throwSupabaseError(error, "load daily note counts");
       return createDailyCounts((data ?? []) as Array<{ created_at: number }>, dayCount);
     },
@@ -73,7 +113,7 @@ export function createSupabaseNotesClient(
     async getNote(noteRef) {
       const { data, error } = await client
         .from("notes")
-        .select("id, content, role, field_id, created_at, updated_at")
+        .select("id, content, role, field_id, created_at, updated_at, archived_at")
         .eq("workspace_id", workspaceId)
         .is("deleted_at", null)
         .ilike("id", `${noteRef}%`)
@@ -146,9 +186,10 @@ export function createSupabaseNotesClient(
 async function listAllNotes(client: SupabaseClient, workspaceId: string): Promise<SupabaseNoteRow[]> {
   const { data, error } = await client
     .from("notes")
-    .select("id, content, role, field_id, created_at, updated_at")
+    .select("id, content, role, field_id, created_at, updated_at, archived_at")
     .eq("workspace_id", workspaceId)
     .is("deleted_at", null)
+    .is("archived_at", null)
     .order("created_at", { ascending: false });
   throwSupabaseError(error, "load notes");
   return (data ?? []) as SupabaseNoteRow[];
@@ -158,7 +199,7 @@ async function listAllNotes(client: SupabaseClient, workspaceId: string): Promis
 async function resolveNoteRow(client: SupabaseClient, workspaceId: string, noteRef: string): Promise<SupabaseNoteRow> {
   const { data, error } = await client
     .from("notes")
-    .select("id, content, role, field_id, created_at, updated_at")
+    .select("id, content, role, field_id, created_at, updated_at, archived_at")
     .eq("workspace_id", workspaceId)
     .is("deleted_at", null)
     .ilike("id", `${noteRef}%`)
@@ -177,33 +218,40 @@ async function getNoteById(client: SupabaseClient, workspaceId: string, noteId: 
   return (await attachTags(client, workspaceId, [await resolveNoteRow(client, workspaceId, noteId)]))[0];
 }
 
-/** Adds tag path display values to stored note rows with two parallel workspace queries. */
+/** Loads complete tag associations even when the service caps each response. */
 async function attachTags(client: SupabaseClient, workspaceId: string, notes: SupabaseNoteRow[]): Promise<NoteDto[]> {
-  if (notes.length === 0) {
-    return [];
+  if (!notes.length) return [];
+  const paths = new Map<string, string>();
+  for (let offset = 0;;) {
+    const { data, error } = await client.from("tags").select("id, path")
+      .eq("workspace_id", workspaceId).order("id").range(offset, offset + 199);
+    throwSupabaseError(error, "load tag paths");
+    if (!data?.length) break;
+    for (const row of data) paths.set(row.id, row.path);
+    offset += data.length;
   }
-
-  const noteIds = notes.map((note) => note.id);
-  const [{ data: noteTags, error: noteTagsError }, { data: tags, error: tagsError }] = await Promise.all([
-    client.from("note_tags").select("note_id, tag_id").eq("workspace_id", workspaceId).in("note_id", noteIds),
-    client.from("tags").select("id, path").eq("workspace_id", workspaceId),
-  ]);
-  throwSupabaseError(noteTagsError, "load note tags");
-  throwSupabaseError(tagsError, "load tag paths");
-  const tagPathById = new Map((tags ?? []).map((tag) => [tag.id as string, tag.path as string]));
-  const pathsByNoteId = new Map<string, string[]>();
-  (noteTags ?? []).forEach((noteTag) => {
-    const path = tagPathById.get(noteTag.tag_id as string);
-    if (path) {
-      pathsByNoteId.set(noteTag.note_id as string, [...(pathsByNoteId.get(noteTag.note_id as string) ?? []), path]);
+  const byNote = new Map<string, string[]>();
+  for (let start = 0; start < notes.length; start += 100) {
+    const ids = notes.slice(start, start + 100).map((note) => note.id);
+    for (let offset = 0;;) {
+      const { data, error } = await client.from("note_tags").select("note_id, tag_id")
+        .eq("workspace_id", workspaceId).in("note_id", ids)
+        .order("note_id").order("tag_id").range(offset, offset + 199);
+      throwSupabaseError(error, "load note tags");
+      if (!data?.length) break;
+      for (const row of data) {
+        const path = paths.get(row.tag_id);
+        if (path) byNote.set(row.note_id, [...(byNote.get(row.note_id) ?? []), path]);
+      }
+      offset += data.length;
     }
-  });
-  return notes.map((note) => mapNoteRow(note, pathsByNoteId.get(note.id) ?? []));
+  }
+  return notes.map((note) => mapNoteRow(note, byNote.get(note.id) ?? []));
 }
 
 /** Maps a Postgres note row into the provider-neutral UI DTO. */
 function mapNoteRow(note: SupabaseNoteRow, tags: string[]): NoteDto {
-  return { id: note.id, content: note.content, role: note.role, fieldId: note.field_id ?? undefined, createdAt: note.created_at, updatedAt: note.updated_at, tags };
+  return { id: note.id, content: note.content, role: note.role, fieldId: note.field_id ?? undefined, createdAt: note.created_at, updatedAt: note.updated_at, archivedAt: note.archived_at, tags };
 }
 
 /** Creates or reuses the required field named by an editor input. */
