@@ -1,3 +1,4 @@
+import { applyComposerContext, composerNeedsReset, composerPrefillExtension, syncComposerMarkdown, type ComposerContext } from "./composerPrefillExtension";
 import { TagSuggestionMenu } from "./TagSuggestionMenu";
 import Link from "@tiptap/extension-link";
 import Mention from "@tiptap/extension-mention";
@@ -45,6 +46,7 @@ export interface LiveMarkdownEditorHandle {
 export const LiveMarkdownEditor = forwardRef<
   LiveMarkdownEditorHandle,
   {
+    composerContext?: ComposerContext;
     disabled?: boolean;
     placeholder: string;
     tags: TagDto[];
@@ -53,7 +55,7 @@ export const LiveMarkdownEditor = forwardRef<
     onChange: (value: string) => void;
   }
 >(function LiveMarkdownEditor(
-  { disabled = false, placeholder, tags, value, variant, onChange },
+  { composerContext, disabled = false, placeholder, tags, value, variant, onChange },
   ref,
 ) {
   const menuId = useId();
@@ -111,6 +113,7 @@ export const LiveMarkdownEditor = forwardRef<
         },
       }),
       tagChipDecorationExtension(),
+      composerPrefillExtension,
     ],
     [],
   );
@@ -168,15 +171,28 @@ export const LiveMarkdownEditor = forwardRef<
     const normalizedValue = normalizeMarkdownSource(value);
     const current = normalizeMarkdownSource(editor.getMarkdown());
 
-    if (value !== normalizedValue || current !== normalizedValue) {
-      editor.commands.setContent(normalizedValue, {
-        contentType: "markdown",
-        emitUpdate: false,
-      });
+    if (!composerNeedsReset(editor, composerContext) && (value !== normalizedValue || current !== normalizedValue)) {
+      if (composerContext) {
+        syncComposerMarkdown(editor, normalizedValue);
+      } else {
+        editor.commands.setContent(normalizedValue, { contentType: "markdown", emitUpdate: false });
+      }
     }
 
-    editor.view.dom.setAttribute("data-markdown-value", normalizedValue);
-  }, [editor, value]);
+    const apply = () => {
+      applyComposerContext(editor, composerContext);
+      editor.view.dom.setAttribute("data-markdown-value", normalizeMarkdownSource(editor.getMarkdown()));
+    };
+    apply();
+    // Composition commits its final transaction before the deferred navigation update.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const finishComposition = () => { timer = setTimeout(apply, 0); };
+    editor.view.dom.addEventListener("compositionend", finishComposition);
+    return () => {
+      clearTimeout(timer);
+      editor.view.dom.removeEventListener("compositionend", finishComposition);
+    };
+  }, [editor, value, composerContext?.workspaceId, composerContext?.kind, composerContext?.value, composerContext?.draftGeneration]);
 
   useImperativeHandle(
     ref,

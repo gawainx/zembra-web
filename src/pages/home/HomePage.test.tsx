@@ -1,3 +1,4 @@
+import type { Editor } from "@tiptap/react";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { createRootRoute, createRoute, createRouter, RouterProvider } from "@tanstack/react-router";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
@@ -8,6 +9,18 @@ import { ThemeProvider } from "../../app/ThemeProvider";
 import { WorkspaceProvider } from "../../app/workspace-context";
 import { HomePage } from "./HomePage";
 import { formatNoteTimestamp } from "./homeUtils";
+
+const editors = new WeakMap<HTMLElement, Editor>();
+vi.mock("@tiptap/react", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tiptap/react")>();
+  return {
+    ...actual,
+    EditorContent: (props: Parameters<typeof actual.EditorContent>[0]) => {
+      if (props.editor) editors.set(props.editor.view.dom, props.editor);
+      return <actual.EditorContent {...props} />;
+    },
+  };
+});
 
 const clientMocks = vi.hoisted(() => ({
   notes: {} as Record<string, unknown>,
@@ -35,10 +48,9 @@ function markdownValue(editor: HTMLElement): string {
   return editor.getAttribute("data-markdown-value") ?? editor.textContent ?? "";
 }
 
-/** Writes Markdown into the rich text editor through a synthetic input event. */
+/** Replaces a draft using a real editor transaction. */
 function changeMarkdownEditor(editor: HTMLElement, value: string) {
-  editor.textContent = value;
-  fireEvent.input(editor);
+  act(() => { editors.get(editor)!.commands.setContent(value, { contentType: "markdown" }); });
 }
 
 /** Finds the composer rich text editor by its accessible placeholder label. */
@@ -1406,7 +1418,7 @@ test("renders previously escaped inline code in cards and edit drafts", async ()
 });
 
 
-/** Keeps the visible destination and creation payload aligned with reference order. */
+/** Resolves the creation payload from explicit fields and reference order. */
 test.each([
   ["[[first]]", "research"],
   ["[[first]] [[second]]", "research"],
@@ -1431,7 +1443,7 @@ test.each([
     ],
   }));
   changeMarkdownEditor(composer, draft);
-  expect(screen.getByText(`Default field for note is @${field}`)).not.toBeNull();
+  expect(screen.queryByText(/Default field for note is/)).toBeNull();
   fireEvent.submit(composer.closest("form")!);
   await waitFor(() => expect(createNote).toHaveBeenCalledWith(expect.objectContaining({ field })));
   expect(useNotesStore.getState().selectedField).toBe("selected");
@@ -1449,12 +1461,13 @@ test("recomputes the destination after removing references", async () => {
       { id: "second", content: "second source", fieldId: "ideas", role: "Human", tags: [], createdAt: 1, updatedAt: 1 },
     ],
   }));
-  changeMarkdownEditor(composer, "[[first]] [[second]]");
-  expect(screen.getByText("Default field for note is @research")).not.toBeNull();
-  changeMarkdownEditor(composer, "[[second]]");
-  expect(screen.getByText("Default field for note is @ideas")).not.toBeNull();
-  changeMarkdownEditor(composer, "no references");
-  expect(screen.getByText("Default field for note is @inbox")).not.toBeNull();
+  const createNote = vi.fn(async () => undefined);
+  act(() => useNotesStore.setState({ createNote }));
+  for (const [content, field] of [["[[first]] [[second]]", "research"], ["[[second]]", "ideas"], ["no references", "inbox"]]) {
+    changeMarkdownEditor(composer, content);
+    fireEvent.submit(composer.closest("form")!);
+    await waitFor(() => expect(createNote).toHaveBeenLastCalledWith(expect.objectContaining({ content, field })));
+  }
 });
 
 /** An unresolved reference must not silently use the sidebar field on an immediate submit. */
@@ -1530,4 +1543,66 @@ test("selects card tags and synchronizes hierarchical navigation", async () => {
   expect(screen.getByText(/match child/)).not.toBeNull();
   expect(screen.getByRole("button", { name: "折叠 books" })).not.toBeNull();
   expect(sidebarButtonForText("AI")).not.toBeNull();
+});
+
+/** Filtering changes the owned prefix while the controlled draft preserves user text. */
+test("prefills navigation classifications and preserves the draft across filter changes", async () => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
+  act(() => useNotesStore.setState({ selectedTag: "books/AI", selectedField: undefined }));
+  expect(markdownValue(composer).trim()).toBe("#books/AI");
+  act(() => { editors.get(composer)!.commands.insertContent("My body #books/AI"); });
+  act(() => useNotesStore.setState({ selectedTag: "books/design" }));
+  expect(markdownValue(composer)).toBe("#books/design My body #books/AI");
+  act(() => useNotesStore.setState({ selectedTag: undefined, selectedField: "field-project" }));
+  expect(markdownValue(composer)).toBe("@project My body #books/AI");
+  fireEvent.click(sidebarButtonForText("全部笔记"));
+  expect(markdownValue(composer)).toBe("My body #books/AI");
+});
+
+test("prefilled fields override references and reset before a pending write completes", async () => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
+  let finish!: () => void;
+  const createNote = vi.fn(() => new Promise<void>((resolve) => { finish = resolve; }));
+  act(() => useNotesStore.setState({ createNote, selectedField: "field-project", selectedTag: undefined }));
+  const editor = editors.get(composer)!;
+  act(() => { editor.commands.insertContent("Body [[source]]"); });
+  fireEvent.submit(composer.closest("form")!);
+  await waitFor(() => expect(createNote).toHaveBeenCalledWith(expect.objectContaining({ field: "project", content: "@project Body [[source]]" })));
+  expect(markdownValue(composer).trim()).toBe("@project");
+  act(() => { editor.commands.insertContent("next"); });
+  await act(async () => finish());
+  expect(markdownValue(composer)).toBe("@project next");
+  expect(screen.queryByText(/Default field for note is/)).toBeNull();
+});
+
+test("tag payload matches the visible prefill and immediately prepares the next note", async () => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  const createNote = vi.fn(async () => undefined);
+  act(() => useNotesStore.setState({ createNote, selectedTag: "books/AI", selectedField: undefined }));
+  act(() => { editors.get(composer)!.commands.insertContent("Body"); });
+  fireEvent.submit(composer.closest("form")!);
+  await waitFor(() => expect(createNote).toHaveBeenCalledWith(expect.objectContaining({ content: "#books/AI Body", tags: ["books/AI"] })));
+  expect(markdownValue(composer).trim()).toBe("#books/AI");
+  fireEvent.submit(composer.closest("form")!);
+  await waitFor(() => expect(createNote).toHaveBeenCalledTimes(2));
+  expect(markdownValue(composer).trim()).toBe("#books/AI");
+});
+
+test("mention insertion preserves ownership of navigation prefill", async () => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
+  act(() => useNotesStore.setState({ selectedField: "field-project", selectedTag: undefined, notes: [{ id: "source", content: "source note", fieldId: "field-project", role: "Human", tags: [], createdAt: 1, updatedAt: 1 }] }));
+  const card = (await screen.findByText("source note")).closest("article")!;
+  fireEvent.keyDown(within(card).getByRole("button", { name: "笔记操作" }), { key: "Enter" });
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Mention" }));
+  expect(markdownValue(composer)).toContain("[[");
+  act(() => useNotesStore.setState({ selectedField: undefined, selectedTag: "books" }));
+  expect(markdownValue(composer)).toMatch(/^#books .*\[\[/);
+  expect(markdownValue(composer)).not.toContain("@project");
 });

@@ -10,7 +10,6 @@ export const home = {
   composer: {
     editorLoading: "Loading editor",
     placeholder: "What are you thinking now?",
-    saveTo: "Default field for note is @{{field}}",
     send: "Send",
     tagSuggestion: {
       create: "Create #{{tag}}",

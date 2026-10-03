@@ -11,7 +11,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "../../app/ThemeToggle";
 import { useWorkspace } from "../../app/workspace-context";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { defaultFieldName } from "../../api/defaultField";
 import {
   SourceHomeControlsProvider,
@@ -21,7 +21,7 @@ import {
 import { useNotesStore } from "../../features/notes/noteStore";
 import type { NoteDto, TagDto } from "../../api/types";
 import { NoteCard } from "./NoteCard";
-import { NoteEditor, type NoteEditorHandle } from "./NoteEditor";
+import { NoteEditor } from "./NoteEditor";
 import { ResponsiveSidebar } from "./ResponsiveSidebar";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import {
@@ -50,7 +50,6 @@ import {
 /** Renders the redesigned Zembra note workspace shell. */
 export function HomePage() {
   const { i18n, t } = useTranslation("home");
-  const composerRef = useRef<NoteEditorHandle>(null);
   const { workspace, workspaces, switchWorkspace, renameWorkspace } = useWorkspace();
   const workspaceScope = useMemo(() => ({ active: true }), [workspace.id]);
   useEffect(() => {
@@ -58,6 +57,7 @@ export function HomePage() {
     return () => { workspaceScope.active = false; };
   }, [workspaceScope]);
   const [draft, setDraft] = useState("");
+  const [draftGeneration, setDraftGeneration] = useState(0);
   const [editingNoteId, setEditingNoteId] = useState<string>();
   const [editDraft, setEditDraft] = useState("");
   const [pendingDeleteTag, setPendingDeleteTag] = useState<TagDto>();
@@ -173,8 +173,7 @@ export function HomePage() {
     const tags = parseTagNames(content);
     const links = parseNoteLinks(content);
     const fieldPromise = composerField.resolveField();
-    setDraft("");
-    composerRef.current?.clear();
+    setDraftGeneration((generation) => generation + 1);
     const field = await fieldPromise;
     if (!workspaceScope.active) {
       console.info("[zembra] Cancelled note creation after leaving workspace", { workspaceId: workspace.id });
@@ -531,12 +530,14 @@ export function HomePage() {
         >
           <div className="min-w-0 lg:col-start-2">
             <NoteEditor
-              ref={composerRef}
               draft={draft}
               isSubmitting={false}
-              meta={t("composer.saveTo", {
-                field: composerField.field,
-              })}
+              composerContext={{
+                workspaceId: workspace.id,
+                draftGeneration,
+                kind: selectedTag ? "tag" : selectedField ? "field" : undefined,
+                value: selectedTag ?? fieldNameById.get(selectedField ?? ""),
+              }}
               placeholder={t("composer.placeholder")}
               submitLabel={t("composer.send")}
               tags={tags}

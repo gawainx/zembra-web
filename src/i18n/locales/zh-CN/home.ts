@@ -10,7 +10,6 @@ export const home = {
   composer: {
     editorLoading: "正在加载编辑器",
     placeholder: "现在的想法是...",
-    saveTo: "Default field for note is @{{field}}",
     send: "发送",
     tagSuggestion: {
       create: "创建 #{{tag}}",

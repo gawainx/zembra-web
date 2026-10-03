@@ -41,6 +41,7 @@ export function getTagSuggestions(
 /** Converts supported escaped Markdown source into the note content format expected by parsers. */
 export function normalizeMarkdownSource(markdown: string): string {
   return normalizeEscapedInlineCode(markdown)
+    .replace(/\\\[\\\[([^\]\n]+)\\\]\\\]/g, "[[$1]]")
     .replace(/\\#([^\s#@]+)/g, "#$1")
     .replace(
       /\\\[([^\]\n]+)\\\]\((https?:\/\/[^\s)]+)\)/g,
