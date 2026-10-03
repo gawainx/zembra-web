@@ -415,7 +415,7 @@ test("renders note metadata with creation time", async () => {
 });
 
 /** Verifies the home feed is ordered by note creation time. */
-test("orders the note feed by creation time", async () => {
+test("toggles creation-time sorting and preserves it across search and archive views", async () => {
   renderHomePage();
   await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
 
@@ -450,6 +450,36 @@ test("orders the note feed by creation time", async () => {
       olderNote.closest("article") as HTMLElement,
     ) & Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy();
+
+  const oldestButton = screen.getByRole("button", { name: "从最旧到最新排序" });
+  expect(oldestButton.textContent).toBe("");
+  fireEvent.click(oldestButton);
+  expect(
+    olderNote.closest("article")!.compareDocumentPosition(newerNote.closest("article")!)
+      & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  const originalNotes = useNotesStore.getState().notes;
+  expect(originalNotes.map((note) => note.id)).toEqual(["older-note", "newer-note"]);
+
+  const search = screen.getByPlaceholderText("搜索笔记、Field、Tag");
+  fireEvent.change(search, { target: { value: "newer" } });
+  expect(screen.queryByText("older created note")).toBeNull();
+  expect(screen.getByText("newer created note")).not.toBeNull();
+  fireEvent.change(search, { target: { value: "" } });
+  expect(screen.getAllByRole("article").map((card) => card.textContent)).toEqual([
+    expect.stringContaining("older created note"), expect.stringContaining("newer created note"),
+  ]);
+
+  act(() => useNotesStore.setState({
+    noteView: "archived", archivedNotes: originalNotes.map((note) => ({ ...note, archivedAt: 200 })),
+  }));
+  expect(screen.getAllByRole("article").map((card) => card.textContent)).toEqual([
+    expect.stringContaining("older created note"), expect.stringContaining("newer created note"),
+  ]);
+  fireEvent.click(screen.getByRole("button", { name: "从最新到最旧排序" }));
+  expect(screen.getAllByRole("article").map((card) => card.textContent)).toEqual([
+    expect.stringContaining("newer created note"), expect.stringContaining("older created note"),
+  ]);
 });
 
 /** Verifies two-level tag chips render as raw paths without duplicate markers. */
@@ -1704,4 +1734,23 @@ test("keeps an unsaved card draft when visiting the archive and returning", asyn
   expect(await screen.findByText("暂无已归档笔记")).not.toBeNull();
   fireEvent.click(screen.getByRole("button", { name: /全部笔记/ }));
   await waitFor(() => expect(getComposerEditors().some((input) => markdownValue(input).includes("unsaved text stays here"))).toBe(true));
+});
+
+test("shows the archive total before opening it and updates the navigation after lifecycle changes", async () => {
+  renderHomePage(undefined, () => {
+    enableArchiveCapabilities();
+    clientMocks.notes.countArchivedNotes = vi.fn(async () => 12);
+  });
+  const navigation = () => screen.getByRole("button", { name: "已归档" }).parentElement!;
+  await waitFor(() => expect(within(navigation()).getByText("12")).not.toBeNull());
+  clientMocks.notes.countArchivedNotes = vi.fn(async () => 13);
+  const card = (await screen.findByText(/今天先把卡片笔记/)).closest("article")!;
+  openCardActions(card);
+  fireEvent.click(await screen.findByRole("menuitem", { name: "归档" }));
+  await waitFor(() => expect(within(navigation()).getByText("13")).not.toBeNull());
+  fireEvent.click(screen.getByRole("button", { name: "已归档" }));
+  openCardActions((await screen.findByText(/今天先把卡片笔记/)).closest("article")!);
+  clientMocks.notes.countArchivedNotes = vi.fn(async () => 12);
+  fireEvent.click(await screen.findByRole("menuitem", { name: "取消归档" }));
+  await waitFor(() => expect(within(navigation()).getByText("12")).not.toBeNull());
 });

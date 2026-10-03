@@ -11,11 +11,22 @@ import {
   parseTagNames,
   stripRenderedFieldMarker,
   stripRenderedTagMarkers,
+  sortNotesByCreatedAt,
 } from "./homeUtils";
 
 const firstNoteId = "abcdef1234567890abcdef1234567890";
 const secondNoteId = "1234567890abcdef1234567890abcdef";
 const hyphenatedNoteId = "db4b2d02-fdfa-4915-8bfe-edfe685f54d11";
+
+test("sorts equal creation times deterministically without mutating the source", () => {
+  const notes = [
+    { id: "a", createdAt: 20 }, { id: "old", createdAt: 10 }, { id: "b", createdAt: 20 },
+  ].map((note) => ({ ...note, content: "note", tags: [], role: "Human", updatedAt: 100 }));
+  expect(sortNotesByCreatedAt(notes).map((note) => note.id)).toEqual(["b", "a", "old"]);
+  expect(sortNotesByCreatedAt(notes, "oldest").map((note) => note.id)).toEqual(["old", "a", "b"]);
+  expect(notes.map((note) => note.id)).toEqual(["a", "old", "b"]);
+  expect(sortNotesByCreatedAt([], "oldest")).toEqual([]);
+});
 
 describe("note link parsing", () => {
   test("extracts full UUID note links with anchor text and position", () => {

@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import { createSupabaseNotesClient } from "./supabase-notes.client";
 
 type Call = { table: string; steps: Array<[string, ...unknown[]]> };
-type Result = { data: unknown; error: { message: string } | null };
+type Result = { count?: number; data: unknown; error: { message: string } | null };
 function mockClient(run: (call: Call) => Result) {
   const calls: Call[] = [];
   const client = { from(table: string) {
@@ -80,4 +80,14 @@ describe("Supabase archive", () => {
     expect(await api.getNote(row.id)).toMatchObject({ id: row.id, archivedAt: 20 });
     expect(calls[0].steps).not.toContainEqual(["is", "archived_at", null]);
   });
+});
+
+
+test.each([0, 1205])("counts %i undeleted archives without fetching rows", async (count) => {
+  const { api, calls } = mockClient(() => ({ data: null, error: null, count }));
+  expect(await api.countArchivedNotes!()).toBe(count);
+  expect(calls).toEqual([{ table: "notes", steps: [
+    ["select", "id", { count: "exact", head: true }], ["eq", "workspace_id", "workspace-a"],
+    ["is", "deleted_at", null], ["not", "archived_at", "is", null],
+  ] }]);
 });

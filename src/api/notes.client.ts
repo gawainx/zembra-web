@@ -28,6 +28,7 @@ type WorkspaceIdSource = string | (() => string | Promise<string>);
 /** Defines the frontend note data access boundary. */
 export interface NotesClient {
   /** Optional lifecycle capabilities supplied by the Supabase client. */
+  countArchivedNotes?: () => Promise<number>;
   listArchivedNotes?: (cursor?: ArchivedNotesCursor) => Promise<ArchivedNotesPage>;
   setNoteArchived?: (noteId: string, archived: boolean) => Promise<NoteArchiveState>;
   /** Lists recent notes ordered by update time for the home feed. */

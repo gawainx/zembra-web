@@ -22,6 +22,8 @@ interface NotesState {
   supportsArchiving: boolean;
   noteView: "active" | "archived";
   archivedNotes: NoteDto[];
+  archivedNoteCount?: number;
+  loadArchivedNoteCount: () => Promise<void>;
   archiveLoading: boolean;
   archiveError: boolean;
   archiveCursor?: ArchivedNotesCursor;
@@ -83,6 +85,7 @@ interface NotesState {
 
 let readVersion = 0;
 let archiveReadVersion = 0;
+let archiveCountReadVersion = 0;
 let metadataReadVersion = 0;
 let mutationEpoch = 0;
 const noteMutations = new WeakMap<NotesClient, Map<string, NoteMutation>>();
@@ -95,6 +98,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   supportsArchiving: false,
   noteView: "active",
   archivedNotes: [],
+  archivedNoteCount: undefined,
   archiveLoading: false,
   archiveError: false,
   archiveCursor: undefined,
@@ -103,11 +107,12 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     if (get().scopeClient === client) return;
     if (get().scopeClient) {
       ++readVersion; ++archiveReadVersion; ++metadataReadVersion;
-      set({ notes: [], roleNavigationNotes: [], archivedNotes: [], notePreviewById: {}, fields: [], tags: [],
+      set({ archivedNoteCount: undefined, notes: [], roleNavigationNotes: [], archivedNotes: [], notePreviewById: {}, fields: [], tags: [],
         dailyNoteCounts: [], noteView: "active", keyword: "", selectedRole: undefined,
         selectedField: undefined, selectedTag: undefined, archiveCursor: undefined, archiveError: false, archiveLoading: false });
     }
     set({ scopeClient: client, supportsArchiving: Boolean(client.listArchivedNotes && client.setNoteArchived) });
+    void get().loadArchivedNoteCount();
   },
   setNoteView: (noteView) => {
     if (noteView === "archived" && !get().supportsArchiving) return;
@@ -120,9 +125,23 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       set({ archiveLoading: false });
     }
   },
+  loadArchivedNoteCount: async () => {
+    const client = getNotesClient();
+    if (!client.countArchivedNotes || hasPendingNotes(client)) return;
+    const version = ++archiveCountReadVersion;
+    const since = mutationEpoch;
+    try {
+      const count = await client.countArchivedNotes();
+      if (!isActiveClient(client) || version !== archiveCountReadVersion || since !== mutationEpoch || hasPendingNotes(client)) return;
+      set({ archivedNoteCount: count });
+    } catch (error) {
+      if (isActiveClient(client) && version === archiveCountReadVersion) console.warn("[zembra] Failed to load archive count", { error });
+    }
+  },
   loadArchivedNotes: async (resume = false) => {
     const client = getNotesClient();
     if (!client.listArchivedNotes) return;
+    void get().loadArchivedNoteCount();
     const version = ++archiveReadVersion;
     const since = mutationEpoch;
     let cursor = resume ? get().archiveCursor : undefined;
@@ -499,7 +518,10 @@ async function mutateNote(
     set((state) => projectNote(state, id, findNote(state, id) ?? before, after));
     console[error ? "warn" : "info"]("[zembra] Note mutation completed", { noteId: id, action: success, failed: Boolean(error) });
     notifyMutationCompleted({ duration: error ? 10000 : 3000, message: error ? failure : success, tone: error ? "error" : "success" });
-    if (!hasPendingNotes(client)) void refreshNoteMetadata(set, get);
+    if (!hasPendingNotes(client)) {
+      void get().loadArchivedNoteCount();
+      void refreshNoteMetadata(set, get);
+    }
   });
   current.queue = operation;
   return operation;

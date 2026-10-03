@@ -1,8 +1,7 @@
 import { useComposerField } from "./useComposerField";
 import { createComposerTools } from "./homeComposerTools";
 import { TagDeleteDialog } from "./TaxonomyDeleteDialogs";
-import { Input } from "../../components/ui/input";
-import { Search } from "lucide-react";
+import { HomeToolbar } from "./HomeToolbar";
 import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "../../app/ThemeToggle";
 import { useWorkspace } from "../../app/workspace-context";
@@ -31,6 +30,7 @@ import {
   parseNoteLinks,
   parseTagNames,
   sortNotesByCreatedAt,
+  type NoteSortOrder,
 } from "./homeUtils";
 
 /** Renders the redesigned Zembra note workspace shell. */
@@ -43,6 +43,7 @@ export function HomePage() {
     return () => { workspaceScope.active = false; };
   }, [workspaceScope]);
   const [draft, setDraft] = useState("");
+  const [sortOrder, setSortOrder] = useState<NoteSortOrder>("newest");
   const [draftGeneration, setDraftGeneration] = useState(0);
   const [pendingDeleteTag, setPendingDeleteTag] = useState<TagDto>();
 
@@ -52,7 +53,7 @@ export function HomePage() {
 
   const {
     notes,
-    archivedNotes, noteView, supportsArchiving, archiveLoading, archiveError,
+    archivedNotes, archivedNoteCount, noteView, supportsArchiving, archiveLoading, archiveError,
     connectWorkspace, setNoteView, loadArchivedNotes, setNoteArchived,
     roleNavigationNotes,
     notePreviewById,
@@ -115,8 +116,9 @@ export function HomePage() {
           tag: selectedTag,
           tagMatch: selectedTagMatch,
         }),
+        sortOrder,
       ),
-    [keyword, displayNotes, selectedField, selectedTag, selectedTagMatch],
+    [keyword, displayNotes, selectedField, selectedTag, selectedTagMatch, sortOrder],
   );
   useEffect(() => {
     void loadFields();
@@ -242,7 +244,7 @@ export function HomePage() {
           </div>
 
           <HomeNavigation
-            archived={noteView === "archived"} onArchiveSelect={supportsArchiving ? () => setNoteView("archived") : undefined}
+            archivedNoteCount={archivedNoteCount} archived={noteView === "archived"} onArchiveSelect={supportsArchiving ? () => setNoteView("archived") : undefined}
             notes={notes} roleNavigationNotes={roleNavigationNotes} fields={fields} tags={tags}
             selectedRole={selectedRole} selectedField={selectedField} selectedTag={selectedTag}
             handleAllNotesSelect={handleAllNotesSelect} handleRoleSelect={handleRoleSelect}
@@ -252,18 +254,8 @@ export function HomePage() {
         </ResponsiveSidebar>
 
         <section className="flex min-h-0 min-w-0 flex-col">
-          <header className="mb-4 flex min-h-11 shrink-0 items-center justify-end lg:mb-3">
-            <label className="flex h-[var(--control-height)] w-full items-center gap-[var(--space-2)] rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-4)] text-sm text-[var(--color-text-muted)] lg:max-w-80">
-              <Search className="size-4" aria-hidden="true" />
-              <Input
-                className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-[var(--color-text-muted)]"
-                placeholder={t("search.placeholder")}
-                value={keyword}
-                onChange={(event) => setKeyword(event.target.value)}
-              />
-              <span className="text-[var(--color-text-muted)]">⌘+K</span>
-            </label>
-          </header>
+          <HomeToolbar keyword={keyword} onKeywordChange={setKeyword}
+            sortOrder={sortOrder} onSortToggle={() => setSortOrder((order) => order === "newest" ? "oldest" : "newest")} />
 
           <HomeNoteFeed
             archived={noteView === "archived"} loading={archiveLoading} failed={archiveError}
