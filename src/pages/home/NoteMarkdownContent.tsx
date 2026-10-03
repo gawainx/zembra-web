@@ -37,11 +37,13 @@ type MarkdownNode = MarkdownTextNode | MarkdownLinkNode | MarkdownParentNode;
 export function NoteMarkdownContent({
   content,
   onLoadNotePreview,
+  onTagSelect,
 }: {
   content: string;
   onLoadNotePreview: (noteRef: string) => Promise<NoteDto>;
+  onTagSelect?: (path: string) => void;
 }) {
-  const components = createMarkdownComponents(onLoadNotePreview);
+  const components = createMarkdownComponents(onLoadNotePreview, onTagSelect);
 
   return (
     <div className="note-markdown">
@@ -195,6 +197,7 @@ function createInternalLinkNode(prefix: string, value: string): MarkdownLinkNode
 /** Creates Markdown element renderers bound to the note preview loader. */
 function createMarkdownComponents(
   onLoadNotePreview: (noteRef: string) => Promise<NoteDto>,
+  onTagSelect?: (path: string) => void,
 ): Components {
   return {
     a({ children, href }) {
@@ -208,6 +211,17 @@ function createMarkdownComponents(
       }
 
       if (href?.startsWith(tagUrlPrefix)) {
+        if (onTagSelect) {
+          return (
+            <button
+              className="note-tag-chip cursor-pointer whitespace-nowrap"
+              type="button"
+              onClick={() => onTagSelect(String(children))}
+            >
+              #{children}
+            </button>
+          );
+        }
         return <span className="note-tag-chip">#{children}</span>;
       }
 

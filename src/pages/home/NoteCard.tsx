@@ -41,6 +41,7 @@ export function NoteCard({
   onFieldChange,
   onLoadNotePreview,
   onMention,
+  onTagSelect,
   tags,
   tools,
 }: {
@@ -60,6 +61,7 @@ export function NoteCard({
   onFieldChange: (note: NoteDto, fieldName: string) => void;
   onLoadNotePreview: (noteRef: string) => Promise<NoteDto>;
   onMention: (noteId: string) => void;
+  onTagSelect: (path: string) => void;
   tags: TagDto[];
   tools: ComposerTool[];
 }) {
@@ -240,6 +242,7 @@ export function NoteCard({
             style={expanded ? undefined : { maxHeight: "5.25rem" }}
           >
             <NoteMarkdownContent
+              onTagSelect={onTagSelect}
               content={displayContent}
               onLoadNotePreview={onLoadNotePreview}
             />

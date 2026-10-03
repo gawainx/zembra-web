@@ -1494,3 +1494,40 @@ test("falls back to the sidebar when the first reference cannot be read", async 
   await waitFor(() => expect(createNote).toHaveBeenCalledWith(expect.objectContaining({ field: "sidebar" })));
   expect(warning).toHaveBeenCalled();
 });
+
+/** Card tags reuse navigation filters and preserve the active search. */
+test("selects card tags and synchronizes hierarchical navigation", async () => {
+  renderHomePage();
+  await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
+  const notes = [
+    { id: "root", content: "match root #books", tags: ["books"], fieldId: "field-inbox", role: "Human", createdAt: 1, updatedAt: 1 },
+    { id: "child", content: "match child #books/AI", tags: ["books/AI"], fieldId: "field-project", role: "Agent", createdAt: 1, updatedAt: 1 },
+    { id: "hidden", content: "excluded #books", tags: ["books"], role: "Human", createdAt: 1, updatedAt: 1 },
+    { id: "other", content: "match other #other", tags: ["other"], role: "Human", createdAt: 1, updatedAt: 1 },
+  ];
+  clientMocks.notes.listRecentNotes = async () => notes;
+  act(() => useNotesStore.setState({
+    notes,
+    keyword: "match",
+    selectedField: "field-inbox",
+    selectedRole: "Human",
+    tags: [
+      { id: "books", name: "books", path: "books", depth: 0, createdAt: 1 },
+      { id: "ai", name: "AI", path: "books/AI", parentTagId: "books", depth: 1, createdAt: 1 },
+    ],
+  }));
+  fireEvent.click(screen.getByRole("button", { name: "#books" }));
+  await waitFor(() => expect(useNotesStore.getState().selectedRole).toBeUndefined());
+  expect(useNotesStore.getState().selectedField).toBeUndefined();
+  expect(useNotesStore.getState().keyword).toBe("match");
+  expect(screen.getByText(/match root/)).not.toBeNull();
+  expect(await screen.findByText(/match child/)).not.toBeNull();
+  expect(screen.queryByText(/excluded/)).toBeNull();
+  expect(screen.queryByText(/match other/)).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "#books/AI" }));
+  expect(useNotesStore.getState().selectedTag).toBe("books/AI");
+  expect(screen.queryByText(/match root/)).toBeNull();
+  expect(screen.getByText(/match child/)).not.toBeNull();
+  expect(screen.getByRole("button", { name: "折叠 books" })).not.toBeNull();
+  expect(sidebarButtonForText("AI")).not.toBeNull();
+});

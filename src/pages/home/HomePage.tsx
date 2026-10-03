@@ -500,6 +500,7 @@ export function HomePage() {
                   onFieldChange={handleNoteFieldChange}
                   onLoadNotePreview={loadNotePreview}
                   onMention={handleMentionNote}
+                  onTagSelect={(path) => void handleTagSelect(path)}
                   fieldName={note.fieldId ? fieldNameById.get(note.fieldId) : undefined}
                   isEditing={editingNoteId === note.id}
                   key={note.id}
