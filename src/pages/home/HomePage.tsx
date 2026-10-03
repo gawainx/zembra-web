@@ -2,12 +2,7 @@ import { useComposerField } from "./useComposerField";
 import { createComposerTools } from "./homeComposerTools";
 import { TagDeleteDialog } from "./TaxonomyDeleteDialogs";
 import { Input } from "../../components/ui/input";
-import {
-  Bot,
-  List,
-  Search,
-  User,
-} from "lucide-react";
+import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "../../app/ThemeToggle";
 import { useWorkspace } from "../../app/workspace-context";
@@ -20,27 +15,20 @@ import {
 } from "@zembra/source-home-controls";
 import { useNotesStore } from "../../features/notes/noteStore";
 import type { NoteDto, TagDto } from "../../api/types";
-import { NoteCard } from "./NoteCard";
+import { HomeNoteFeed } from "./HomeNoteFeed";
+import { HomeNavigation } from "./HomeNavigation";
 import { NoteEditor } from "./NoteEditor";
 import { ResponsiveSidebar } from "./ResponsiveSidebar";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import {
   DailyNotesHeatmap,
-  NavItem,
-  SidebarSection,
   StatBlock,
-  TagTreeItem,
 } from "./HomeSidebar";
 import { normalizeMarkdownSource } from "./liveMarkdownEditorUtils";
 import {
   buildTagFilterMatch,
   buildTagTree,
-  countFields,
-  countRoles,
-  countTags,
-  findSelectedTagRootPath,
   filterVisibleNotes,
-  noteMatchesTagPath,
   parseFieldNames,
   parseNoteLinks,
   parseTagNames,
@@ -104,7 +92,6 @@ export function HomePage() {
     draft, fields, notes, cachedNotes: notePreviewById, selectedField,
     workspaceId: workspace.id, loadNote: loadNotePreview,
   });
-  const tagUsage = useMemo(() => countTags(notes), [notes]);
   const tagTree = useMemo(() => buildTagTree(tags), [tags]);
   const selectedTagMatch = useMemo(
     () => buildTagFilterMatch(tagTree, selectedTag),
@@ -122,45 +109,16 @@ export function HomePage() {
       ),
     [keyword, notes, selectedField, selectedTag, selectedTagMatch],
   );
-  const fieldUsage = useMemo(() => countFields(notes), [notes]);
-  const roleUsage = useMemo(
-    () => countRoles(roleNavigationNotes.length > 0 ? roleNavigationNotes : notes),
-    [notes, roleNavigationNotes],
-  );
-  const roleTotalCount = roleNavigationNotes.length > 0
-    ? roleNavigationNotes.length
-    : notes.length;
   const editFieldNames = useMemo(() => parseFieldNames(editDraft), [editDraft]);
   const editWarning =
     editFieldNames.length > 1
       ? t("note.edit.warningMultipleFields", { field: editFieldNames[0] })
       : undefined;
-  const [expandedTagRoots, setExpandedTagRoots] = useState<Set<string>>(
-    () => new Set(),
-  );
   useEffect(() => {
     void loadFields();
     void loadTags();
     void loadRecentNotes();
   }, [loadFields, loadRecentNotes, loadTags, workspace.id]);
-
-  useEffect(() => {
-    const rootPath = findSelectedTagRootPath(tagTree, selectedTag);
-
-    if (!rootPath) {
-      return;
-    }
-
-    setExpandedTagRoots((current) => {
-      if (current.has(rootPath)) {
-        return current;
-      }
-
-      const next = new Set(current);
-      next.add(rootPath);
-      return next;
-    });
-  }, [selectedTag, tagTree]);
 
   /** Persists the current composer draft as a new note. */
   async function handleCreateSubmit() {
@@ -187,21 +145,6 @@ export function HomePage() {
       role: "Human",
       tags,
     }).catch(() => undefined);
-  }
-
-  /** Toggles one root tag branch in the sidebar tree. */
-  function handleTagRootToggle(path: string) {
-    setExpandedTagRoots((current) => {
-      const next = new Set(current);
-
-      if (next.has(path)) {
-        next.delete(path);
-      } else {
-        next.add(path);
-      }
-
-      return next;
-    });
   }
 
   /** Clears every sidebar classification filter and restores all recent notes. */
@@ -369,99 +312,13 @@ export function HomePage() {
             />
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto pb-4 pr-1 pt-4 lg:pb-44">
-            <NavItem
-              active={
-                selectedRole === undefined &&
-                selectedField === undefined &&
-                selectedTag === undefined
-              }
-              count={roleTotalCount}
-              label={t("sidebar.allNotes")}
-              prefix={<List className="size-4" aria-hidden="true" />}
-              onClick={() => void handleAllNotesSelect()}
-            />
-            <SidebarSection className="mt-4" title={t("sidebar.roles")}>
-              {Array.from(roleUsage.entries()).map(([role, count]) => {
-                const label = role || t("sidebar.unknownRole");
-
-                return (
-                  <NavItem
-                    active={selectedRole === role}
-                    count={count}
-                    key={role || "unknown-role"}
-                    label={label}
-                    prefix={
-                      role === "Human" ? (
-                        <User className="size-4" aria-hidden="true" />
-                      ) : (
-                        <Bot className="size-4" aria-hidden="true" />
-                      )
-                    }
-                    onClick={() => void handleRoleSelect(role)}
-                  />
-                );
-              })}
-            </SidebarSection>
-
-            <SidebarSection title={t("sidebar.fields")}>
-              {fields.map((field) => (
-                <NavItem
-                  active={selectedField === field.id}
-                  count={fieldUsage.get(field.id) ?? 0}
-                  key={field.id}
-                  label={field.name}
-                  prefix="@"
-                  onClick={() => void handleFieldSelect(field.id)}
-                />
-              ))}
-            </SidebarSection>
-
-            <SidebarSection title={t("sidebar.tags")}>
-              {tagTree.length === 0 ? (
-                <NavItem
-                  active={false}
-                  count={0}
-                  disabled
-                  label={t("sidebar.emptyTags")}
-                  prefix="#"
-                  onClick={() => undefined}
-                />
-              ) : null}
-              {tagTree.map((node) => (
-                <TagTreeItem
-                  activePath={selectedTag}
-                  childCounts={tagUsage}
-                  collapsedLabel={t("sidebar.expandTag", {
-                    tag: node.tag.name,
-                  })}
-                  expanded={expandedTagRoots.has(node.tag.path)}
-                  expandedLabel={t("sidebar.collapseTag", {
-                    tag: node.tag.name,
-                  })}
-                  getDeleteLabel={(tag, count) =>
-                    count === 0 ? t("tag.delete.action", { tag: tag.path }) : undefined
-                  }
-                  key={node.tag.path}
-                  node={node}
-                  rootCount={Math.max(
-                    notes.filter((note) =>
-                      noteMatchesTagPath(note.tags, node.tag.path),
-                    ).length,
-                    (tagUsage.get(node.tag.path) ?? tagUsage.get(node.tag.name) ?? 0) +
-                      node.children.reduce(
-                        (total, child) =>
-                          total + (tagUsage.get(child.path) ?? tagUsage.get(child.name) ?? 0),
-                        0,
-                      ),
-                  )}
-                  onDelete={handleTagDeleteRequest}
-                  onSelect={(path) => void handleTagSelect(path)}
-                  onToggle={handleTagRootToggle}
-                />
-              ))}
-            </SidebarSection>
-          </div>
+          <HomeNavigation
+            notes={notes} roleNavigationNotes={roleNavigationNotes} fields={fields} tags={tags}
+            selectedRole={selectedRole} selectedField={selectedField} selectedTag={selectedTag}
+            handleAllNotesSelect={handleAllNotesSelect} handleRoleSelect={handleRoleSelect}
+            handleFieldSelect={handleFieldSelect} handleTagSelect={handleTagSelect}
+            handleTagDeleteRequest={handleTagDeleteRequest}
+          />
         </ResponsiveSidebar>
 
         <section className="flex min-h-0 min-w-0 flex-col">
@@ -478,39 +335,16 @@ export function HomePage() {
             </label>
           </header>
 
-          <div className="min-h-0 flex-1 overflow-y-auto pb-44">
-            <div className="flex flex-col gap-[var(--space-3)]">
-              {visibleNotes.length === 0 ? (
-                <article className="rounded-[var(--radius-card)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-[var(--space-5)] text-[var(--color-text-muted)]">
-                  {t("note.empty")}
-                </article>
-              ) : null}
-              {visibleNotes.map((note) => (
-                <NoteCard
-                  canStartEditing={!editingNoteId || editingNoteId === note.id}
-                  editDraft={editingNoteId === note.id ? editDraft : undefined}
-                  editWarning={editingNoteId === note.id ? editWarning : undefined}
-                  fields={fields}
-                  onDelete={deleteNote}
-                  onEditCancel={handleEditCancel}
-                  onEditDraftChange={setEditDraft}
-                  onEditStart={handleEditStart}
-                  onEditSubmit={handleEditSubmit}
-                  onFieldChange={handleNoteFieldChange}
-                  onLoadNotePreview={loadNotePreview}
-                  onMention={handleMentionNote}
-                  onTagSelect={(path) => void handleTagSelect(path)}
-                  fieldName={note.fieldId ? fieldNameById.get(note.fieldId) : undefined}
-                  isEditing={editingNoteId === note.id}
-                  key={note.id}
-                  locale={i18n.resolvedLanguage}
-                  note={note}
-                  tags={tags}
-                  tools={composerTools}
-                />
-              ))}
-            </div>
-          </div>
+          <HomeNoteFeed
+            visibleNotes={visibleNotes} editingNoteId={editingNoteId} editDraft={editDraft}
+            editWarning={editWarning} fieldNameById={fieldNameById}
+            cardProps={{ fields, tags, tools: composerTools, locale: i18n.resolvedLanguage,
+              onDelete: deleteNote, onEditCancel: handleEditCancel, onEditDraftChange: setEditDraft,
+              onEditStart: handleEditStart, onEditSubmit: handleEditSubmit, onFieldChange: handleNoteFieldChange,
+              onLoadNotePreview: loadNotePreview, onMention: handleMentionNote,
+              onTagSelect: (path) => void handleTagSelect(path),
+            }}
+          />
         </section>
       </div>
 
