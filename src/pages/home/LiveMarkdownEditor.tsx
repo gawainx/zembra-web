@@ -1,4 +1,4 @@
-import { Button } from "../../components/ui/button";
+import { TagSuggestionMenu } from "./TagSuggestionMenu";
 import Link from "@tiptap/extension-link";
 import Mention from "@tiptap/extension-mention";
 import { Table } from "@tiptap/extension-table";
@@ -17,12 +17,13 @@ import { Decoration, DecorationSet, type EditorView } from "@tiptap/pm/view";
 import {
   forwardRef,
   type FormEvent,
+  type KeyboardEvent,
+  useId,
   useEffect,
   useImperativeHandle,
   useMemo,
   useState,
 } from "react";
-import { useTranslation } from "react-i18next";
 import type { TagDto } from "../../api/types";
 import type { ComposerTool } from "./homeTypes";
 import {
@@ -55,9 +56,11 @@ export const LiveMarkdownEditor = forwardRef<
   { disabled = false, placeholder, tags, value, variant, onChange },
   ref,
 ) {
-  const { t } = useTranslation("home");
+  const menuId = useId();
   const [tagMenu, setTagMenu] = useState<
     | {
+        activeIndex: number;
+        anchorTop: number;
         left: number;
         options: TagSuggestion[];
         range: { from: number; to: number };
@@ -139,6 +142,9 @@ export const LiveMarkdownEditor = forwardRef<
     onSelectionUpdate({ editor: currentEditor }) {
       updateTagMenu(currentEditor);
     },
+    onBlur() {
+      setTagMenu(undefined);
+    },
   });
 
   useEffect(() => {
@@ -147,7 +153,12 @@ export const LiveMarkdownEditor = forwardRef<
     }
 
     editor.setEditable(!disabled);
+    if (disabled) setTagMenu(undefined);
   }, [disabled, editor]);
+
+  useEffect(() => {
+    if (editor?.isFocused && !disabled) updateTagMenu(editor);
+  }, [editor, tags, disabled]);
 
   useEffect(() => {
     if (!editor) {
@@ -298,6 +309,8 @@ export const LiveMarkdownEditor = forwardRef<
     const rect = currentEditor.view.coordsAtPos(from);
 
     setTagMenu({
+      activeIndex: -1,
+      anchorTop: rect.top,
       left: Math.min(rect.left, window.innerWidth - 260),
       options,
       range: { from: tagStart, to: from },
@@ -321,37 +334,37 @@ export const LiveMarkdownEditor = forwardRef<
     updateTagMenu(editor);
   }
 
+  /** Keeps keyboard navigation in the popup without changing the editor selection. */
+  function handleTagNavigation(event: KeyboardEvent<HTMLDivElement>) {
+    if (!tagMenu || disabled || event.nativeEvent.isComposing ||
+        (event.key !== "ArrowDown" && event.key !== "ArrowUp")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setTagMenu((current) => {
+      if (!current) return current;
+      const count = current.options.length;
+      const activeIndex = current.activeIndex < 0
+        ? (event.key === "ArrowDown" ? 0 : count - 1)
+        : (current.activeIndex + (event.key === "ArrowDown" ? 1 : -1) + count) % count;
+      return { ...current, activeIndex };
+    });
+  }
+
+  useEffect(() => {
+    if (!editor) return;
+    const dom = editor.view.dom;
+    if (tagMenu) dom.setAttribute("aria-controls", menuId);
+    else dom.removeAttribute("aria-controls");
+    if (tagMenu && tagMenu.activeIndex >= 0) {
+      dom.setAttribute("aria-activedescendant", `${menuId}-${tagMenu.activeIndex}`);
+    } else dom.removeAttribute("aria-activedescendant");
+  }, [editor, menuId, tagMenu]);
+
   return (
-    <div className="relative">
+    <div className="relative" onKeyDownCapture={handleTagNavigation}>
       <EditorContent editor={editor} onInput={handleEditorInput} />
       {tagMenu ? (
-        <div
-          className="fixed z-50 max-h-56 w-64 overflow-y-auto rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface-raised)] py-1 shadow-[var(--color-shadow-float)]"
-          role="listbox"
-          style={{
-            left: `${Math.max(8, tagMenu.left)}px`,
-            top: `${tagMenu.top}px`,
-          }}
-        >
-          {tagMenu.options.map((option) => (
-            <Button variant="plain" size="content"
-              className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)]"
-              key={`${option.type}-${option.path}`}
-              role="option"
-              type="button"
-              onMouseDown={(event) => {
-                event.preventDefault();
-                handleTagSelect(option);
-              }}
-            >
-              <span>
-                {option.type === "create"
-                  ? t("composer.tagSuggestion.create", { tag: option.path })
-                  : option.label}
-              </span>
-            </Button>
-          ))}
-        </div>
+        <TagSuggestionMenu id={menuId} {...tagMenu} onSelect={handleTagSelect} />
       ) : null}
     </div>
   );
