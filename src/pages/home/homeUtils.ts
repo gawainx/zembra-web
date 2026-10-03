@@ -37,16 +37,19 @@ export function filterVisibleNotes(
   });
 }
 
-/** Sorts notes by creation time descending for the home message flow. */
-export function sortNotesByCreatedAt(notes: NoteDto[]): NoteDto[] {
+export type NoteSortOrder = "newest" | "oldest";
+
+/** Sorts a copy of the feed by creation time, with IDs breaking ties. */
+export function sortNotesByCreatedAt(notes: NoteDto[], order: NoteSortOrder = "newest"): NoteDto[] {
+  const direction = order === "newest" ? 1 : -1;
   return [...notes].sort((left, right) => {
     const createdAtDelta = right.createdAt - left.createdAt;
 
     if (createdAtDelta !== 0) {
-      return createdAtDelta;
+      return createdAtDelta * direction;
     }
 
-    return right.id.localeCompare(left.id);
+    return right.id.localeCompare(left.id) * direction;
   });
 }
 

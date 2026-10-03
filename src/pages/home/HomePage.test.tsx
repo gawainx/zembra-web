@@ -415,7 +415,7 @@ test("renders note metadata with creation time", async () => {
 });
 
 /** Verifies the home feed is ordered by note creation time. */
-test("orders the note feed by creation time", async () => {
+test("toggles creation-time sorting and preserves it across search and archive views", async () => {
   renderHomePage();
   await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
 
@@ -450,6 +450,36 @@ test("orders the note feed by creation time", async () => {
       olderNote.closest("article") as HTMLElement,
     ) & Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy();
+
+  const oldestButton = screen.getByRole("button", { name: "从最旧到最新排序" });
+  expect(oldestButton.textContent).toBe("");
+  fireEvent.click(oldestButton);
+  expect(
+    olderNote.closest("article")!.compareDocumentPosition(newerNote.closest("article")!)
+      & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  const originalNotes = useNotesStore.getState().notes;
+  expect(originalNotes.map((note) => note.id)).toEqual(["older-note", "newer-note"]);
+
+  const search = screen.getByPlaceholderText("搜索笔记、Field、Tag");
+  fireEvent.change(search, { target: { value: "newer" } });
+  expect(screen.queryByText("older created note")).toBeNull();
+  expect(screen.getByText("newer created note")).not.toBeNull();
+  fireEvent.change(search, { target: { value: "" } });
+  expect(screen.getAllByRole("article").map((card) => card.textContent)).toEqual([
+    expect.stringContaining("older created note"), expect.stringContaining("newer created note"),
+  ]);
+
+  act(() => useNotesStore.setState({
+    noteView: "archived", archivedNotes: originalNotes.map((note) => ({ ...note, archivedAt: 200 })),
+  }));
+  expect(screen.getAllByRole("article").map((card) => card.textContent)).toEqual([
+    expect.stringContaining("older created note"), expect.stringContaining("newer created note"),
+  ]);
+  fireEvent.click(screen.getByRole("button", { name: "从最新到最旧排序" }));
+  expect(screen.getAllByRole("article").map((card) => card.textContent)).toEqual([
+    expect.stringContaining("newer created note"), expect.stringContaining("older created note"),
+  ]);
 });
 
 /** Verifies two-level tag chips render as raw paths without duplicate markers. */

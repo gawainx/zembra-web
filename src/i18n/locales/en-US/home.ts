@@ -84,6 +84,10 @@ export const home = {
       title: "Delete Tag",
     },
   },
+  sort: {
+    switchToOldest: "Sort oldest to newest",
+    switchToNewest: "Sort newest to oldest",
+  },
   search: {
     placeholder: "Search notes, Fields, Tags",
   },

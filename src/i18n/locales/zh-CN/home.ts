@@ -84,6 +84,10 @@ export const home = {
       title: "删除 Tag",
     },
   },
+  sort: {
+    switchToOldest: "从最旧到最新排序",
+    switchToNewest: "从最新到最旧排序",
+  },
   search: {
     placeholder: "搜索笔记、Field、Tag",
   },

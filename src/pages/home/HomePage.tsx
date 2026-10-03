@@ -30,6 +30,7 @@ import {
   parseNoteLinks,
   parseTagNames,
   sortNotesByCreatedAt,
+  type NoteSortOrder,
 } from "./homeUtils";
 
 /** Renders the redesigned Zembra note workspace shell. */
@@ -42,6 +43,7 @@ export function HomePage() {
     return () => { workspaceScope.active = false; };
   }, [workspaceScope]);
   const [draft, setDraft] = useState("");
+  const [sortOrder, setSortOrder] = useState<NoteSortOrder>("newest");
   const [draftGeneration, setDraftGeneration] = useState(0);
   const [pendingDeleteTag, setPendingDeleteTag] = useState<TagDto>();
 
@@ -114,8 +116,9 @@ export function HomePage() {
           tag: selectedTag,
           tagMatch: selectedTagMatch,
         }),
+        sortOrder,
       ),
-    [keyword, displayNotes, selectedField, selectedTag, selectedTagMatch],
+    [keyword, displayNotes, selectedField, selectedTag, selectedTagMatch, sortOrder],
   );
   useEffect(() => {
     void loadFields();
@@ -251,7 +254,8 @@ export function HomePage() {
         </ResponsiveSidebar>
 
         <section className="flex min-h-0 min-w-0 flex-col">
-          <HomeToolbar keyword={keyword} onKeywordChange={setKeyword} />
+          <HomeToolbar keyword={keyword} onKeywordChange={setKeyword}
+            sortOrder={sortOrder} onSortToggle={() => setSortOrder((order) => order === "newest" ? "oldest" : "newest")} />
 
           <HomeNoteFeed
             archived={noteView === "archived"} loading={archiveLoading} failed={archiveError}
