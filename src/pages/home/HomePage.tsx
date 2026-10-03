@@ -1,8 +1,7 @@
 import { useComposerField } from "./useComposerField";
 import { createComposerTools } from "./homeComposerTools";
 import { TagDeleteDialog } from "./TaxonomyDeleteDialogs";
-import { Input } from "../../components/ui/input";
-import { Search } from "lucide-react";
+import { HomeToolbar } from "./HomeToolbar";
 import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "../../app/ThemeToggle";
 import { useWorkspace } from "../../app/workspace-context";
@@ -252,18 +251,7 @@ export function HomePage() {
         </ResponsiveSidebar>
 
         <section className="flex min-h-0 min-w-0 flex-col">
-          <header className="mb-4 flex min-h-11 shrink-0 items-center justify-end lg:mb-3">
-            <label className="flex h-[var(--control-height)] w-full items-center gap-[var(--space-2)] rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-4)] text-sm text-[var(--color-text-muted)] lg:max-w-80">
-              <Search className="size-4" aria-hidden="true" />
-              <Input
-                className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-[var(--color-text-muted)]"
-                placeholder={t("search.placeholder")}
-                value={keyword}
-                onChange={(event) => setKeyword(event.target.value)}
-              />
-              <span className="text-[var(--color-text-muted)]">⌘+K</span>
-            </label>
-          </header>
+          <HomeToolbar keyword={keyword} onKeywordChange={setKeyword} />
 
           <HomeNoteFeed
             archived={noteView === "archived"} loading={archiveLoading} failed={archiveError}
