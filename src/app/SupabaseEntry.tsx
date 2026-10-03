@@ -17,6 +17,11 @@ import {
 import { WorkspaceProvider } from "./workspace-context";
 import { SupabaseEntryForm } from "./SupabaseEntryForm";
 import { notifyMutationCompleted } from "./mutationToast";
+import {
+  describeSupabaseEntryFailure,
+  type SupabaseEntryFailure,
+  type SupabaseEntryStage,
+} from "./supabaseEntryUtils";
 
 const workspaceRenameQueues = new Map<string, Promise<void>>();
 const workspaceRenameVersions = new Map<string, number>();
@@ -40,6 +45,8 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
   const [message, setMessage] = useState<string>();
   const [error, setError] = useState<string>();
 
+  const [startupFailure, setStartupFailure] = useState<SupabaseEntryFailure>();
+
   useEffect(() => {
     void loadSession();
   }, []);
@@ -48,23 +55,31 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
   async function loadSession() {
     setIsLoading(true);
     setError(undefined);
+    setStartupFailure(undefined);
+    let stage: SupabaseEntryStage = "configuration";
+    console.info("[zembra] Starting Supabase session restoration");
     try {
       getSupabasePublicConfig();
       const client = getSupabaseBrowserClient();
+      stage = "session";
       const { data, error: sessionError } = await client.auth.getSession();
       if (sessionError) {
         throw sessionError;
       }
       if (data.session) {
         setHasSession(true);
+        stage = "workspaces";
         await loadWorkspaces(client);
       }
+      console.info("[zembra] Supabase startup checks completed", { hasSession: Boolean(data.session) });
     } catch (caught) {
-      setError(
-        caught instanceof SupabaseConfigurationError
-          ? t("dataSource.configured")
-          : t("dataSource.sessionUnavailable"),
-      );
+      const failure = describeSupabaseEntryFailure(caught, stage);
+      console.warn("[zembra] Supabase startup failed", failure);
+      if (failure.sessionExpired) {
+        setHasSession(false);
+      } else {
+        setStartupFailure(failure);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -224,11 +239,15 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
       workspaces={workspaces}
       selectedWorkspaceId={selectedWorkspaceId}
       isLoading={isLoading}
+      startupFailure={startupFailure}
       isSending={isSending}
       hasSession={hasSession}
       message={message}
       error={error}
-      onEmailChange={(value) => { setEmail(value); setMessage(undefined); }}
+      onEmailChange={(value) => {
+        setEmail(value);
+        setMessage(undefined);
+      }}
       onWorkspaceChange={setSelectedWorkspaceId}
       handleSupabaseEntry={handleSupabaseEntry}
     />

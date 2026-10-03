@@ -44,14 +44,14 @@ export async function listSupabaseWorkspaces(
   client: SupabaseClient,
 ): Promise<SupabaseWorkspace[]> {
   console.info("[zembra] Loading Supabase workspaces for authenticated user");
-  const { data, error } = await client
+  const { data, error, status } = await client
     .from("workspaces")
     .select("id, workspace_name")
     .order("workspace_name");
 
   if (error) {
-    console.warn("[zembra] Failed to load Supabase workspaces", { error });
-    throw error;
+    console.warn("[zembra] Failed to load Supabase workspaces", { status });
+    throw { ...error, status };
   }
 
   const workspaces = (data ?? []).map((workspace) => ({
