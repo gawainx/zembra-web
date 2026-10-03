@@ -1,6 +1,3 @@
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { NativeSelect } from "../components/ui/native-select";
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { activateDataSource } from "../api/client";
@@ -18,7 +15,13 @@ import {
   setConfiguredSupabaseWorkspaceId,
 } from "../api/backendConfig";
 import { WorkspaceProvider } from "./workspace-context";
+import { SupabaseEntryForm } from "./SupabaseEntryForm";
 import { notifyMutationCompleted } from "./mutationToast";
+import {
+  describeSupabaseEntryFailure,
+  type SupabaseEntryFailure,
+  type SupabaseEntryStage,
+} from "./supabaseEntryUtils";
 
 const workspaceRenameQueues = new Map<string, Promise<void>>();
 const workspaceRenameVersions = new Map<string, number>();
@@ -42,6 +45,8 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
   const [message, setMessage] = useState<string>();
   const [error, setError] = useState<string>();
 
+  const [startupFailure, setStartupFailure] = useState<SupabaseEntryFailure>();
+
   useEffect(() => {
     void loadSession();
   }, []);
@@ -50,23 +55,31 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
   async function loadSession() {
     setIsLoading(true);
     setError(undefined);
+    setStartupFailure(undefined);
+    let stage: SupabaseEntryStage = "configuration";
+    console.info("[zembra] Starting Supabase session restoration");
     try {
       getSupabasePublicConfig();
       const client = getSupabaseBrowserClient();
+      stage = "session";
       const { data, error: sessionError } = await client.auth.getSession();
       if (sessionError) {
         throw sessionError;
       }
       if (data.session) {
         setHasSession(true);
+        stage = "workspaces";
         await loadWorkspaces(client);
       }
+      console.info("[zembra] Supabase startup checks completed", { hasSession: Boolean(data.session) });
     } catch (caught) {
-      setError(
-        caught instanceof SupabaseConfigurationError
-          ? t("dataSource.configured")
-          : t("dataSource.sessionUnavailable"),
-      );
+      const failure = describeSupabaseEntryFailure(caught, stage);
+      console.warn("[zembra] Supabase startup failed", failure);
+      if (failure.sessionExpired) {
+        setHasSession(false);
+      } else {
+        setStartupFailure(failure);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -221,80 +234,23 @@ export function SupabaseEntry({ children }: SupabaseEntryProps) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[var(--color-app-bg)] p-[var(--space-5)] text-[var(--color-text-primary)]">
-      <section className="flex w-full max-w-[var(--layout-entry-max)] flex-col gap-[var(--space-5)]">
-        <header className="flex items-baseline gap-[var(--space-3)] whitespace-nowrap">
-          <h1 aria-label="Zembra" className="whitespace-nowrap text-lg font-semibold"><span aria-hidden="true">ℤembra</span></h1>
-          <span className="text-sm text-[var(--color-text-muted)]">{t("dataSource.supabase")}</span>
-        </header>
-        <form className="flex flex-col gap-[var(--space-3)]" onSubmit={handleSupabaseEntry}>
-          {hasSession ? (
-            <label className="block min-w-0 text-sm font-normal text-[var(--color-text-primary)]">
-
-              <NativeSelect
-                aria-label={t("dataSource.workspaceLabel")}
-                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none transition"
-                disabled={isLoading || isSending || workspaces.length === 0}
-                required
-                value={selectedWorkspaceId}
-                onChange={(event) => setSelectedWorkspaceId(event.target.value)}
-              >
-                <option value="">{t("dataSource.workspacePlaceholder")}</option>
-                {workspaces.map((workspace) => (
-                  <option key={workspace.id} value={workspace.id}>
-                    {workspace.name || t("dataSource.unnamedWorkspace")}
-                  </option>
-                ))}
-              </NativeSelect>
-            </label>
-          ) : (
-            <label className="block min-w-0 text-sm font-normal text-[var(--color-text-primary)]">
-
-              <Input
-                aria-label={t("dataSource.emailLabel")}
-                className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
-                disabled={isLoading || isSending}
-                autoComplete="email"
-                placeholder={t("dataSource.emailPlaceholder")}
-                required
-                type="email"
-                value={email}
-                onChange={(event) => {
-                  setEmail(event.target.value);
-                  setMessage(undefined);
-                }}
-              />
-            </label>
-          )}
-          <Button variant="plain" size="content"
-            className="h-[var(--control-height)] w-full rounded-[var(--radius-control)] bg-[var(--color-accent)] px-[var(--space-4)] whitespace-nowrap text-sm font-medium text-[var(--color-accent-contrast)] disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={isLoading || (hasSession ? !selectedWorkspaceId : !email.trim())}
-            type="submit"
-          >
-            {hasSession
-              ? t("dataSource.enter")
-              : isSending
-                ? t("dataSource.sendingMagicLink")
-                : message
-                  ? t("dataSource.magicLinkSendSuccess")
-                  : t("dataSource.sendMagicLink")}
-          </Button>
-        </form>
-        {message ? (
-          <p className="text-sm text-[var(--color-text-secondary)]" role="status">
-            {message}
-          </p>
-        ) : null}
-        {error ? (
-          <p
-            className="rounded-[var(--radius-control)] border border-[var(--color-error-border)] bg-[var(--color-error-soft)] px-[var(--space-3)] py-[var(--space-2)] text-sm text-[var(--color-error)]"
-            role="alert"
-          >
-            {error}
-          </p>
-        ) : null}
-      </section>
-    </main>
+    <SupabaseEntryForm
+      email={email}
+      workspaces={workspaces}
+      selectedWorkspaceId={selectedWorkspaceId}
+      isLoading={isLoading}
+      startupFailure={startupFailure}
+      isSending={isSending}
+      hasSession={hasSession}
+      message={message}
+      error={error}
+      onEmailChange={(value) => {
+        setEmail(value);
+        setMessage(undefined);
+      }}
+      onWorkspaceChange={setSelectedWorkspaceId}
+      handleSupabaseEntry={handleSupabaseEntry}
+    />
   );
 }
 

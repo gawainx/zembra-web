@@ -1,5 +1,28 @@
 export const common = {
   dataSource: {
+    startup: {
+      loading: "Loading…",
+      failed: "Loading failed",
+      errorCode: "Error code: {{code}}",
+      stages: {
+        configuration: "Reading connection configuration",
+        session: "Restoring sign-in session",
+        workspaces: "Loading workspaces"
+      },
+      reasons: {
+        configuration: "This deployment is missing the Supabase URL or publishable key. Contact the deployment administrator.",
+        expired: "The sign-in session has expired. Sign in again.",
+        denied: "The service denied access. Check the access permissions for this account.",
+        rateLimit: "The service is limiting requests. Try again later.",
+        timeout: "The request timed out. Check your connection and reload.",
+        server: "The Supabase service cannot process the request right now. Try again later.",
+        credentials: "The service rejected the authentication credentials. This does not confirm that the sign-in session has expired.",
+        workspaceUnavailable: "The service could not find an accessible workspace table. Ask the administrator to check the deployment.",
+        offline: "Your browser reports that it is offline. Connect to the network and reload.",
+        network: "The network request received no usable response. The specific connection failure could not be determined. Check your connection and service URL, then reload.",
+        unknown: "This stage could not complete. The returned information does not identify the cause. Reload; if it persists, report the failed stage to the administrator."
+      }
+    },
     backend: "Backend",
     configured: "Supabase is not configured for this deployment.",
     emailLabel: "Email address",
@@ -53,6 +76,10 @@ export const common = {
     noteCreateFailed: "Could not save. Please try again.",
     noteDeleted: "Deleted",
     noteDeleteFailed: "Could not delete. The note was restored.",
+    noteArchived: "Archived",
+    noteArchiveFailed: "Could not archive note",
+    noteUnarchived: "Unarchived",
+    noteUnarchiveFailed: "Could not unarchive note",
     noteUpdated: "Saved",
     noteUpdateFailed: "Could not save. The note was restored.",
     fieldDeleted: "Field deleted",

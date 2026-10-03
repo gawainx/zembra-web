@@ -9,9 +9,7 @@ export const home = {
   },
   composer: {
     editorLoading: "正在加载编辑器",
-    help: "帮助",
     placeholder: "现在的想法是...",
-    saveTo: "Default field for note is @{{field}}",
     send: "发送",
     tagSuggestion: {
       create: "创建 #{{tag}}",
@@ -45,6 +43,15 @@ export const home = {
     title: "最近活跃",
   },
   note: {
+    archive: "归档",
+    unarchive: "取消归档",
+    archiveEmpty: "暂无已归档笔记",
+    archiveNoMatch: "没有匹配的已归档笔记",
+    archiveLoading: "正在加载已归档笔记…",
+    archiveLoadFailed: "加载已归档笔记失败",
+    archiveRetry: "重试",
+    list: "笔记列表",
+
     actions: "笔记操作",
     collapse: "收起",
     delete: "删除",
@@ -81,6 +88,7 @@ export const home = {
     placeholder: "搜索笔记、Field、Tag",
   },
   sidebar: {
+    archived: "已归档",
     title: "侧边栏",
     open: "打开侧边栏",
     close: "关闭侧边栏",

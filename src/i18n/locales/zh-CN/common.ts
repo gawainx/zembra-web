@@ -1,5 +1,28 @@
 export const common = {
   dataSource: {
+    startup: {
+      loading: "正在加载…",
+      failed: "加载失败",
+      errorCode: "错误代码：{{code}}",
+      stages: {
+        configuration: "读取连接配置",
+        session: "恢复登录会话",
+        workspaces: "加载 workspace"
+      },
+      reasons: {
+        configuration: "当前部署缺少 Supabase 地址或公开连接密钥，请联系部署管理员。",
+        expired: "登录会话已失效，需要重新登录。",
+        denied: "服务拒绝访问，请确认当前账号的访问权限。",
+        rateLimit: "请求过于频繁，服务暂时限制访问，请稍后再试。",
+        timeout: "请求超时，请检查网络后重新加载。",
+        server: "Supabase 服务暂时无法处理请求，请稍后再试。",
+        credentials: "服务拒绝了当前认证凭据，尚不能确认登录会话已失效。",
+        workspaceUnavailable: "服务中找不到可访问的 workspace 数据表，请联系管理员检查部署。",
+        offline: "浏览器报告当前已离线，请连接网络后重新加载。",
+        network: "网络请求未获得可用响应，无法确认具体连接原因。请检查网络和服务地址后重新加载。",
+        unknown: "此阶段未能完成，返回信息不足以确认具体原因。请重新加载；若持续失败，请向管理员提供失败阶段。"
+      }
+    },
     backend: "Backend",
     configured: "此部署尚未配置 Supabase。",
     emailLabel: "邮箱地址",
@@ -48,6 +71,10 @@ export const common = {
     noteCreateFailed: "未能保存，请重试",
     noteDeleted: "已删除",
     noteDeleteFailed: "未能删除，已恢复笔记",
+    noteArchived: "已归档",
+    noteArchiveFailed: "归档失败",
+    noteUnarchived: "已取消归档",
+    noteUnarchiveFailed: "取消归档失败",
     noteUpdated: "已保存",
     noteUpdateFailed: "未能保存，已恢复笔记",
     fieldDeleted: "Field 已删除",

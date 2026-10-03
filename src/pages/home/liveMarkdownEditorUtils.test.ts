@@ -25,8 +25,21 @@ const tags = [
 ];
 
 describe("getTagSuggestions", () => {
-  test("does not show suggestions for an empty hash query", () => {
-    expect(getTagSuggestions("", tags)).toEqual([]);
+  test("matches prefixes case-insensitively but not middle substrings", () => {
+    expect(getTagSuggestions("HANDS", tags)[0].path).toBe("books/hands-on-gpt");
+    expect(getTagSuggestions("BOOKS/HA", tags)[0].path).toBe("books/hands-on-gpt");
+    expect(getTagSuggestions("gpt", tags)[0].type).toBe("create");
+    expect(getTagSuggestions("ook", tags)[0].type).toBe("create");
+  });
+
+  test("sorts full paths without mutating the workspace tags", () => {
+    const reversed = [...tags].reverse();
+    expect(getTagSuggestions("", reversed).map((tag) => tag.path)).toEqual(tags.map((tag) => tag.path));
+    expect(reversed[0].path).toBe("books/hands-on-gpt");
+  });
+  test("shows all tags for an empty hash query", () => {
+    expect(getTagSuggestions("", tags).map((tag) => tag.path)).toEqual(["books", "books/hands-on-gpt"]);
+    expect(getTagSuggestions("", [])).toEqual([]);
   });
 
   test("matches existing tags by full path and leaf name", () => {
@@ -58,6 +71,9 @@ describe("getTagSuggestions", () => {
 });
 
 describe("findActiveTagQuery", () => {
+  test.each(["text#tag", "##", "#tag ", "#tag@field"])("preserves trigger boundaries: %s", (text) => {
+    expect(findActiveTagQuery(text)).toBeUndefined();
+  });
   test("finds a non-empty tag query before the cursor", () => {
     expect(findActiveTagQuery("hello #hand")).toEqual({
       fromOffset: 6,
@@ -65,8 +81,8 @@ describe("findActiveTagQuery", () => {
     });
   });
 
-  test("ignores a bare hash", () => {
-    expect(findActiveTagQuery("hello #")).toBeUndefined();
+  test("recognizes a bare hash", () => {
+    expect(findActiveTagQuery("hello #")).toEqual({ fromOffset: 6, query: "" });
   });
 });
 

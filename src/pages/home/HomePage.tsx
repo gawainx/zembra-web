@@ -1,48 +1,33 @@
+import { useComposerField } from "./useComposerField";
 import { createComposerTools } from "./homeComposerTools";
-import { FieldDeleteDialog, TagDeleteDialog } from "./TaxonomyDeleteDialogs";
-import { Button } from "../../components/ui/button";
+import { TagDeleteDialog } from "./TaxonomyDeleteDialogs";
 import { Input } from "../../components/ui/input";
-import {
-  Bot,
-  CircleHelp,
-  List,
-  Search,
-  User,
-} from "lucide-react";
+import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "../../app/ThemeToggle";
 import { useWorkspace } from "../../app/workspace-context";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { defaultFieldName } from "../../api/defaultField";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useHomeNoteEditing } from "./useHomeNoteEditing";
 import {
   SourceHomeControlsProvider,
   SourceStatusFeedback,
   SourceToolbarActions,
 } from "@zembra/source-home-controls";
 import { useNotesStore } from "../../features/notes/noteStore";
-import type { FieldDto, NoteDto, TagDto } from "../../api/types";
-import { NoteCard } from "./NoteCard";
-import { NoteEditor, type NoteEditorHandle } from "./NoteEditor";
+import type { TagDto } from "../../api/types";
+import { HomeNoteFeed } from "./HomeNoteFeed";
+import { HomeNavigation } from "./HomeNavigation";
+import { NoteEditor } from "./NoteEditor";
 import { ResponsiveSidebar } from "./ResponsiveSidebar";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import {
   DailyNotesHeatmap,
-  NavItem,
-  SidebarSection,
   StatBlock,
-  TagTreeItem,
 } from "./HomeSidebar";
-import { normalizeMarkdownSource } from "./liveMarkdownEditorUtils";
 import {
   buildTagFilterMatch,
   buildTagTree,
-  countFields,
-  countRoles,
-  countTags,
-  findSelectedTagRootPath,
   filterVisibleNotes,
-  noteMatchesTagPath,
-  parseFieldNames,
   parseNoteLinks,
   parseTagNames,
   sortNotesByCreatedAt,
@@ -51,12 +36,14 @@ import {
 /** Renders the redesigned Zembra note workspace shell. */
 export function HomePage() {
   const { i18n, t } = useTranslation("home");
-  const composerRef = useRef<NoteEditorHandle>(null);
   const { workspace, workspaces, switchWorkspace, renameWorkspace } = useWorkspace();
+  const workspaceScope = useMemo(() => ({ active: true }), [workspace.id]);
+  useEffect(() => {
+    workspaceScope.active = true;
+    return () => { workspaceScope.active = false; };
+  }, [workspaceScope]);
   const [draft, setDraft] = useState("");
-  const [editingNoteId, setEditingNoteId] = useState<string>();
-  const [editDraft, setEditDraft] = useState("");
-  const [pendingDeleteField, setPendingDeleteField] = useState<FieldDto>();
+  const [draftGeneration, setDraftGeneration] = useState(0);
   const [pendingDeleteTag, setPendingDeleteTag] = useState<TagDto>();
 
   useEffect(() => {
@@ -65,7 +52,10 @@ export function HomePage() {
 
   const {
     notes,
+    archivedNotes, noteView, supportsArchiving, archiveLoading, archiveError,
+    connectWorkspace, setNoteView, loadArchivedNotes, setNoteArchived,
     roleNavigationNotes,
+    notePreviewById,
     dailyNoteCounts,
     fields,
     tags,
@@ -84,10 +74,16 @@ export function HomePage() {
     loadRecentNotes,
     loadTags,
     deleteNote,
-    deleteField,
     deleteTagTree,
     updateNote,
   } = useNotesStore();
+
+  useLayoutEffect(() => {
+    connectWorkspace();
+    setDraft("");
+    setPendingDeleteTag(undefined);
+  }, [connectWorkspace, workspace.id]);
+  const displayNotes = noteView === "archived" ? archivedNotes : notes;
 
   const composerTools = useMemo(
     () => createComposerTools(t),
@@ -97,7 +93,14 @@ export function HomePage() {
     () => new Map(fields.map((field) => [field.id, field.name])),
     [fields],
   );
-  const tagUsage = useMemo(() => countTags(notes), [notes]);
+  const { editingNoteId, editDraft, editWarning, setEditDraft, handleEditStart, handleEditCancel,
+    handleMentionNote, handleEditSubmit, handleNoteFieldChange } = useHomeNoteEditing({
+      workspaceId: workspace.id, notes: displayNotes, fieldNameById, updateNote, setComposerDraft: setDraft,
+    });
+  const composerField = useComposerField({
+    draft, fields, notes, cachedNotes: notePreviewById, selectedField,
+    workspaceId: workspace.id, loadNote: loadNotePreview,
+  });
   const tagTree = useMemo(() => buildTagTree(tags), [tags]);
   const selectedTagMatch = useMemo(
     () => buildTagFilterMatch(tagTree, selectedTag),
@@ -106,54 +109,20 @@ export function HomePage() {
   const visibleNotes = useMemo(
     () =>
       sortNotesByCreatedAt(
-        filterVisibleNotes(notes, {
+        filterVisibleNotes(displayNotes, {
           fieldId: selectedField,
           keyword,
           tag: selectedTag,
           tagMatch: selectedTagMatch,
         }),
       ),
-    [keyword, notes, selectedField, selectedTag, selectedTagMatch],
-  );
-  const fieldUsage = useMemo(() => countFields(notes), [notes]);
-  const roleUsage = useMemo(
-    () => countRoles(roleNavigationNotes.length > 0 ? roleNavigationNotes : notes),
-    [notes, roleNavigationNotes],
-  );
-  const roleTotalCount = roleNavigationNotes.length > 0
-    ? roleNavigationNotes.length
-    : notes.length;
-  const editFieldNames = useMemo(() => parseFieldNames(editDraft), [editDraft]);
-  const editWarning =
-    editFieldNames.length > 1
-      ? t("note.edit.warningMultipleFields", { field: editFieldNames[0] })
-      : undefined;
-  const [expandedTagRoots, setExpandedTagRoots] = useState<Set<string>>(
-    () => new Set(),
+    [keyword, displayNotes, selectedField, selectedTag, selectedTagMatch],
   );
   useEffect(() => {
     void loadFields();
     void loadTags();
     void loadRecentNotes();
   }, [loadFields, loadRecentNotes, loadTags, workspace.id]);
-
-  useEffect(() => {
-    const rootPath = findSelectedTagRootPath(tagTree, selectedTag);
-
-    if (!rootPath) {
-      return;
-    }
-
-    setExpandedTagRoots((current) => {
-      if (current.has(rootPath)) {
-        return current;
-      }
-
-      const next = new Set(current);
-      next.add(rootPath);
-      return next;
-    });
-  }, [selectedTag, tagTree]);
 
   /** Persists the current composer draft as a new note. */
   async function handleCreateSubmit() {
@@ -163,13 +132,15 @@ export function HomePage() {
       return;
     }
 
-    const fieldNames = parseFieldNames(content);
-    const field =
-      fieldNames[0] ??
-      fields.find((item) => item.id === selectedField)?.name ??
-      defaultFieldName;
     const tags = parseTagNames(content);
     const links = parseNoteLinks(content);
+    const fieldPromise = composerField.resolveField();
+    setDraftGeneration((generation) => generation + 1);
+    const field = await fieldPromise;
+    if (!workspaceScope.active) {
+      console.info("[zembra] Cancelled note creation after leaving workspace", { workspaceId: workspace.id });
+      return;
+    }
 
     void createNote({
       content,
@@ -178,37 +149,22 @@ export function HomePage() {
       role: "Human",
       tags,
     }).catch(() => undefined);
-    setDraft("");
-    composerRef.current?.clear();
-  }
-
-  /** Toggles one root tag branch in the sidebar tree. */
-  function handleTagRootToggle(path: string) {
-    setExpandedTagRoots((current) => {
-      const next = new Set(current);
-
-      if (next.has(path)) {
-        next.delete(path);
-      } else {
-        next.add(path);
-      }
-
-      return next;
-    });
   }
 
   /** Clears every sidebar classification filter and restores all recent notes. */
   async function handleAllNotesSelect() {
+    setNoteView("active");
     setSelectedField(undefined);
     setSelectedTag(undefined);
 
-    if (selectedRole !== undefined) {
+    if (selectedRole !== undefined || noteView === "archived") {
       await setSelectedRole(undefined);
     }
   }
 
   /** Selects one role and removes active field and tag filters. */
   async function handleRoleSelect(role: string) {
+    setNoteView("active");
     setSelectedField(undefined);
     setSelectedTag(undefined);
     await setSelectedRole(role);
@@ -216,121 +172,24 @@ export function HomePage() {
 
   /** Selects one field and removes active role and tag filters. */
   async function handleFieldSelect(fieldId: string) {
+    setNoteView("active");
     setSelectedTag(undefined);
     setSelectedField(fieldId);
 
-    if (selectedRole !== undefined) {
+    if (selectedRole !== undefined || noteView === "archived") {
       await setSelectedRole(undefined);
     }
   }
 
   /** Selects one tag and removes active role and field filters. */
   async function handleTagSelect(path: string) {
+    setNoteView("active");
     setSelectedField(undefined);
     setSelectedTag(path);
 
-    if (selectedRole !== undefined) {
+    if (selectedRole !== undefined || noteView === "archived") {
       await setSelectedRole(undefined);
     }
-  }
-
-  /** Starts editing a note when no other card owns a draft. */
-  function handleEditStart(note: NoteDto) {
-    if (editingNoteId && editingNoteId !== note.id) {
-      return;
-    }
-
-    setEditingNoteId(note.id);
-    setEditDraft(normalizeMarkdownSource(note.content));
-  }
-
-  /** Cancels the current note edit draft. */
-  function handleEditCancel() {
-    setEditingNoteId(undefined);
-    setEditDraft("");
-  }
-
-  /** Inserts a note mention into the active editor draft. */
-  function handleMentionNote(noteId: string) {
-    const mention = `[[${noteId}]]`;
-
-    if (editingNoteId) {
-      setEditDraft((current) =>
-        current.trim().length > 0 ? `${current} ${mention}` : mention,
-      );
-      return;
-    }
-
-    setDraft((current) =>
-      current.trim().length > 0 ? `${current} ${mention}` : mention,
-    );
-  }
-
-  /** Optimistically persists the current edit draft and immediately exits edit mode. */
-  function handleEditSubmit() {
-    if (!editingNoteId) {
-      return;
-    }
-
-    const content = editDraft.trim();
-
-    if (!content) {
-      return;
-    }
-
-    const fieldNames = parseFieldNames(content);
-
-    const existingFieldName = fieldNameById.get(
-      notes.find((note) => note.id === editingNoteId)?.fieldId ?? "",
-    );
-
-    void updateNote(editingNoteId, {
-      content,
-      field: fieldNames[0] ?? existingFieldName ?? defaultFieldName,
-      links: parseNoteLinks(content),
-      tags: parseTagNames(content),
-    });
-    handleEditCancel();
-  }
-
-  /** Persists a field-only change for one note without changing navigation filters. */
-  function handleNoteFieldChange(note: NoteDto, field: string) {
-    void updateNote(note.id, {
-      content: note.content,
-      field,
-      links: parseNoteLinks(note.content),
-      tags: parseTagNames(note.content),
-    });
-  }
-
-  /** Opens the in-app confirmation dialog for deleting an unused field. */
-  function handleFieldDeleteRequest(field: FieldDto) {
-    setPendingDeleteField(field);
-  }
-
-  /** Closes the field deletion dialog. */
-  function handleFieldDeleteCancel() {
-    setPendingDeleteField(undefined);
-  }
-
-  /** Optimistically removes the pending unused field and queues deletion. */
-  function handleFieldDeleteConfirm() {
-    if (!pendingDeleteField) {
-      return;
-    }
-
-    void deleteField(pendingDeleteField.id);
-    setPendingDeleteField(undefined);
-  }
-
-  /** Opens the in-app confirmation dialog for deleting an empty tag subtree. */
-  function handleTagDeleteRequest(tag: TagDto) {
-    setPendingDeleteTag(tag);
-  }
-
-  /** Closes the tag deletion dialog. */
-  function handleTagDeleteCancel() {
-    setPendingDeleteTag(undefined);
   }
 
   /** Optimistically removes the pending empty tag subtree and queues deletion. */
@@ -359,17 +218,6 @@ export function HomePage() {
                 />
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <Button variant="plain" size="content"
-                  className="flex size-[var(--icon-hit-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)]"
-                  type="button"
-                  aria-label={t("composer.help")}
-                  title={t("composer.help")}
-                >
-                  <CircleHelp
-                    className="size-[var(--icon-size)] text-[var(--color-accent)]"
-                    aria-hidden="true"
-                  />
-                </Button>
                 <SourceToolbarActions />
                 <ThemeToggle />
               </div>
@@ -393,110 +241,14 @@ export function HomePage() {
             />
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto pb-4 pr-1 pt-4 lg:pb-44">
-            <NavItem
-              active={
-                selectedRole === undefined &&
-                selectedField === undefined &&
-                selectedTag === undefined
-              }
-              count={roleTotalCount}
-              label={t("sidebar.allNotes")}
-              prefix={<List className="size-4" aria-hidden="true" />}
-              onClick={() => void handleAllNotesSelect()}
-            />
-            <SidebarSection className="mt-4" title={t("sidebar.roles")}>
-              {Array.from(roleUsage.entries()).map(([role, count]) => {
-                const label = role || t("sidebar.unknownRole");
-
-                return (
-                  <NavItem
-                    active={selectedRole === role}
-                    count={count}
-                    key={role || "unknown-role"}
-                    label={label}
-                    prefix={
-                      role === "Human" ? (
-                        <User className="size-4" aria-hidden="true" />
-                      ) : (
-                        <Bot className="size-4" aria-hidden="true" />
-                      )
-                    }
-                    onClick={() => void handleRoleSelect(role)}
-                  />
-                );
-              })}
-            </SidebarSection>
-
-            <SidebarSection title={t("sidebar.fields")}>
-              {fields.map((field) => (
-                <NavItem
-                  active={selectedField === field.id}
-                  count={fieldUsage.get(field.id) ?? 0}
-                  deleteDisabled={false}
-                  deleteLabel={
-                    (fieldUsage.get(field.id) ?? 0) === 0
-                      ? t("field.delete.action", { field: field.name })
-                      : undefined
-                  }
-                  key={field.id}
-                  label={field.name}
-                  prefix="@"
-                  onDelete={
-                    (fieldUsage.get(field.id) ?? 0) === 0
-                      ? () => handleFieldDeleteRequest(field)
-                      : undefined
-                  }
-                  onClick={() => void handleFieldSelect(field.id)}
-                />
-              ))}
-            </SidebarSection>
-
-            <SidebarSection title={t("sidebar.tags")}>
-              {tagTree.length === 0 ? (
-                <NavItem
-                  active={false}
-                  count={0}
-                  disabled
-                  label={t("sidebar.emptyTags")}
-                  prefix="#"
-                  onClick={() => undefined}
-                />
-              ) : null}
-              {tagTree.map((node) => (
-                <TagTreeItem
-                  activePath={selectedTag}
-                  childCounts={tagUsage}
-                  collapsedLabel={t("sidebar.expandTag", {
-                    tag: node.tag.name,
-                  })}
-                  expanded={expandedTagRoots.has(node.tag.path)}
-                  expandedLabel={t("sidebar.collapseTag", {
-                    tag: node.tag.name,
-                  })}
-                  getDeleteLabel={(tag, count) =>
-                    count === 0 ? t("tag.delete.action", { tag: tag.path }) : undefined
-                  }
-                  key={node.tag.path}
-                  node={node}
-                  rootCount={Math.max(
-                    notes.filter((note) =>
-                      noteMatchesTagPath(note.tags, node.tag.path),
-                    ).length,
-                    (tagUsage.get(node.tag.path) ?? tagUsage.get(node.tag.name) ?? 0) +
-                      node.children.reduce(
-                        (total, child) =>
-                          total + (tagUsage.get(child.path) ?? tagUsage.get(child.name) ?? 0),
-                        0,
-                      ),
-                  )}
-                  onDelete={handleTagDeleteRequest}
-                  onSelect={(path) => void handleTagSelect(path)}
-                  onToggle={handleTagRootToggle}
-                />
-              ))}
-            </SidebarSection>
-          </div>
+          <HomeNavigation
+            archived={noteView === "archived"} onArchiveSelect={supportsArchiving ? () => setNoteView("archived") : undefined}
+            notes={notes} roleNavigationNotes={roleNavigationNotes} fields={fields} tags={tags}
+            selectedRole={selectedRole} selectedField={selectedField} selectedTag={selectedTag}
+            handleAllNotesSelect={handleAllNotesSelect} handleRoleSelect={handleRoleSelect}
+            handleFieldSelect={handleFieldSelect} handleTagSelect={handleTagSelect}
+            handleTagDeleteRequest={setPendingDeleteTag}
+          />
         </ResponsiveSidebar>
 
         <section className="flex min-h-0 min-w-0 flex-col">
@@ -513,38 +265,18 @@ export function HomePage() {
             </label>
           </header>
 
-          <div className="min-h-0 flex-1 overflow-y-auto pb-44">
-            <div className="flex flex-col gap-[var(--space-3)]">
-              {visibleNotes.length === 0 ? (
-                <article className="rounded-[var(--radius-card)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-[var(--space-5)] text-[var(--color-text-muted)]">
-                  {t("note.empty")}
-                </article>
-              ) : null}
-              {visibleNotes.map((note) => (
-                <NoteCard
-                  canStartEditing={!editingNoteId || editingNoteId === note.id}
-                  editDraft={editingNoteId === note.id ? editDraft : undefined}
-                  editWarning={editingNoteId === note.id ? editWarning : undefined}
-                  fields={fields}
-                  onDelete={deleteNote}
-                  onEditCancel={handleEditCancel}
-                  onEditDraftChange={setEditDraft}
-                  onEditStart={handleEditStart}
-                  onEditSubmit={handleEditSubmit}
-                  onFieldChange={handleNoteFieldChange}
-                  onLoadNotePreview={loadNotePreview}
-                  onMention={handleMentionNote}
-                  fieldName={note.fieldId ? fieldNameById.get(note.fieldId) : undefined}
-                  isEditing={editingNoteId === note.id}
-                  key={note.id}
-                  locale={i18n.resolvedLanguage}
-                  note={note}
-                  tags={tags}
-                  tools={composerTools}
-                />
-              ))}
-            </div>
-          </div>
+          <HomeNoteFeed
+            archived={noteView === "archived"} loading={archiveLoading} failed={archiveError}
+            hasKeyword={Boolean(keyword.trim())} onRetry={() => void loadArchivedNotes(true)}
+            visibleNotes={visibleNotes} editingNoteId={editingNoteId} editDraft={editDraft}
+            editWarning={editWarning} fieldNameById={fieldNameById}
+            cardProps={{ onArchiveChange: supportsArchiving ? setNoteArchived : undefined, fields, tags, tools: composerTools, locale: i18n.resolvedLanguage,
+              onDelete: deleteNote, onEditCancel: handleEditCancel, onEditDraftChange: setEditDraft,
+              onEditStart: handleEditStart, onEditSubmit: handleEditSubmit, onFieldChange: handleNoteFieldChange,
+              onLoadNotePreview: loadNotePreview, onMention: handleMentionNote,
+              onTagSelect: (path) => void handleTagSelect(path),
+            }}
+          />
         </section>
       </div>
 
@@ -564,14 +296,14 @@ export function HomePage() {
         >
           <div className="min-w-0 lg:col-start-2">
             <NoteEditor
-              ref={composerRef}
               draft={draft}
               isSubmitting={false}
-              meta={t("composer.saveTo", {
-                field:
-                  fields.find((field) => field.id === selectedField)?.name ??
-                  "Inbox",
-              })}
+              composerContext={{
+                workspaceId: workspace.id,
+                draftGeneration,
+                kind: selectedTag ? "tag" : selectedField ? "field" : undefined,
+                value: selectedTag ?? fieldNameById.get(selectedField ?? ""),
+              }}
               placeholder={t("composer.placeholder")}
               submitLabel={t("composer.send")}
               tags={tags}
@@ -581,21 +313,11 @@ export function HomePage() {
             />
           </div>
         </form>
-        {pendingDeleteField ? (
-          <FieldDeleteDialog
-            error={undefined}
-            field={pendingDeleteField}
-            isDeleting={false}
-            t={t}
-            onCancel={handleFieldDeleteCancel}
-            onConfirm={() => void handleFieldDeleteConfirm()}
-          />
-        ) : null}
         {pendingDeleteTag ? (
           <TagDeleteDialog
             tag={pendingDeleteTag}
             t={t}
-            onCancel={handleTagDeleteCancel}
+            onCancel={() => setPendingDeleteTag(undefined)}
             onConfirm={handleTagDeleteConfirm}
           />
         ) : null}

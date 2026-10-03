@@ -16,19 +16,16 @@ export function getTagSuggestions(
 ): TagSuggestion[] {
   const normalizedQuery = query.trim().toLowerCase();
 
-  if (normalizedQuery.length === 0) {
-    return [];
-  }
-
   const existing = tags
     .filter((tag) => tagMatchesQuery(tag, normalizedQuery))
+    .sort((a, b) => a.path.localeCompare(b.path))
     .map((tag) => ({
       label: `#${tag.path}`,
       path: tag.path,
       type: "existing" as const,
     }));
 
-  if (existing.length > 0) {
+  if (existing.length > 0 || normalizedQuery.length === 0) {
     return existing;
   }
 
@@ -44,6 +41,7 @@ export function getTagSuggestions(
 /** Converts supported escaped Markdown source into the note content format expected by parsers. */
 export function normalizeMarkdownSource(markdown: string): string {
   return normalizeEscapedInlineCode(markdown)
+    .replace(/\\\[\\\[([^\]\n]+)\\\]\\\]/g, "[[$1]]")
     .replace(/\\#([^\s#@]+)/g, "#$1")
     .replace(
       /\\\[([^\]\n]+)\\\]\((https?:\/\/[^\s)]+)\)/g,
@@ -68,7 +66,7 @@ export function findActiveTagQuery(textBeforeCursor: string):
   | undefined {
   const match = /(?:^|\s)#([^\s#@]*)$/.exec(textBeforeCursor);
 
-  if (!match || match[1].length === 0) {
+  if (!match) {
     return undefined;
   }
 
@@ -81,8 +79,8 @@ export function findActiveTagQuery(textBeforeCursor: string):
 /** Returns whether one taxonomy tag should appear for the current suggestion query. */
 function tagMatchesQuery(tag: TagDto, query: string): boolean {
   return (
-    tag.path.toLowerCase().includes(query) ||
-    tag.name.toLowerCase().includes(query)
+    tag.path.toLowerCase().startsWith(query) ||
+    tag.name.toLowerCase().startsWith(query)
   );
 }
 

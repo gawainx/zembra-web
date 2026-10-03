@@ -9,9 +9,7 @@ export const home = {
   },
   composer: {
     editorLoading: "Loading editor",
-    help: "Help",
     placeholder: "What are you thinking now?",
-    saveTo: "Default field for note is @{{field}}",
     send: "Send",
     tagSuggestion: {
       create: "Create #{{tag}}",
@@ -45,6 +43,15 @@ export const home = {
     title: "Recent activity",
   },
   note: {
+    archive: "Archive",
+    unarchive: "Unarchive",
+    archiveEmpty: "No archived notes",
+    archiveNoMatch: "No matching archived notes",
+    archiveLoading: "Loading archived notes…",
+    archiveLoadFailed: "Could not load archived notes",
+    archiveRetry: "Retry",
+    list: "Notes",
+
     actions: "Note actions",
     collapse: "Collapse",
     delete: "Delete",
@@ -81,6 +88,7 @@ export const home = {
     placeholder: "Search notes, Fields, Tags",
   },
   sidebar: {
+    archived: "Archived",
     title: "Sidebar",
     open: "Open sidebar",
     close: "Close sidebar",

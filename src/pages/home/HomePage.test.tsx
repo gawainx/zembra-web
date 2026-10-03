@@ -1,3 +1,4 @@
+import type { Editor } from "@tiptap/react";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { createRootRoute, createRoute, createRouter, RouterProvider } from "@tanstack/react-router";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
@@ -8,6 +9,18 @@ import { ThemeProvider } from "../../app/ThemeProvider";
 import { WorkspaceProvider } from "../../app/workspace-context";
 import { HomePage } from "./HomePage";
 import { formatNoteTimestamp } from "./homeUtils";
+
+const editors = new WeakMap<HTMLElement, Editor>();
+vi.mock("@tiptap/react", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tiptap/react")>();
+  return {
+    ...actual,
+    EditorContent: (props: Parameters<typeof actual.EditorContent>[0]) => {
+      if (props.editor) editors.set(props.editor.view.dom, props.editor);
+      return <actual.EditorContent {...props} />;
+    },
+  };
+});
 
 const clientMocks = vi.hoisted(() => ({
   notes: {} as Record<string, unknown>,
@@ -35,10 +48,9 @@ function markdownValue(editor: HTMLElement): string {
   return editor.getAttribute("data-markdown-value") ?? editor.textContent ?? "";
 }
 
-/** Writes Markdown into the rich text editor through a synthetic input event. */
+/** Replaces a draft using a real editor transaction. */
 function changeMarkdownEditor(editor: HTMLElement, value: string) {
-  editor.textContent = value;
-  fireEvent.input(editor);
+  act(() => { editors.get(editor)!.commands.setContent(value, { contentType: "markdown" }); });
 }
 
 /** Finds the composer rich text editor by its accessible placeholder label. */
@@ -567,62 +579,8 @@ test("renders actual note counts for global all-notes and field navigation", asy
   expect(await sidebarNavCount("empty")).toBe("0");
 });
 
-/** Verifies empty fields expose an in-app delete confirmation flow. */
-test("deletes an empty field from the sidebar after in-app confirmation", async () => {
-  renderHomePage();
-  await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
-  const deleteField = vi.fn(async (fieldId: string) => {
-    useNotesStore.setState((state) => ({
-      fields: state.fields.filter((field) => field.id !== fieldId),
-      selectedField:
-        state.selectedField === fieldId ? undefined : state.selectedField,
-    }));
-  });
-
-  act(() => {
-    useNotesStore.setState({
-      deleteField,
-      fields: [
-        { id: "used-field", name: "used", createdAt: 1_779_382_320 },
-        { id: "empty-field", name: "empty", createdAt: 1_779_382_320 },
-      ],
-      notes: [
-        {
-          id: "note-1",
-          content: "used note",
-          role: "Human",
-          createdAt: 1_779_382_320,
-          updatedAt: 1_779_382_320,
-          fieldId: "used-field",
-          tags: [],
-        },
-      ],
-      selectedField: "empty-field",
-    });
-  });
-
-  expect(screen.queryByRole("button", { name: "删除 Field @used" })).toBeNull();
-  fireEvent.click(await screen.findByRole("button", { name: "删除 Field @empty" }));
-
-  expect(await screen.findByRole("alertdialog", { name: "删除 Field" })).not.toBeNull();
-
-  fireEvent.click(screen.getByRole("button", { name: "取消" }));
-  await waitFor(() =>
-    expect(screen.queryByRole("dialog", { name: "删除 Field" })).toBeNull(),
-  );
-  expect(deleteField).not.toHaveBeenCalled();
-  expect(await screen.findByText("empty")).not.toBeNull();
-
-  fireEvent.click(screen.getByRole("button", { name: "删除 Field @empty" }));
-  fireEvent.click(await screen.findByRole("button", { name: "删除" }));
-
-  await waitFor(() => expect(deleteField).toHaveBeenCalledWith("empty-field"));
-  await waitFor(() => expect(screen.queryByText("empty")).toBeNull());
-  expect(useNotesStore.getState().selectedField).toBeUndefined();
-});
-
-/** Verifies field deletion closes its dialog before the background result returns. */
-test("closes empty field deletion without blocking on the request", async () => {
+/** Verifies fields remain selectable without exposing deletion interactions. */
+test("keeps empty and used fields as navigation without delete actions", async () => {
   renderHomePage();
   await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
   const deleteField = vi.fn(async () => undefined);
@@ -630,17 +588,27 @@ test("closes empty field deletion without blocking on the request", async () => 
   act(() => {
     useNotesStore.setState({
       deleteField,
-      fields: [{ id: "empty-field", name: "empty", createdAt: 1_779_382_320 }],
-      notes: [],
+      fields: [
+        { id: "used-field", name: "used", createdAt: 1 },
+        { id: "empty-field", name: "empty", createdAt: 1 },
+      ],
+      notes: [{ id: "note-1", content: "used note", role: "Human", createdAt: 1, updatedAt: 1, fieldId: "used-field", tags: [] }],
     });
   });
 
-  fireEvent.click(await screen.findByRole("button", { name: "删除 Field @empty" }));
-  fireEvent.click(await screen.findByRole("button", { name: "删除" }));
-
-  await waitFor(() => expect(deleteField).toHaveBeenCalledWith("empty-field"));
-  expect(await screen.findByText("empty")).not.toBeNull();
-  expect(screen.queryByRole("dialog", { name: "删除 Field" })).toBeNull();
+  expect(await sidebarNavCount("used")).toBe("1");
+  expect(await sidebarNavCount("empty")).toBe("0");
+  for (const name of ["used", "empty"]) {
+    const button = screen.getByText(name, { exact: true }).closest("button")!;
+    fireEvent.mouseOver(button);
+    fireEvent.focus(button);
+    expect(screen.queryByRole("button", { name: /删除 Field/ })).toBeNull();
+    await act(async () => { fireEvent.click(button); });
+    expect(useNotesStore.getState().selectedField).toBe(name + "-field");
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+  }
+  expect(await sidebarNavCount("empty")).toBe("0");
+  expect(deleteField).not.toHaveBeenCalled();
 });
 
 /** Verifies empty tag trees delete from the sidebar only after confirmation. */
@@ -1386,10 +1354,11 @@ function configureHomeTestStore() {
 }
 
 /** Renders HomePage with the providers required by its header controls. */
-function renderHomePage(syncClient = createMockSyncClient()) {
+function renderHomePage(syncClient = createMockSyncClient(), setup?: () => void) {
   act(() => {
     configureHomeTestStore();
     clientMocks.sync = syncClient;
+    setup?.();
   });
   const rootRoute = createRootRoute();
   const homeRoute = createRoute({
@@ -1447,4 +1416,292 @@ test("renders previously escaped inline code in cards and edit drafts", async ()
   const editor = await within(card).findByRole("textbox");
   expect(editor.querySelector("code")?.textContent).toBe("test");
   expect(markdownValue(editor)).toBe("`test`");
+});
+
+
+/** Resolves the creation payload from explicit fields and reference order. */
+test.each([
+  ["[[first]]", "research"],
+  ["[[first]] [[second]]", "research"],
+  ["[[second]] [[first]]", "ideas"],
+  ["@personal [[first]] [[second]]", "personal"],
+  ["[[unassigned]] [[second]]", "inbox"],
+])("inherits the first referenced field for %s", async (draft, field) => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  const createNote = vi.fn(async () => undefined);
+  act(() => useNotesStore.setState({
+    createNote, selectedField: "selected",
+    fields: [
+      { id: "selected", name: "sidebar", createdAt: 1 },
+      { id: "research", name: "research", createdAt: 1 },
+      { id: "ideas", name: "ideas", createdAt: 1 },
+    ],
+    notes: [
+      { id: "second", content: "second source", fieldId: "ideas", role: "Human", tags: [], createdAt: 1, updatedAt: 1 },
+      { id: "first", content: "first source", fieldId: "research", role: "Human", tags: [], createdAt: 1, updatedAt: 1 },
+      { id: "unassigned", content: "no field", role: "Human", tags: [], createdAt: 1, updatedAt: 1 },
+    ],
+  }));
+  changeMarkdownEditor(composer, draft);
+  expect(screen.queryByText(/Default field for note is/)).toBeNull();
+  fireEvent.submit(composer.closest("form")!);
+  await waitFor(() => expect(createNote).toHaveBeenCalledWith(expect.objectContaining({ field })));
+  expect(useNotesStore.getState().selectedField).toBe("selected");
+});
+
+/** Removing the first reference recomputes the default without remembering stale mentions. */
+test("recomputes the destination after removing references", async () => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  act(() => useNotesStore.setState({
+    selectedField: undefined,
+    fields: [ { id: "research", name: "research", createdAt: 1 }, { id: "ideas", name: "ideas", createdAt: 1 } ],
+    notes: [
+      { id: "first", content: "first source", fieldId: "research", role: "Human", tags: [], createdAt: 1, updatedAt: 1 },
+      { id: "second", content: "second source", fieldId: "ideas", role: "Human", tags: [], createdAt: 1, updatedAt: 1 },
+    ],
+  }));
+  const createNote = vi.fn(async () => undefined);
+  act(() => useNotesStore.setState({ createNote }));
+  for (const [content, field] of [["[[first]] [[second]]", "research"], ["[[second]]", "ideas"], ["no references", "inbox"]]) {
+    changeMarkdownEditor(composer, content);
+    fireEvent.submit(composer.closest("form")!);
+    await waitFor(() => expect(createNote).toHaveBeenLastCalledWith(expect.objectContaining({ content, field })));
+  }
+});
+
+/** An unresolved reference must not silently use the sidebar field on an immediate submit. */
+test("resolves an unloaded reference without clearing subsequent typing", async () => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  let resolveNote!: (note: import("../../api/types").NoteDto) => void;
+  const getNote = vi.fn(() => new Promise<import("../../api/types").NoteDto>((resolve) => { resolveNote = resolve; }));
+  clientMocks.notes.getNote = getNote;
+  const createNote = vi.fn(async () => undefined);
+  act(() => useNotesStore.setState({ createNote, fields: [{ id: "research", name: "research", createdAt: 1 }] }));
+  changeMarkdownEditor(composer, "[[remote-note]]");
+  await waitFor(() => expect(getNote).toHaveBeenCalledTimes(1));
+  fireEvent.submit(composer.closest("form")!);
+  changeMarkdownEditor(composer, "next draft");
+  await act(async () => resolveNote({ id: "remote-note", content: "remote", fieldId: "research", role: "Human", tags: [], createdAt: 1, updatedAt: 1 }));
+  await waitFor(() => expect(createNote).toHaveBeenCalledWith(expect.objectContaining({ field: "research", content: "[[remote-note]]" })));
+  expect(getNote).toHaveBeenCalledTimes(1);
+  expect(markdownValue(composer)).toBe("next draft");
+});
+
+
+/** A failed first reference falls back rather than inheriting the second reference. */
+test("falls back to the sidebar when the first reference cannot be read", async () => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  const warning = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+  clientMocks.notes.getNote = vi.fn(async () => { throw new Error("Not found"); });
+  const createNote = vi.fn(async () => undefined);
+  act(() => useNotesStore.setState({
+    createNote, selectedField: "selected",
+    fields: [{ id: "selected", name: "sidebar", createdAt: 1 }, { id: "ideas", name: "ideas", createdAt: 1 }],
+    notes: [{ id: "second", content: "source", fieldId: "ideas", role: "Human", tags: [], createdAt: 1, updatedAt: 1 }],
+  }));
+  changeMarkdownEditor(composer, "[[missing]] [[second]]");
+  fireEvent.submit(composer.closest("form")!);
+  await waitFor(() => expect(createNote).toHaveBeenCalledWith(expect.objectContaining({ field: "sidebar" })));
+  expect(warning).toHaveBeenCalled();
+});
+
+/** Card tags reuse navigation filters and preserve the active search. */
+test("selects card tags and synchronizes hierarchical navigation", async () => {
+  renderHomePage();
+  await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
+  const notes = [
+    { id: "root", content: "match root #books", tags: ["books"], fieldId: "field-inbox", role: "Human", createdAt: 1, updatedAt: 1 },
+    { id: "child", content: "match child #books/AI", tags: ["books/AI"], fieldId: "field-project", role: "Agent", createdAt: 1, updatedAt: 1 },
+    { id: "hidden", content: "excluded #books", tags: ["books"], role: "Human", createdAt: 1, updatedAt: 1 },
+    { id: "other", content: "match other #other", tags: ["other"], role: "Human", createdAt: 1, updatedAt: 1 },
+  ];
+  clientMocks.notes.listRecentNotes = async () => notes;
+  act(() => useNotesStore.setState({
+    notes,
+    keyword: "match",
+    selectedField: "field-inbox",
+    selectedRole: "Human",
+    tags: [
+      { id: "books", name: "books", path: "books", depth: 0, createdAt: 1 },
+      { id: "ai", name: "AI", path: "books/AI", parentTagId: "books", depth: 1, createdAt: 1 },
+    ],
+  }));
+  fireEvent.click(screen.getByRole("button", { name: "#books" }));
+  await waitFor(() => expect(useNotesStore.getState().selectedRole).toBeUndefined());
+  expect(useNotesStore.getState().selectedField).toBeUndefined();
+  expect(useNotesStore.getState().keyword).toBe("match");
+  expect(screen.getByText(/match root/)).not.toBeNull();
+  expect(await screen.findByText(/match child/)).not.toBeNull();
+  expect(screen.queryByText(/excluded/)).toBeNull();
+  expect(screen.queryByText(/match other/)).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "#books/AI" }));
+  expect(useNotesStore.getState().selectedTag).toBe("books/AI");
+  expect(screen.queryByText(/match root/)).toBeNull();
+  expect(screen.getByText(/match child/)).not.toBeNull();
+  expect(screen.getByRole("button", { name: "折叠 books" })).not.toBeNull();
+  expect(sidebarButtonForText("AI")).not.toBeNull();
+});
+
+/** Filtering changes the owned prefix while the controlled draft preserves user text. */
+test("prefills navigation classifications and preserves the draft across filter changes", async () => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
+  act(() => useNotesStore.setState({ selectedTag: "books/AI", selectedField: undefined }));
+  expect(markdownValue(composer).trim()).toBe("#books/AI");
+  act(() => { editors.get(composer)!.commands.insertContent("My body #books/AI"); });
+  act(() => useNotesStore.setState({ selectedTag: "books/design" }));
+  expect(markdownValue(composer)).toBe("#books/design My body #books/AI");
+  act(() => useNotesStore.setState({ selectedTag: undefined, selectedField: "field-project" }));
+  expect(markdownValue(composer)).toBe("@project My body #books/AI");
+  fireEvent.click(sidebarButtonForText("全部笔记"));
+  expect(markdownValue(composer)).toBe("My body #books/AI");
+});
+
+test("prefilled fields override references and reset before a pending write completes", async () => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
+  let finish!: () => void;
+  const createNote = vi.fn(() => new Promise<void>((resolve) => { finish = resolve; }));
+  act(() => useNotesStore.setState({ createNote, selectedField: "field-project", selectedTag: undefined }));
+  const editor = editors.get(composer)!;
+  act(() => { editor.commands.insertContent("Body [[source]]"); });
+  fireEvent.submit(composer.closest("form")!);
+  await waitFor(() => expect(createNote).toHaveBeenCalledWith(expect.objectContaining({ field: "project", content: "@project Body [[source]]" })));
+  expect(markdownValue(composer).trim()).toBe("@project");
+  act(() => { editor.commands.insertContent("next"); });
+  await act(async () => finish());
+  expect(markdownValue(composer)).toBe("@project next");
+  expect(screen.queryByText(/Default field for note is/)).toBeNull();
+});
+
+test("tag payload matches the visible prefill and immediately prepares the next note", async () => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  const createNote = vi.fn(async () => undefined);
+  act(() => useNotesStore.setState({ createNote, selectedTag: "books/AI", selectedField: undefined }));
+  act(() => { editors.get(composer)!.commands.insertContent("Body"); });
+  fireEvent.submit(composer.closest("form")!);
+  await waitFor(() => expect(createNote).toHaveBeenCalledWith(expect.objectContaining({ content: "#books/AI Body", tags: ["books/AI"] })));
+  expect(markdownValue(composer).trim()).toBe("#books/AI");
+  fireEvent.submit(composer.closest("form")!);
+  await waitFor(() => expect(createNote).toHaveBeenCalledTimes(2));
+  expect(markdownValue(composer).trim()).toBe("#books/AI");
+});
+
+test("mention insertion preserves ownership of navigation prefill", async () => {
+  renderHomePage();
+  const composer = await findComposerEditor();
+  await waitFor(() => expect(useNotesStore.getState().notes.length).toBe(2));
+  act(() => useNotesStore.setState({ selectedField: "field-project", selectedTag: undefined, notes: [{ id: "source", content: "source note", fieldId: "field-project", role: "Human", tags: [], createdAt: 1, updatedAt: 1 }] }));
+  const card = (await screen.findByText("source note")).closest("article")!;
+  fireEvent.keyDown(within(card).getByRole("button", { name: "笔记操作" }), { key: "Enter" });
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Mention" }));
+  expect(markdownValue(composer)).toContain("[[");
+  act(() => useNotesStore.setState({ selectedField: undefined, selectedTag: "books" }));
+  expect(markdownValue(composer)).toMatch(/^#books .*\[\[/);
+  expect(markdownValue(composer)).not.toContain("@project");
+});
+
+/** Supplies Supabase's optional capabilities while keeping a separate persisted fixture. */
+function enableArchiveCapabilities() {
+  let server = useNotesStore.getState().notes.map((note) => ({ ...note, archivedAt: null as number | null }));
+  const listArchivedNotes = vi.fn(async () => ({ notes: server.filter((note) => note.archivedAt !== null) }));
+  const setNoteArchived = vi.fn(async (id: string, archived: boolean) => {
+    server = server.map((note) => note.id === id ? { ...note, archivedAt: archived ? 100 : null } : note);
+    const note = server.find((note) => note.id === id)!;
+    return { id, archivedAt: note.archivedAt, updatedAt: note.updatedAt };
+  });
+  Object.assign(clientMocks.notes, {
+    listArchivedNotes, setNoteArchived,
+    listRecentNotes: async () => server.filter((note) => note.archivedAt === null),
+    updateNote: async (id: string, input: { content: string }) => {
+      server = server.map((note) => note.id === id ? { ...note, content: input.content } : note);
+      return server.find((note) => note.id === id)!;
+    },
+  });
+  return { listArchivedNotes, setNoteArchived };
+}
+
+function openCardActions(card: HTMLElement) {
+  fireEvent.keyDown(within(card).getByRole("button", { name: "笔记操作" }), { key: "Enter" });
+}
+
+test("archives and restores through Supabase menus while preserving the card content", async () => {
+  let api!: ReturnType<typeof enableArchiveCapabilities>;
+  renderHomePage(undefined, () => { api = enableArchiveCapabilities(); });
+  const text = await screen.findByText(/今天先把卡片笔记/);
+  openCardActions(text.closest("article")!);
+  fireEvent.click(await screen.findByRole("menuitem", { name: "归档" }));
+  await waitFor(() => expect(screen.queryByText(/今天先把卡片笔记/)).toBeNull());
+  await waitFor(() => expect(api.setNoteArchived).toHaveBeenCalledWith("note-human", true));
+  fireEvent.click(screen.getByRole("button", { name: "已归档" }));
+  const restoredText = await screen.findByText(/今天先把卡片笔记/);
+  expect(screen.queryByText(/数据库契约来自/)).toBeNull();
+  openCardActions(restoredText.closest("article")!);
+  expect(screen.queryByRole("menuitem", { name: "归档" })).toBeNull();
+  expect(screen.getByRole("menuitem", { name: "编辑笔记" })).not.toBeNull();
+  expect(screen.getByRole("menuitem", { name: "删除" })).not.toBeNull();
+  fireEvent.click(screen.getByRole("menuitem", { name: "取消归档" }));
+  expect(await screen.findByText("暂无已归档笔记")).not.toBeNull();
+  expect(document.activeElement).toBe(screen.getByRole("region", { name: "已归档" }));
+  fireEvent.click(screen.getByRole("button", { name: /全部笔记/ }));
+  expect(await screen.findByText(/今天先把卡片笔记/)).not.toBeNull();
+  expect(api.setNoteArchived).toHaveBeenLastCalledWith("note-human", false);
+});
+
+test("does not expose archive navigation or card actions to Backend", async () => {
+  renderHomePage();
+  expect(screen.queryByRole("button", { name: "已归档" })).toBeNull();
+  openCardActions((await screen.findByText(/今天先把卡片笔记/)).closest("article")!);
+  expect(screen.queryByRole("menuitem", { name: "归档" })).toBeNull();
+});
+
+test("clears classification and search on archive entry and retries local loading failures", async () => {
+  let api!: ReturnType<typeof enableArchiveCapabilities>;
+  renderHomePage(undefined, () => { api = enableArchiveCapabilities(); });
+  await screen.findByText(/今天先把卡片笔记/);
+  act(() => useNotesStore.setState({ selectedTag: "产品", keyword: "no match" }));
+  api.listArchivedNotes.mockRejectedValueOnce(new Error("offline"));
+  fireEvent.click(screen.getByRole("button", { name: "已归档" }));
+  expect(await screen.findByText("加载已归档笔记失败")).not.toBeNull();
+  expect(useNotesStore.getState().selectedTag).toBeUndefined();
+  expect(useNotesStore.getState().keyword).toBe("");
+  fireEvent.click(screen.getByRole("button", { name: "重试" }));
+  expect(await screen.findByText("暂无已归档笔记")).not.toBeNull();
+  expect(await findComposerEditor()).not.toBeNull();
+});
+
+test("edits archived notes without restoring them to the active feed", async () => {
+  renderHomePage(undefined, enableArchiveCapabilities);
+  await screen.findByText(/今天先把卡片笔记/);
+  await act(async () => { await useNotesStore.getState().setNoteArchived("note-human", true); });
+  fireEvent.click(screen.getByRole("button", { name: "已归档" }));
+  const card = (await screen.findByText(/今天先把卡片笔记/)).closest("article")!;
+  openCardActions(card);
+  fireEvent.click(screen.getByRole("menuitem", { name: "编辑笔记" }));
+  const editor = await within(card).findByRole("textbox");
+  changeMarkdownEditor(editor, "archived edited content");
+  fireEvent.submit(editor.closest("form")!);
+  expect(await screen.findByText("archived edited content")).not.toBeNull();
+  expect(useNotesStore.getState().archivedNotes[0].archivedAt).not.toBeNull();
+  expect(useNotesStore.getState().notes.some((note) => note.id === "note-human")).toBe(false);
+});
+
+test("keeps an unsaved card draft when visiting the archive and returning", async () => {
+  renderHomePage(undefined, enableArchiveCapabilities);
+  const card = (await screen.findByText(/今天先把卡片笔记/)).closest("article")!;
+  openCardActions(card);
+  fireEvent.click(screen.getByRole("menuitem", { name: "编辑笔记" }));
+  const editor = await within(card).findByRole("textbox");
+  changeMarkdownEditor(editor, "unsaved text stays here");
+  fireEvent.click(screen.getByRole("button", { name: "已归档" }));
+  expect(await screen.findByText("暂无已归档笔记")).not.toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: /全部笔记/ }));
+  await waitFor(() => expect(getComposerEditors().some((input) => markdownValue(input).includes("unsaved text stays here"))).toBe(true));
 });

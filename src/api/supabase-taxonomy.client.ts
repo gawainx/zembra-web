@@ -25,6 +25,16 @@ export function createSupabaseTaxonomyClient(client: SupabaseClient, workspaceId
       throwSupabaseError(error, "delete field");
     },
     async deleteTagTree(tags) {
+      console.info("[zembra] Checking tag subtree usage", { workspaceId, tagCount: tags.length });
+      for (let start = 0; start < tags.length; start += 100) {
+        const { data, error } = await client.from("note_tags").select("note_id")
+          .eq("workspace_id", workspaceId).in("tag_id", tags.slice(start, start + 100).map((tag) => tag.id)).limit(1);
+        throwSupabaseError(error, "check tag usage");
+        if (data?.length) {
+          console.warn("[zembra] Tag subtree is still used by notes", { workspaceId });
+          throw new Error("Cannot delete a tag that is used by notes");
+        }
+      }
       const orderedTags = [...tags].sort((left, right) => right.depth - left.depth);
 
       for (const tag of orderedTags) {

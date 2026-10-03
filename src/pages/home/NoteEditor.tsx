@@ -1,3 +1,4 @@
+import type { ComposerContext } from "./composerPrefillExtension";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "../../components/ui/tooltip";
 import { Button } from "../../components/ui/button";
 import { SendHorizontal } from "lucide-react";
@@ -29,6 +30,7 @@ export interface NoteEditorHandle {
 export const NoteEditor = forwardRef<
   NoteEditorHandle,
   {
+  composerContext?: ComposerContext;
   draft: string;
   isSubmitting: boolean;
   meta?: string;
@@ -43,6 +45,7 @@ export const NoteEditor = forwardRef<
   }
 >(function NoteEditor(
   {
+    composerContext,
     draft,
     isSubmitting,
     meta,
@@ -109,6 +112,7 @@ export const NoteEditor = forwardRef<
         }
       >
         <LiveMarkdownEditor
+          composerContext={composerContext}
           disabled={isSubmitting}
           placeholder={placeholder}
           value={draft}

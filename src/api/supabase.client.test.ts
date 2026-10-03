@@ -1,6 +1,7 @@
 import { afterEach, expect, test, vi } from "vitest";
 import {
   getSupabasePublicConfig,
+  listSupabaseWorkspaces,
   renameSupabaseWorkspace,
   SupabaseConfigurationError,
 } from "./supabase.client";
@@ -51,4 +52,12 @@ test("renames an authorized workspace", async () => {
   });
   expect(eq).toHaveBeenCalledWith("id", "workspace-1");
   expect(select).toHaveBeenCalledWith("id, workspace_name");
+});
+
+/** Retains transport status so the entry can distinguish service and permission failures. */
+test("preserves the workspace HTTP failure status", async () => {
+  const error = { code: "", message: "Service unavailable", details: "", hint: "" };
+  const order = vi.fn().mockResolvedValue({ data: null, error, status: 503 });
+  const client = { from: () => ({ select: () => ({ order }) }) };
+  await expect(listSupabaseWorkspaces(client as never)).rejects.toEqual({ ...error, status: 503 });
 });

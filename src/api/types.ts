@@ -12,6 +12,8 @@ export interface NoteDto {
   createdAt: number;
   /** Unix timestamp for the latest note update. */
   updatedAt: number;
+  /** Unix archive timestamp; null or absent means active. */
+  archivedAt?: number | null;
   /** Tag names projected for UI display. */
   tags: string[];
 }
@@ -427,3 +429,8 @@ export interface SyncRunResponse {
   /** Number of remote changes pulled locally. */
   pulled: number;
 }
+
+/** Stable keyset position in the archive, ordered by creation time and ID. */
+export interface ArchivedNotesCursor { createdAt: number; id: string }
+export interface ArchivedNotesPage { notes: NoteDto[]; nextCursor?: ArchivedNotesCursor }
+export type NoteArchiveState = Pick<NoteDto, "id" | "archivedAt" | "updatedAt">;

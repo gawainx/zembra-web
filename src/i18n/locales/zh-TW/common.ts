@@ -1,5 +1,28 @@
 export const common = {
   dataSource: {
+    startup: {
+      loading: "正在載入…",
+      failed: "載入失敗",
+      errorCode: "錯誤代碼：{{code}}",
+      stages: {
+        configuration: "讀取連線設定",
+        session: "還原登入工作階段",
+        workspaces: "載入 workspace"
+      },
+      reasons: {
+        configuration: "目前部署缺少 Supabase 位址或公開連線金鑰，請聯絡部署管理員。",
+        expired: "登入工作階段已失效，需要重新登入。",
+        denied: "服務拒絕存取，請確認目前帳號的存取權限。",
+        rateLimit: "請求過於頻繁，服務暫時限制存取，請稍後再試。",
+        timeout: "請求逾時，請檢查網路後重新載入。",
+        server: "Supabase 服務暫時無法處理請求，請稍後再試。",
+        credentials: "服務拒絕了目前的認證憑證，尚不能確認登入工作階段已失效。",
+        workspaceUnavailable: "服務中找不到可存取的 workspace 資料表，請聯絡管理員檢查部署。",
+        offline: "瀏覽器回報目前已離線，請連接網路後重新載入。",
+        network: "網路請求未取得可用回應，無法確認具體連線原因。請檢查網路和服務位址後重新載入。",
+        unknown: "此階段未能完成，回傳資訊不足以確認具體原因。請重新載入；若持續失敗，請向管理員提供失敗階段。"
+      }
+    },
     backend: "Backend",
     configured: "此部署尚未設定 Supabase。",
     emailLabel: "電子郵件地址",
@@ -48,6 +71,10 @@ export const common = {
     noteCreateFailed: "無法儲存，請重試",
     noteDeleted: "已刪除",
     noteDeleteFailed: "無法刪除，筆記已還原",
+    noteArchived: "已封存",
+    noteArchiveFailed: "封存失敗",
+    noteUnarchived: "已取消封存",
+    noteUnarchiveFailed: "取消封存失敗",
     noteUpdated: "已儲存",
     noteUpdateFailed: "無法儲存，筆記已還原",
     fieldDeleted: "Field 已刪除",
