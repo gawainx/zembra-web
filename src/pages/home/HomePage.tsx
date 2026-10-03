@@ -7,14 +7,14 @@ import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "../../app/ThemeToggle";
 import { useWorkspace } from "../../app/workspace-context";
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
-import { defaultFieldName } from "../../api/defaultField";
+import { useHomeNoteEditing } from "./useHomeNoteEditing";
 import {
   SourceHomeControlsProvider,
   SourceStatusFeedback,
   SourceToolbarActions,
 } from "@zembra/source-home-controls";
 import { useNotesStore } from "../../features/notes/noteStore";
-import type { NoteDto, TagDto } from "../../api/types";
+import type { TagDto } from "../../api/types";
 import { HomeNoteFeed } from "./HomeNoteFeed";
 import { HomeNavigation } from "./HomeNavigation";
 import { NoteEditor } from "./NoteEditor";
@@ -24,12 +24,10 @@ import {
   DailyNotesHeatmap,
   StatBlock,
 } from "./HomeSidebar";
-import { normalizeMarkdownSource } from "./liveMarkdownEditorUtils";
 import {
   buildTagFilterMatch,
   buildTagTree,
   filterVisibleNotes,
-  parseFieldNames,
   parseNoteLinks,
   parseTagNames,
   sortNotesByCreatedAt,
@@ -46,8 +44,6 @@ export function HomePage() {
   }, [workspaceScope]);
   const [draft, setDraft] = useState("");
   const [draftGeneration, setDraftGeneration] = useState(0);
-  const [editingNoteId, setEditingNoteId] = useState<string>();
-  const [editDraft, setEditDraft] = useState("");
   const [pendingDeleteTag, setPendingDeleteTag] = useState<TagDto>();
 
   useEffect(() => {
@@ -85,8 +81,6 @@ export function HomePage() {
   useLayoutEffect(() => {
     connectWorkspace();
     setDraft("");
-    setEditingNoteId(undefined);
-    setEditDraft("");
     setPendingDeleteTag(undefined);
   }, [connectWorkspace, workspace.id]);
   const displayNotes = noteView === "archived" ? archivedNotes : notes;
@@ -99,6 +93,10 @@ export function HomePage() {
     () => new Map(fields.map((field) => [field.id, field.name])),
     [fields],
   );
+  const { editingNoteId, editDraft, editWarning, setEditDraft, handleEditStart, handleEditCancel,
+    handleMentionNote, handleEditSubmit, handleNoteFieldChange } = useHomeNoteEditing({
+      workspaceId: workspace.id, notes: displayNotes, fieldNameById, updateNote, setComposerDraft: setDraft,
+    });
   const composerField = useComposerField({
     draft, fields, notes, cachedNotes: notePreviewById, selectedField,
     workspaceId: workspace.id, loadNote: loadNotePreview,
@@ -120,11 +118,6 @@ export function HomePage() {
       ),
     [keyword, displayNotes, selectedField, selectedTag, selectedTagMatch],
   );
-  const editFieldNames = useMemo(() => parseFieldNames(editDraft), [editDraft]);
-  const editWarning =
-    editFieldNames.length > 1
-      ? t("note.edit.warningMultipleFields", { field: editFieldNames[0] })
-      : undefined;
   useEffect(() => {
     void loadFields();
     void loadTags();
@@ -199,85 +192,6 @@ export function HomePage() {
     }
   }
 
-  /** Starts editing a note when no other card owns a draft. */
-  function handleEditStart(note: NoteDto) {
-    if (editingNoteId && editingNoteId !== note.id) {
-      return;
-    }
-
-    setEditingNoteId(note.id);
-    setEditDraft(normalizeMarkdownSource(note.content));
-  }
-
-  /** Cancels the current note edit draft. */
-  function handleEditCancel() {
-    setEditingNoteId(undefined);
-    setEditDraft("");
-  }
-
-  /** Inserts a note mention into the active editor draft. */
-  function handleMentionNote(noteId: string) {
-    const mention = `[[${noteId}]]`;
-
-    if (editingNoteId) {
-      setEditDraft((current) =>
-        current.trim().length > 0 ? `${current} ${mention}` : mention,
-      );
-      return;
-    }
-
-    setDraft((current) =>
-      current.trim().length > 0 ? `${current} ${mention}` : mention,
-    );
-  }
-
-  /** Optimistically persists the current edit draft and immediately exits edit mode. */
-  function handleEditSubmit() {
-    if (!editingNoteId) {
-      return;
-    }
-
-    const content = editDraft.trim();
-
-    if (!content) {
-      return;
-    }
-
-    const fieldNames = parseFieldNames(content);
-
-    const existingFieldName = fieldNameById.get(
-      displayNotes.find((note) => note.id === editingNoteId)?.fieldId ?? "",
-    );
-
-    void updateNote(editingNoteId, {
-      content,
-      field: fieldNames[0] ?? existingFieldName ?? defaultFieldName,
-      links: parseNoteLinks(content),
-      tags: parseTagNames(content),
-    });
-    handleEditCancel();
-  }
-
-  /** Persists a field-only change for one note without changing navigation filters. */
-  function handleNoteFieldChange(note: NoteDto, field: string) {
-    void updateNote(note.id, {
-      content: note.content,
-      field,
-      links: parseNoteLinks(note.content),
-      tags: parseTagNames(note.content),
-    });
-  }
-
-  /** Opens the in-app confirmation dialog for deleting an empty tag subtree. */
-  function handleTagDeleteRequest(tag: TagDto) {
-    setPendingDeleteTag(tag);
-  }
-
-  /** Closes the tag deletion dialog. */
-  function handleTagDeleteCancel() {
-    setPendingDeleteTag(undefined);
-  }
-
   /** Optimistically removes the pending empty tag subtree and queues deletion. */
   function handleTagDeleteConfirm() {
     if (!pendingDeleteTag) {
@@ -333,7 +247,7 @@ export function HomePage() {
             selectedRole={selectedRole} selectedField={selectedField} selectedTag={selectedTag}
             handleAllNotesSelect={handleAllNotesSelect} handleRoleSelect={handleRoleSelect}
             handleFieldSelect={handleFieldSelect} handleTagSelect={handleTagSelect}
-            handleTagDeleteRequest={handleTagDeleteRequest}
+            handleTagDeleteRequest={setPendingDeleteTag}
           />
         </ResponsiveSidebar>
 
@@ -403,7 +317,7 @@ export function HomePage() {
           <TagDeleteDialog
             tag={pendingDeleteTag}
             t={t}
-            onCancel={handleTagDeleteCancel}
+            onCancel={() => setPendingDeleteTag(undefined)}
             onConfirm={handleTagDeleteConfirm}
           />
         ) : null}

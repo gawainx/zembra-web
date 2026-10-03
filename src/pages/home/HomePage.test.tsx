@@ -1692,3 +1692,16 @@ test("edits archived notes without restoring them to the active feed", async () 
   expect(useNotesStore.getState().archivedNotes[0].archivedAt).not.toBeNull();
   expect(useNotesStore.getState().notes.some((note) => note.id === "note-human")).toBe(false);
 });
+
+test("keeps an unsaved card draft when visiting the archive and returning", async () => {
+  renderHomePage(undefined, enableArchiveCapabilities);
+  const card = (await screen.findByText(/今天先把卡片笔记/)).closest("article")!;
+  openCardActions(card);
+  fireEvent.click(screen.getByRole("menuitem", { name: "编辑笔记" }));
+  const editor = await within(card).findByRole("textbox");
+  changeMarkdownEditor(editor, "unsaved text stays here");
+  fireEvent.click(screen.getByRole("button", { name: "已归档" }));
+  expect(await screen.findByText("暂无已归档笔记")).not.toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: /全部笔记/ }));
+  await waitFor(() => expect(getComposerEditors().some((input) => markdownValue(input).includes("unsaved text stays here"))).toBe(true));
+});
