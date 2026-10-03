@@ -152,3 +152,43 @@ test("keeps archive view while creating a normal note and never exposes Backend 
   state().setNoteView("archived");
   expect(state().noteView).toBe("active");
 });
+
+
+test("loads the archive total without downloading notes and rejects stale workspace counts", async () => {
+  mocks.notes.countArchivedNotes = vi.fn(async () => 1205);
+  await state().loadArchivedNoteCount();
+  expect(state().archivedNoteCount).toBe(1205);
+  expect(mocks.notes.listArchivedNotes).not.toHaveBeenCalled();
+  const pending = deferred<number>();
+  mocks.notes.countArchivedNotes = () => pending.promise;
+  const read = state().loadArchivedNoteCount();
+  mocks.notes = { ...mocks.notes, countArchivedNotes: vi.fn(async () => 3) };
+  state().connectWorkspace();
+  await state().loadArchivedNoteCount();
+  pending.resolve(1205); await read;
+  expect(state().archivedNoteCount).toBe(3);
+});
+
+test("updates the total optimistically, ignores stale reads, and rolls back failures", async () => {
+  useNotesStore.setState({ archivedNoteCount: 7 });
+  const count = deferred<number>();
+  mocks.notes.countArchivedNotes = () => count.promise;
+  const read = state().loadArchivedNoteCount();
+  const write = deferred<NoteArchiveState>();
+  mocks.notes.setNoteArchived = () => write.promise;
+  const archive = state().setNoteArchived("n1", true);
+  expect(state().archivedNoteCount).toBe(8);
+  count.resolve(7); await read;
+  expect(state().archivedNoteCount).toBe(8);
+  write.reject(new Error("offline")); await archive;
+  expect(state().archivedNoteCount).toBe(7);
+});
+
+test("deleting an archived note decrements the total and restores it on failure", async () => {
+  useNotesStore.setState({ archivedNoteCount: 9, notes: [], roleNavigationNotes: [], archivedNotes: [{ ...note, archivedAt: 20 }] });
+  mocks.notes.deleteNote = vi.fn(async () => { throw new Error("offline"); });
+  const deletion = state().deleteNote("n1");
+  expect(state().archivedNoteCount).toBe(8);
+  await deletion;
+  expect(state().archivedNoteCount).toBe(9);
+});

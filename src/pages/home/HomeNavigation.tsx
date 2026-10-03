@@ -5,7 +5,8 @@ import type { FieldDto, NoteDto, TagDto } from "../../api/types";
 import { NavItem, SidebarSection, TagTreeItem } from "./HomeSidebar";
 import { buildTagTree, countFields, countRoles, countTags, findSelectedTagRootPath, noteMatchesTagPath } from "./homeUtils";
 
-export function HomeNavigation({ archived = false, onArchiveSelect, notes, roleNavigationNotes, fields, tags, selectedRole, selectedField, selectedTag, handleAllNotesSelect, handleRoleSelect, handleFieldSelect, handleTagSelect, handleTagDeleteRequest }: {
+export function HomeNavigation({ archived = false, archivedNoteCount, onArchiveSelect, notes, roleNavigationNotes, fields, tags, selectedRole, selectedField, selectedTag, handleAllNotesSelect, handleRoleSelect, handleFieldSelect, handleTagSelect, handleTagDeleteRequest }: {
+  archivedNoteCount?: number;
   archived?: boolean; onArchiveSelect?: () => void;
   notes: NoteDto[]; roleNavigationNotes: NoteDto[]; fields: FieldDto[]; tags: TagDto[];
   selectedRole?: string; selectedField?: string; selectedTag?: string;
@@ -73,7 +74,7 @@ export function HomeNavigation({ archived = false, onArchiveSelect, notes, roleN
         prefix={<List className="size-4" aria-hidden="true" />}
         onClick={() => void handleAllNotesSelect()}
       />
-      {onArchiveSelect ? <NavItem active={archived} label={t("sidebar.archived")}
+      {onArchiveSelect ? <NavItem active={archived} count={archivedNoteCount} label={t("sidebar.archived")}
         prefix={<Archive className="size-4" aria-hidden="true" />} onClick={onArchiveSelect} /> : null}
       <SidebarSection className="mt-4" title={t("sidebar.roles")}>
         {Array.from(roleUsage.entries()).map(([role, count]) => {

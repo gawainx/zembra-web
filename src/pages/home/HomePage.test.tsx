@@ -1705,3 +1705,22 @@ test("keeps an unsaved card draft when visiting the archive and returning", asyn
   fireEvent.click(screen.getByRole("button", { name: /全部笔记/ }));
   await waitFor(() => expect(getComposerEditors().some((input) => markdownValue(input).includes("unsaved text stays here"))).toBe(true));
 });
+
+test("shows the archive total before opening it and updates the navigation after lifecycle changes", async () => {
+  renderHomePage(undefined, () => {
+    enableArchiveCapabilities();
+    clientMocks.notes.countArchivedNotes = vi.fn(async () => 12);
+  });
+  const navigation = () => screen.getByRole("button", { name: "已归档" }).parentElement!;
+  await waitFor(() => expect(within(navigation()).getByText("12")).not.toBeNull());
+  clientMocks.notes.countArchivedNotes = vi.fn(async () => 13);
+  const card = (await screen.findByText(/今天先把卡片笔记/)).closest("article")!;
+  openCardActions(card);
+  fireEvent.click(await screen.findByRole("menuitem", { name: "归档" }));
+  await waitFor(() => expect(within(navigation()).getByText("13")).not.toBeNull());
+  fireEvent.click(screen.getByRole("button", { name: "已归档" }));
+  openCardActions((await screen.findByText(/今天先把卡片笔记/)).closest("article")!);
+  clientMocks.notes.countArchivedNotes = vi.fn(async () => 12);
+  fireEvent.click(await screen.findByRole("menuitem", { name: "取消归档" }));
+  await waitFor(() => expect(within(navigation()).getByText("12")).not.toBeNull());
+});

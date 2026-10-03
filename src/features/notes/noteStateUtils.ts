@@ -3,6 +3,7 @@ import type { DailyNoteCount, NoteDto } from "../../api/types";
 export interface NoteCollections {
   notes: NoteDto[];
   archivedNotes: NoteDto[];
+  archivedNoteCount?: number;
   roleNavigationNotes: NoteDto[];
   notePreviewById: Record<string, NoteDto>;
   dailyNoteCounts: DailyNoteCount[];
@@ -35,6 +36,8 @@ export function projectNote(state: NoteCollections, id: string, previous: NoteDt
     notes: replace(state.notes, isActiveNote(next) && (!state.selectedRole || next.role === state.selectedRole), 50),
     roleNavigationNotes: replace(state.roleNavigationNotes, isActiveNote(next), 50),
     archivedNotes: replace(state.archivedNotes, Boolean(next && next.archivedAt != null)),
+    archivedNoteCount: state.archivedNoteCount === undefined ? undefined : Math.max(0, state.archivedNoteCount
+      + Number(next != null && next.archivedAt != null) - Number(previous != null && previous.archivedAt != null)),
     notePreviewById: previews,
     dailyNoteCounts: delta ? state.dailyNoteCounts.map((day) => day.date === date ? { ...day, count: Math.max(0, day.count + delta) } : day) : state.dailyNoteCounts,
   };

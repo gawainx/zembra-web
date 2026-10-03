@@ -52,7 +52,7 @@ export function HomePage() {
 
   const {
     notes,
-    archivedNotes, noteView, supportsArchiving, archiveLoading, archiveError,
+    archivedNotes, archivedNoteCount, noteView, supportsArchiving, archiveLoading, archiveError,
     connectWorkspace, setNoteView, loadArchivedNotes, setNoteArchived,
     roleNavigationNotes,
     notePreviewById,
@@ -242,7 +242,7 @@ export function HomePage() {
           </div>
 
           <HomeNavigation
-            archived={noteView === "archived"} onArchiveSelect={supportsArchiving ? () => setNoteView("archived") : undefined}
+            archivedNoteCount={archivedNoteCount} archived={noteView === "archived"} onArchiveSelect={supportsArchiving ? () => setNoteView("archived") : undefined}
             notes={notes} roleNavigationNotes={roleNavigationNotes} fields={fields} tags={tags}
             selectedRole={selectedRole} selectedField={selectedField} selectedTag={selectedTag}
             handleAllNotesSelect={handleAllNotesSelect} handleRoleSelect={handleRoleSelect}

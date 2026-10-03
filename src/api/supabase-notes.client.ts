@@ -41,6 +41,15 @@ export function createSupabaseNotesClient(
   workspaceId: string,
 ): NotesClient {
   return {
+    async countArchivedNotes() {
+      console.info("[zembra] Loading archive count", { workspaceId });
+      const { count, error } = await client.from("notes").select("id", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId).is("deleted_at", null).not("archived_at", "is", null);
+      throwSupabaseError(error, "load archive count");
+      if (count == null) throw new Error("Archive count was not returned");
+      console.info("[zembra] Loaded archive count", { workspaceId, count });
+      return count;
+    },
     async listArchivedNotes(cursor) {
       console.info("[zembra] Loading archive page", { workspaceId, hasCursor: Boolean(cursor) });
       let request = client.from("notes")
