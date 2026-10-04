@@ -16,7 +16,7 @@ import { useNotesStore } from "../../features/notes/noteStore";
 import type { TagDto } from "../../api/types";
 import { HomeNoteFeed } from "./HomeNoteFeed";
 import { HomeNavigation } from "./HomeNavigation";
-import { HomeComposer } from "./HomeComposer";
+import { NoteEditor } from "./NoteEditor";
 import { ResponsiveSidebar } from "./ResponsiveSidebar";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import {
@@ -272,9 +272,39 @@ export function HomePage() {
         </section>
       </div>
 
-      <HomeComposer draft={draft} setDraft={setDraft} draftGeneration={draftGeneration}
-        workspaceId={workspace.id} selectedTag={selectedTag} selectedField={selectedField}
-        fieldNameById={fieldNameById} tags={tags} tools={composerTools} onSubmit={handleCreateSubmit} />
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 px-5 lg:px-0">
+        <div className="mx-auto grid h-[154px] w-full max-w-[var(--layout-shell-max)] grid-cols-1 gap-[var(--space-4)] lg:grid-cols-[minmax(var(--layout-sidebar-min),var(--layout-sidebar-max))_minmax(var(--layout-content-min),var(--layout-content-max))]">
+          <div className="min-w-0 bg-[image:var(--color-composer-gradient)] lg:col-start-2" />
+        </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-6 z-20 px-5 lg:px-0">
+        <form
+          className="mx-auto grid w-full max-w-[var(--layout-shell-max)] grid-cols-1 gap-[var(--space-4)] lg:grid-cols-[minmax(var(--layout-sidebar-min),var(--layout-sidebar-max))_minmax(var(--layout-content-min),var(--layout-content-max))]"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleCreateSubmit();
+          }}
+        >
+          <div className="min-w-0 lg:col-start-2">
+            <NoteEditor
+              draft={draft}
+              isSubmitting={false}
+              composerContext={{
+                workspaceId: workspace.id,
+                draftGeneration,
+                kind: selectedTag ? "tag" : selectedField ? "field" : undefined,
+                value: selectedTag ?? fieldNameById.get(selectedField ?? ""),
+              }}
+              placeholder={t("composer.placeholder")}
+              submitLabel={t("composer.send")}
+              tags={tags}
+              tools={composerTools}
+              variant="floating"
+              onDraftChange={setDraft}
+            />
+          </div>
+        </form>
         {pendingDeleteTag ? (
           <TagDeleteDialog
             tag={pendingDeleteTag}
@@ -283,6 +313,7 @@ export function HomePage() {
             onConfirm={handleTagDeleteConfirm}
           />
         ) : null}
+      </div>
     </main>
     </SourceHomeControlsProvider>
   );
