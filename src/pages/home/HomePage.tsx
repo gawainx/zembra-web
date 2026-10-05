@@ -3,22 +3,17 @@ import { createComposerTools } from "./homeComposerTools";
 import { TagDeleteDialog } from "./TaxonomyDeleteDialogs";
 import { HomeToolbar } from "./HomeToolbar";
 import { useTranslation } from "react-i18next";
-import { ThemeToggle } from "../../app/ThemeToggle";
+import { HomeWorkspaceHeader } from "./HomeWorkspaceHeader";
 import { useWorkspace } from "../../app/workspace-context";
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useHomeNoteEditing } from "./useHomeNoteEditing";
-import {
-  SourceHomeControlsProvider,
-  SourceStatusFeedback,
-  SourceToolbarActions,
-} from "@zembra/source-home-controls";
+import { SourceHomeControlsProvider } from "@zembra/source-home-controls";
 import { useNotesStore } from "../../features/notes/noteStore";
 import type { TagDto } from "../../api/types";
 import { HomeNoteFeed } from "./HomeNoteFeed";
 import { HomeNavigation } from "./HomeNavigation";
 import { NoteEditor } from "./NoteEditor";
 import { ResponsiveSidebar } from "./ResponsiveSidebar";
-import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import {
   DailyNotesHeatmap,
   StatBlock,
@@ -36,7 +31,7 @@ import {
 /** Renders the redesigned Zembra note workspace shell. */
 export function HomePage() {
   const { i18n, t } = useTranslation("home");
-  const { workspace, workspaces, switchWorkspace, renameWorkspace } = useWorkspace();
+  const { workspace } = useWorkspace();
   const workspaceScope = useMemo(() => ({ active: true }), [workspace.id]);
   useEffect(() => {
     workspaceScope.active = true;
@@ -53,6 +48,7 @@ export function HomePage() {
 
   const {
     notes,
+    randomNotes, randomEligibleCount, randomLoading, randomError, supportsRandomNotes, loadRandomNotes,
     archivedNotes, archivedNoteCount, noteView, supportsArchiving, archiveLoading, archiveError,
     connectWorkspace, setNoteView, loadArchivedNotes, setNoteArchived,
     roleNavigationNotes,
@@ -84,7 +80,7 @@ export function HomePage() {
     setDraft("");
     setPendingDeleteTag(undefined);
   }, [connectWorkspace, workspace.id]);
-  const displayNotes = noteView === "archived" ? archivedNotes : notes;
+  const displayNotes = noteView === "random" ? randomNotes : noteView === "archived" ? archivedNotes : notes;
 
   const composerTools = useMemo(
     () => createComposerTools(t),
@@ -108,7 +104,7 @@ export function HomePage() {
     [selectedTag, tagTree],
   );
   const visibleNotes = useMemo(
-    () =>
+    () => noteView === "random" ? randomNotes :
       sortNotesByCreatedAt(
         filterVisibleNotes(displayNotes, {
           fieldId: selectedField,
@@ -118,7 +114,7 @@ export function HomePage() {
         }),
         sortOrder,
       ),
-    [keyword, displayNotes, selectedField, selectedTag, selectedTagMatch, sortOrder],
+    [noteView, randomNotes, keyword, displayNotes, selectedField, selectedTag, selectedTagMatch, sortOrder],
   );
   useEffect(() => {
     void loadFields();
@@ -159,7 +155,7 @@ export function HomePage() {
     setSelectedField(undefined);
     setSelectedTag(undefined);
 
-    if (selectedRole !== undefined || noteView === "archived") {
+    if (selectedRole !== undefined || noteView !== "active") {
       await setSelectedRole(undefined);
     }
   }
@@ -178,7 +174,7 @@ export function HomePage() {
     setSelectedTag(undefined);
     setSelectedField(fieldId);
 
-    if (selectedRole !== undefined || noteView === "archived") {
+    if (selectedRole !== undefined || noteView !== "active") {
       await setSelectedRole(undefined);
     }
   }
@@ -189,7 +185,7 @@ export function HomePage() {
     setSelectedField(undefined);
     setSelectedTag(path);
 
-    if (selectedRole !== undefined || noteView === "archived") {
+    if (selectedRole !== undefined || noteView !== "active") {
       await setSelectedRole(undefined);
     }
   }
@@ -208,26 +204,7 @@ export function HomePage() {
     <SourceHomeControlsProvider>
     <main className="h-screen overflow-hidden bg-[var(--color-app-bg)] text-[var(--color-text-primary)]">
       <div className="mx-auto grid h-full w-full max-w-[var(--layout-shell-max)] grid-cols-1 grid-rows-[auto_minmax(0,1fr)] lg:grid-rows-1 gap-[var(--space-4)] px-[var(--space-5)] pt-[var(--space-1)] lg:grid-cols-[minmax(var(--layout-sidebar-min),var(--layout-sidebar-max))_minmax(var(--layout-content-min),var(--layout-content-max))] lg:px-0">
-        <ResponsiveSidebar header={<>
-            <div className="mb-[var(--space-3)] flex items-center justify-between gap-[var(--space-3)]">
-              <div className="flex min-w-0 items-center gap-[var(--space-2)] text-lg font-bold">
-                <span className="text-[2em] leading-none">ℤ</span>
-                <WorkspaceSwitcher
-                  workspace={workspace}
-                  workspaces={workspaces}
-                  onWorkspaceChange={switchWorkspace}
-                  onWorkspaceRename={renameWorkspace}
-                />
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <SourceToolbarActions />
-                <ThemeToggle />
-              </div>
-            </div>
-
-            <SourceStatusFeedback />
-
-          </>}>
+        <ResponsiveSidebar header={<HomeWorkspaceHeader />}>
           <div className="shrink-0">
             <div className="mb-5 grid grid-cols-3 gap-4">
               <StatBlock label={t("stats.notes")} value={String(notes.length)} />
@@ -244,6 +221,7 @@ export function HomePage() {
           </div>
 
           <HomeNavigation
+            random={noteView === "random"} onRandomSelect={supportsRandomNotes ? () => void loadRandomNotes() : undefined}
             archivedNoteCount={archivedNoteCount} archived={noteView === "archived"} onArchiveSelect={supportsArchiving ? () => setNoteView("archived") : undefined}
             notes={notes} roleNavigationNotes={roleNavigationNotes} fields={fields} tags={tags}
             selectedRole={selectedRole} selectedField={selectedField} selectedTag={selectedTag}
@@ -254,12 +232,13 @@ export function HomePage() {
         </ResponsiveSidebar>
 
         <section className="flex min-h-0 min-w-0 flex-col">
-          <HomeToolbar keyword={keyword} onKeywordChange={setKeyword}
-            sortOrder={sortOrder} onSortToggle={() => setSortOrder((order) => order === "newest" ? "oldest" : "newest")} />
+          {noteView === "random" ? <h1 className="py-4 text-lg font-medium">{t("random.title")}</h1> : <HomeToolbar keyword={keyword} onKeywordChange={setKeyword}
+            sortOrder={sortOrder} onSortToggle={() => setSortOrder((order) => order === "newest" ? "oldest" : "newest")} />}
 
           <HomeNoteFeed
-            archived={noteView === "archived"} loading={archiveLoading} failed={archiveError}
-            hasKeyword={Boolean(keyword.trim())} onRetry={() => void loadArchivedNotes(true)}
+            random={noteView === "random"} randomEligibleCount={randomEligibleCount}
+            archived={noteView === "archived"} loading={noteView === "random" ? randomLoading : archiveLoading} failed={noteView === "random" ? randomError : archiveError}
+            hasKeyword={Boolean(keyword.trim())} onRetry={() => void (noteView === "random" ? loadRandomNotes() : loadArchivedNotes(true))}
             visibleNotes={visibleNotes} editingNoteId={editingNoteId} editDraft={editDraft}
             editWarning={editWarning} fieldNameById={fieldNameById}
             cardProps={{ onArchiveChange: supportsArchiving ? setNoteArchived : undefined, fields, tags, tools: composerTools, locale: i18n.resolvedLanguage,

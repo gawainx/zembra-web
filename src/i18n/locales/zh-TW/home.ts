@@ -1,4 +1,11 @@
 export const home = {
+  random: {
+    "title": "隨機筆記",
+    "insufficient": "目前工作區未封存的筆記超過 20 則後，即可使用隨機筆記。",
+    "loading": "正在抽取隨機筆記…",
+    "failed": "載入隨機筆記失敗，請重試。",
+    "empty": "本批筆記已移除，請再次點選隨機筆記。"
+  },
   actions: {
     sync: "同步",
     syncSummary: "已推送 {{pushed}} 則，已拉取 {{pulled}} 則",

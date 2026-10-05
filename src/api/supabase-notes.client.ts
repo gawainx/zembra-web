@@ -41,6 +41,20 @@ export function createSupabaseNotesClient(
   workspaceId: string,
 ): NotesClient {
   return {
+    async getRandomNotes() {
+      console.info("[zembra] Loading random notes", { workspaceId });
+      const { data, error } = await client.rpc("get_random_notes", { p_workspace_id: workspaceId });
+      throwSupabaseError(error, "load random notes");
+      if (!data || !Number.isSafeInteger(data.eligible_count) || data.eligible_count < 0 || !Array.isArray(data.notes)
+        || data.notes.length !== (data.eligible_count > 20 ? 5 : 0)
+        || new Set(data.notes.map((note: SupabaseNoteRow) => note.id)).size !== data.notes.length
+        || data.notes.some((note: SupabaseNoteRow & { tags: string[] }) => !note || typeof note.id !== "string" || typeof note.content !== "string" || note.archived_at != null || !Array.isArray(note.tags))) {
+        console.warn("[zembra] Invalid random notes response", { workspaceId });
+        throw new Error("Invalid random notes response");
+      }
+      console.info("[zembra] Loaded random notes", { workspaceId, count: data.notes.length });
+      return { eligibleCount: data.eligible_count as number, notes: data.notes.map((note: SupabaseNoteRow & { tags: string[] }) => mapNoteRow(note, note.tags)) };
+    },
     async countArchivedNotes() {
       console.info("[zembra] Loading archive count", { workspaceId });
       const { count, error } = await client.from("notes").select("id", { count: "exact", head: true })

@@ -2,6 +2,9 @@ import type { DailyNoteCount, NoteDto } from "../../api/types";
 
 export interface NoteCollections {
   notes: NoteDto[];
+  randomNotes?: NoteDto[];
+  randomSampleIds?: string[];
+  randomEligibleCount?: number;
   archivedNotes: NoteDto[];
   archivedNoteCount?: number;
   roleNavigationNotes: NoteDto[];
@@ -33,6 +36,11 @@ export function projectNote(state: NoteCollections, id: string, previous: NoteDt
   const delta = Number(isActiveNote(next)) - Number(isActiveNote(previous));
   return {
     ...state,
+    ...(state.randomNotes ? { randomNotes: (state.randomSampleIds ?? []).flatMap((sampleId) => {
+      const note = sampleId === id ? next : state.randomNotes!.find((item) => item.id === sampleId);
+      return isActiveNote(note) ? [note] : [];
+    }) } : {}),
+    randomEligibleCount: state.randomEligibleCount === undefined ? undefined : Math.max(0, state.randomEligibleCount + delta),
     notes: replace(state.notes, isActiveNote(next) && (!state.selectedRole || next.role === state.selectedRole), 50),
     roleNavigationNotes: replace(state.roleNavigationNotes, isActiveNote(next), 50),
     archivedNotes: replace(state.archivedNotes, Boolean(next && next.archivedAt != null)),
