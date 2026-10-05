@@ -1,5 +1,6 @@
 import type { NoteDto, TagDto } from "../../api/types";
-import type { NoteLinkInput } from "../../api/types";
+import { fullNoteLinkPattern } from "../../features/notes/noteLinkUtils";
+export { fullNoteLinkPattern, parseNoteLinks } from "../../features/notes/noteLinkUtils";
 
 export type RenderableNoteContentSegment =
   | { text: string; type: "text" }
@@ -18,9 +19,6 @@ export interface TagFilterMatch {
   /** Legacy or display names that should match the selected sidebar tag. */
   names: string[];
 }
-
-/** Matches complete non-whitespace note IDs inside Zembra double-bracket references. */
-export const fullNoteLinkPattern = /\[\[([^\[\]\s]+)\]\]/g;
 
 /** Applies current home feed filters to recent notes. */
 export function filterVisibleNotes(
@@ -286,15 +284,6 @@ export function parseFieldNames(content: string): string[] {
     content.matchAll(/(?:^|\s)@([^\s#@]+)/g),
     (match) => match[1],
   );
-}
-
-/** Extracts full UUID note links from note content for backend submission. */
-export function parseNoteLinks(content: string): NoteLinkInput[] {
-  return Array.from(content.matchAll(fullNoteLinkPattern), (match) => ({
-    anchorText: match[0],
-    position: match.index ?? null,
-    targetNoteRef: match[1],
-  }));
 }
 
 /** Formats a full note reference as the compact card display label. */

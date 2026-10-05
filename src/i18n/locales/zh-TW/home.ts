@@ -50,6 +50,13 @@ export const home = {
     title: "最近活躍",
   },
   note: {
+    backlinks: {
+      "count": "被 {{count}} 則筆記引用",
+      "count_one": "被 {{count}} 則筆記引用",
+      "loading": "正在載入引用…",
+      "failed": "無法載入被引用清單",
+      "retry": "重試"
+    },
     archive: "封存",
     unarchive: "取消封存",
     archiveEmpty: "尚無已封存筆記",

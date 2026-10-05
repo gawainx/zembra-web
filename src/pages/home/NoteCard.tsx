@@ -1,3 +1,4 @@
+import { NoteBacklinks } from "./NoteBacklinks";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -271,6 +272,7 @@ export function NoteCard({
           ) : null}
         </>
       )}
+      <NoteBacklinks noteId={note.id} locale={locale} onLoadNotePreview={onLoadNotePreview} />
     </article>
   );
 }

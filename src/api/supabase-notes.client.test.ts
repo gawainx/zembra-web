@@ -116,3 +116,33 @@ describe("Supabase random notes", () => {
     await expect(api.getRandomNotes!()).rejects.toThrow("Invalid random notes response");
   });
 });
+
+describe("Supabase incoming notes", () => {
+  test("reads capped pages, deduplicates sources, preserves archives and scopes every query", async () => {
+    const links = ["older", "archived", "older", "deleted"];
+    const { api, calls } = mockClient((call) => {
+      const offset = Number(call.steps.find(([name]) => name === "range")![1]);
+      if (call.table === "note_links") return ok(offset < links.length ? [{ id: `link-${offset}`, source_note_id: links[offset] }] : []);
+      return ok([
+        { ...row, id: "older", created_at: 10, archived_at: null },
+        { ...row, id: "archived", created_at: 30 },
+      ].slice(offset, offset + 1));
+    });
+    const notes = await api.listBacklinks("target");
+    expect(notes.map((note) => note.id)).toEqual(["archived", "older"]);
+    expect(notes[0].archivedAt).toBe(20);
+    for (const call of calls) {
+      expect(call.steps).toContainEqual(["eq", "workspace_id", "workspace-a"]);
+      if (call.table === "notes") {
+        expect(call.steps).toContainEqual(["is", "deleted_at", null]);
+        expect(call.steps).not.toContainEqual(["is", "archived_at", null]);
+        expect(call.steps).toContainEqual(["in", "id", ["older", "archived", "deleted"]]);
+      } else expect(call.steps).toContainEqual(["eq", "target_note_id", "target"]);
+    }
+  });
+
+  test("surfaces read errors rather than reporting zero incoming notes", async () => {
+    const { api } = mockClient(() => ({ data: null, error: { message: "denied" } }));
+    await expect(api.listBacklinks("target")).rejects.toThrow("denied");
+  });
+});

@@ -1,7 +1,9 @@
+import { referencesNote } from "./noteLinkUtils";
 import type { DailyNoteCount, NoteDto } from "../../api/types";
 
 export interface NoteCollections {
   notes: NoteDto[];
+  backlinksByNoteId?: Record<string, NoteDto[]>;
   randomNotes?: NoteDto[];
   randomSampleIds?: string[];
   randomEligibleCount?: number;
@@ -36,6 +38,7 @@ export function projectNote(state: NoteCollections, id: string, previous: NoteDt
   const delta = Number(isActiveNote(next)) - Number(isActiveNote(previous));
   return {
     ...state,
+    backlinksByNoteId: projectBacklinks(state.backlinksByNoteId ?? {}, id, next),
     ...(state.randomNotes ? { randomNotes: (state.randomSampleIds ?? []).flatMap((sampleId) => {
       const note = sampleId === id ? next : state.randomNotes!.find((item) => item.id === sampleId);
       return isActiveNote(note) ? [note] : [];
@@ -75,4 +78,12 @@ export function overlayNotes(notes: NoteDto[], mutations: Map<string, NoteMutati
     else result.delete(id);
   });
   return orderNotes([...result.values()]);
+}
+
+/** Updates only one source in each loaded incoming list. */
+export function projectBacklinks(lists: Record<string, NoteDto[]>, sourceId: string, source: NoteDto | null): Record<string, NoteDto[]> {
+  return Object.fromEntries(Object.entries(lists).map(([targetId, notes]) => [targetId, orderNotes([
+    ...notes.filter((note) => note.id !== sourceId),
+    ...(source && referencesNote(source.content, sourceId, targetId) ? [source] : []),
+  ])]));
 }
