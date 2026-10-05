@@ -12,3 +12,13 @@ export function parseNoteLinks(content: string): NoteLinkInput[] {
   }));
 }
 
+/** Returns whether a source contains a reference to another note. */
+export function referencesNote(content: string, sourceId: string, targetId: string): boolean {
+  return sourceId !== targetId && parseNoteLinks(content).some((link) => link.targetNoteRef === targetId);
+}
+
+/** Takes a deterministic prefix without splitting Unicode code points. */
+export function noteBacklinkExcerpt(content: string): string {
+  const characters = Array.from(content.replace(/\r\n|[\r\n]/g, " "));
+  return characters.slice(0, 120).join("") + (characters.length > 120 ? "…" : "");
+}

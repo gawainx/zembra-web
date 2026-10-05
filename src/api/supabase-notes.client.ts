@@ -1,3 +1,4 @@
+import { orderNotes } from "../features/notes/noteStateUtils";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NotesClient } from "./notes.client";
 import type {
@@ -41,6 +42,33 @@ export function createSupabaseNotesClient(
   workspaceId: string,
 ): NotesClient {
   return {
+    async listBacklinks(noteId) {
+      const ids = new Set<string>();
+      for (let offset = 0;;) {
+        const { data, error } = await client.from("note_links").select("id, source_note_id")
+          .eq("workspace_id", workspaceId).eq("target_note_id", noteId)
+          .order("id").range(offset, offset + 199);
+        throwSupabaseError(error, "load incoming links");
+        if (!data?.length) break;
+        for (const link of data) if (link.source_note_id !== noteId) ids.add(link.source_note_id);
+        offset += data.length;
+      }
+      const sources = [...ids];
+      const notes = new Map<string, NoteDto>();
+      for (let start = 0; start < sources.length; start += 100) {
+        for (let offset = 0;;) {
+          const { data, error } = await client.from("notes")
+            .select("id, content, role, field_id, created_at, updated_at, archived_at")
+            .eq("workspace_id", workspaceId).is("deleted_at", null)
+            .in("id", sources.slice(start, start + 100)).order("id").range(offset, offset + 199);
+          throwSupabaseError(error, "load incoming source notes");
+          if (!data?.length) break;
+          for (const row of data) notes.set(row.id, mapNoteRow(row as SupabaseNoteRow, []));
+          offset += data.length;
+        }
+      }
+      return orderNotes([...notes.values()]);
+    },
     async getRandomNotes() {
       console.info("[zembra] Loading random notes", { workspaceId });
       const { data, error } = await client.rpc("get_random_notes", { p_workspace_id: workspaceId });

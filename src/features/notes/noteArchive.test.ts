@@ -16,6 +16,7 @@ const state = () => useNotesStore.getState();
 beforeEach(() => {
   useNotesStore.setState(useNotesStore.getInitialState(), true);
   mocks.notes = {
+    listBacklinks: vi.fn(async () => []),
     listRecentNotes: vi.fn(async () => [note]), listDailyNoteCounts: vi.fn(async () => []),
     listNotes: vi.fn(async () => [note]), getNote: vi.fn(async () => note),
     createNote: vi.fn(async () => note), updateNote: vi.fn(async () => note), deleteNote: vi.fn(async () => {}),

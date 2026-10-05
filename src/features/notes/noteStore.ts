@@ -1,6 +1,6 @@
 import type { NotesClient } from "../../api/notes.client";
 import type { MutationToastMessage } from "../../app/mutationToast";
-import { isActiveNote, orderNotes, overlayNotes, projectedMutation, projectNote, type NoteIntent, type NoteMutation } from "./noteStateUtils";
+import { isActiveNote, orderNotes, projectBacklinks, overlayNotes, projectedMutation, projectNote, type NoteIntent, type NoteMutation } from "./noteStateUtils";
 import { create } from "zustand";
 import { notifyMutationCompleted } from "../../app/mutationToast";
 import {
@@ -18,6 +18,9 @@ import type {
 } from "../../api/types";
 
 interface NotesState {
+  backlinksByNoteId: Record<string, NoteDto[]>;
+  backlinkStatus: Record<string, "loading" | "ready" | "error">;
+  loadBacklinks: (noteId: string, retry?: boolean) => Promise<void>;
   scopeClient?: NotesClient;
   supportsArchiving: boolean;
   noteView: "active" | "archived" | "random";
@@ -90,6 +93,7 @@ interface NotesState {
   loadTags: () => Promise<void>;
 }
 
+let backlinkScopeVersion = 0;
 let randomReadVersion = 0;
 let readVersion = 0;
 let archiveReadVersion = 0;
@@ -102,6 +106,33 @@ const remoteMutationVersions = new Map<string, number>();
 
 /** Stores note list state for the card note interface. */
 export const useNotesStore = create<NotesState>((set, get) => ({
+  backlinksByNoteId: {}, backlinkStatus: {},
+  loadBacklinks: async (noteId, retry = false) => {
+    const client = getNotesClient();
+    if (noteId.startsWith("pending-") || !client.listBacklinks) return;
+    const status = get().backlinkStatus[noteId];
+    if (status === "loading" || (!retry && status)) return;
+    const since = mutationEpoch;
+    const scope = backlinkScopeVersion;
+    set((state) => ({ backlinkStatus: { ...state.backlinkStatus, [noteId]: "loading" },
+      backlinksByNoteId: { ...state.backlinksByNoteId, [noteId]: state.backlinksByNoteId[noteId] ?? [] } }));
+    console.info("[zembra] Loading incoming notes", { noteId });
+    try {
+      const notes = await client.listBacklinks(noteId);
+      if (!isActiveClient(client) || backlinkScopeVersion !== scope) return;
+      let lists = { [noteId]: orderNotes([...new Map(notes.map((note) => [note.id, note])).values()]) };
+      noteMutations.get(client)?.forEach((mutation, id) => {
+        if (mutation.intents.length || mutation.epoch > since) lists = projectBacklinks(lists, id, projectedMutation(mutation));
+      });
+      set((state) => ({ backlinksByNoteId: { ...state.backlinksByNoteId, [noteId]: lists[noteId] },
+        backlinkStatus: { ...state.backlinkStatus, [noteId]: "ready" } }));
+      console.info("[zembra] Loaded incoming notes", { noteId, count: lists[noteId].length });
+    } catch (error) {
+      if (!isActiveClient(client) || backlinkScopeVersion !== scope) return;
+      console.warn("[zembra] Failed to load incoming notes", { noteId, error });
+      set((state) => ({ backlinkStatus: { ...state.backlinkStatus, [noteId]: "error" } }));
+    }
+  },
   randomNotes: [], randomSampleIds: [], randomEligibleCount: undefined, randomLoading: false, randomError: false, supportsRandomNotes: false,
   loadRandomNotes: async () => {
     const client = getNotesClient();
@@ -136,6 +167,8 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     const client = getNotesClient();
     if (get().scopeClient === client) return;
     ++randomReadVersion;
+    ++backlinkScopeVersion;
+    set({ backlinksByNoteId: {}, backlinkStatus: {} });
     set({ randomNotes: [], randomSampleIds: [], randomEligibleCount: undefined, randomLoading: false, randomError: false, supportsRandomNotes: Boolean(client.getRandomNotes) });
     if (get().scopeClient) {
       ++readVersion; ++archiveReadVersion; ++metadataReadVersion;
@@ -242,7 +275,12 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   createNote: async (input) => {
     const temporaryNote = createTemporaryNote(input, get().fields);
     const client = getNotesClient();
+    let mutations = noteMutations.get(client);
+    if (!mutations) { mutations = new Map(); noteMutations.set(client, mutations); }
+    const creation: NoteMutation = { confirmed: temporaryNote, intents: [{ patch: {} }], queue: Promise.resolve(), epoch: ++mutationEpoch };
+    mutations.set(temporaryNote.id, creation);
     set((state) => ({
+      backlinksByNoteId: projectBacklinks(state.backlinksByNoteId, temporaryNote.id, temporaryNote),
       notes:
         state.selectedRole === undefined || state.selectedRole === temporaryNote.role
           ? [temporaryNote, ...state.notes].slice(0, 50)
@@ -252,8 +290,11 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
     try {
       const note = await client.createNote(input);
+      creation.confirmed = null; creation.intents = []; creation.epoch = ++mutationEpoch;
+      mutations.set(note.id, { confirmed: note, intents: [], queue: Promise.resolve(), epoch: mutationEpoch });
       if (!isActiveClient(client)) return;
       set((state) => ({
+        backlinksByNoteId: projectBacklinks(projectBacklinks(state.backlinksByNoteId, temporaryNote.id, null), note.id, note),
         notes: replaceNote(state.notes, temporaryNote.id, note),
         roleNavigationNotes: replaceNote(
           state.roleNavigationNotes,
@@ -269,8 +310,10 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       });
       void refreshNoteMetadata(set, get);
     } catch (error) {
+      creation.confirmed = null; creation.intents = []; creation.epoch = ++mutationEpoch;
       if (!isActiveClient(client)) return;
       set((state) => ({
+        backlinksByNoteId: projectBacklinks(state.backlinksByNoteId, temporaryNote.id, null),
         notes: state.notes.filter((note) => note.id !== temporaryNote.id),
         roleNavigationNotes: state.roleNavigationNotes.filter(
           (note) => note.id !== temporaryNote.id,
@@ -511,7 +554,8 @@ function hasPendingNotes(client: NotesClient): boolean {
 }
 function findNote(state: NotesState, id: string): NoteDto | undefined {
   return state.randomNotes.find((note) => note.id === id) ?? state.notes.find((note) => note.id === id) ?? state.archivedNotes.find((note) => note.id === id)
-    ?? state.roleNavigationNotes.find((note) => note.id === id) ?? state.notePreviewById[id];
+    ?? state.roleNavigationNotes.find((note) => note.id === id) ?? state.notePreviewById[id]
+    ?? Object.values(state.backlinksByNoteId).flat().find((note) => note.id === id);
 }
 
 /** Applies local intent now, then serializes the captured client's writes per note. */

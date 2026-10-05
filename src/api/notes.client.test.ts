@@ -508,3 +508,26 @@ describe("mapNoteResponseToDto", () => {
     );
   });
 });
+
+test("loads unique incoming sources through the existing workspace note contract", async () => {
+  const requests: URL[] = [];
+  globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
+    const url = new URL(String(input)); requests.push(url);
+    const id = url.pathname.split("/").pop();
+    if (id === "target") return jsonResponse({ note: { id }, metadata: { tags: [], backlinks: ["old", "new", "old", "gone", "deleted"].map((source_note_id) => ({ source_note_id })) } });
+    if (id === "gone") return jsonResponse({}, { status: 404 });
+    return jsonResponse({ note: { id, content: "source", role: "Human", created_at: id === "new" ? 30 : 10, updated_at: 30, archived_at: 20, deleted_at: id === "deleted" ? 30 : null }, metadata: { tags: [] } });
+  }) as typeof fetch;
+  const api = createNotesHttpClient({ baseUrl: "https://backend.test", workspaceId });
+  expect((await api.listBacklinks("target")).map((note) => note.id)).toEqual(["new", "old"]);
+  expect(requests.filter((url) => url.pathname === "/notes/old")).toHaveLength(1);
+  for (const url of requests) expect(url.searchParams.get("workspace_id")).toBe(workspaceId);
+});
+
+test("does not hide incoming source authorization errors", async () => {
+  globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => String(input).includes("/notes/target?")
+    ? jsonResponse({ metadata: { backlinks: [{ source_note_id: "denied" }] } })
+    : jsonResponse({}, { status: 403 })) as typeof fetch;
+  const api = createNotesHttpClient({ baseUrl: "https://backend.test", workspaceId });
+  await expect(api.listBacklinks("target")).rejects.toMatchObject({ status: 403 });
+});

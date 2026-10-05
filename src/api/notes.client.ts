@@ -2,7 +2,7 @@ import {
   resolveBackendBaseUrl,
   type BackendBaseUrlSource,
 } from "./backendConfig";
-import { requestJson } from "./http";
+import { ApiError, requestJson } from "./http";
 import type {
   ArchivedNotesCursor,
   ArchivedNotesPage,
@@ -22,11 +22,15 @@ import type {
 } from "./types";
 import { resolveRequiredFieldName } from "./defaultField";
 
+import { orderNotes } from "../features/notes/noteStateUtils";
+
 /** Defines a workspace ID value or lazy resolver. */
 type WorkspaceIdSource = string | (() => string | Promise<string>);
 
 /** Defines the frontend note data access boundary. */
 export interface NotesClient {
+  /** Reads unique, undeleted incoming sources, including archived notes. */
+  listBacklinks(noteId: string): Promise<NoteDto[]>;
   /** Draws five active workspace notes when more than twenty are eligible. */
   getRandomNotes?: () => Promise<{ eligibleCount: number; notes: NoteDto[] }>;
   /** Optional lifecycle capabilities supplied by the Supabase client. */
@@ -64,6 +68,26 @@ export function createNotesHttpClient(
   const { baseUrl, workspaceId } = options;
 
   return {
+    async listBacklinks(noteId) {
+      const resolvedBaseUrl = resolveBackendBaseUrl(baseUrl);
+      const query = await createWorkspaceQuery(workspaceId);
+      const target = await requestJson<NoteResponse>(resolvedBaseUrl, `/notes/${encodeURIComponent(noteId)}`, { query });
+      const ids = [...new Set((target.metadata.backlinks ?? []).map((link) => link.source_note_id))].filter((id) => id !== noteId);
+      const notes: NoteDto[] = [];
+      for (let start = 0; start < ids.length; start += 6) {
+        const page = await Promise.all(ids.slice(start, start + 6).map(async (id) => {
+          try {
+            const response = await requestJson<NoteResponse>(resolvedBaseUrl, `/notes/${encodeURIComponent(id)}`, { query });
+            return response.note.deleted_at == null ? mapNoteResponseToDto(response) : undefined;
+          } catch (error) {
+            if (error instanceof ApiError && error.status === 404) return undefined;
+            throw error;
+          }
+        }));
+        notes.push(...page.filter((note): note is NoteDto => Boolean(note)));
+      }
+      return orderNotes(notes);
+    },
     async listRecentNotes(query = {}) {
       const resolvedBaseUrl = resolveBackendBaseUrl(baseUrl);
       const workspaceQuery = await createWorkspaceQuery(workspaceId);
