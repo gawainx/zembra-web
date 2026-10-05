@@ -91,3 +91,28 @@ test.each([0, 1205])("counts %i undeleted archives without fetching rows", async
     ["is", "deleted_at", null], ["not", "archived_at", "is", null],
   ] }]);
 });
+
+describe("Supabase random notes", () => {
+  const notes = Array.from({ length: 5 }, (_, i) => ({ ...row, id: `random-${i}`, archived_at: null, tags: ["parent/child"] }));
+  test("uses one workspace RPC and maps complete notes without extra requests", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: { eligible_count: 21, notes }, error: null });
+    const api = createSupabaseNotesClient({ rpc } as never, "workspace-a");
+    const result = await api.getRandomNotes!();
+    expect(rpc).toHaveBeenCalledWith("get_random_notes", { p_workspace_id: "workspace-a" });
+    expect(result.eligibleCount).toBe(21);
+    expect(result.notes).toHaveLength(5);
+    expect(result.notes[0]).toMatchObject({ id: "random-0", archivedAt: null, tags: ["parent/child"] });
+  });
+  test.each([0, 20])("preserves the insufficient count %s", async (eligible_count) => {
+    const api = createSupabaseNotesClient({ rpc: vi.fn().mockResolvedValue({ data: { eligible_count, notes: [] }, error: null }) } as never, "workspace-a");
+    expect(await api.getRandomNotes!()).toEqual({ eligibleCount: eligible_count, notes: [] });
+  });
+  test("does not treat denied requests as insufficient notes", async () => {
+    const api = createSupabaseNotesClient({ rpc: vi.fn().mockResolvedValue({ data: null, error: { message: "denied" } }) } as never, "workspace-a");
+    await expect(api.getRandomNotes!()).rejects.toThrow("denied");
+  });
+  test.each([null, { eligible_count: 21, notes: [] }, { eligible_count: 20, notes }, { eligible_count: 21, notes: Array(5).fill(notes[0]) }])("rejects invalid results", async (data) => {
+    const api = createSupabaseNotesClient({ rpc: vi.fn().mockResolvedValue({ data, error: null }) } as never, "workspace-a");
+    await expect(api.getRandomNotes!()).rejects.toThrow("Invalid random notes response");
+  });
+});

@@ -1754,3 +1754,30 @@ test("shows the archive total before opening it and updates the navigation after
   fireEvent.click(await screen.findByRole("menuitem", { name: "取消归档" }));
   await waitFor(() => expect(within(navigation()).getByText("12")).not.toBeNull());
 });
+
+test("random entry remains clickable at twenty notes and shows the explanation", async () => {
+  const draw = vi.fn().mockResolvedValue({ eligibleCount: 20, notes: [] });
+  renderHomePage(createMockSyncClient(), () => { clientMocks.notes.getRandomNotes = draw; });
+  const entry = await screen.findByRole("button", { name: "随机笔记" });
+  expect((entry as HTMLButtonElement).disabled).toBe(false);
+  fireEvent.click(entry);
+  expect(await screen.findByText("当前工作区未归档的笔记超过 20 条后，即可使用随机笔记。")).not.toBeNull();
+  expect(screen.getByRole("heading", { name: "随机笔记" })).not.toBeNull();
+  fireEvent.click(entry);
+  await waitFor(() => expect(draw).toHaveBeenCalledTimes(2));
+});
+
+test("random view displays five remote notes and supports retry after failure", async () => {
+  const notes = Array.from({ length: 5 }, (_, i) => ({ id: `random-${i}`, content: `随机内容 ${i}`, role: "Human", createdAt: 1, updatedAt: 1, tags: [] }));
+  const draw = vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValue({ eligibleCount: 21, notes });
+  renderHomePage(createMockSyncClient(), () => { clientMocks.notes.getRandomNotes = draw; });
+  fireEvent.click(await screen.findByRole("button", { name: "随机笔记" }));
+  expect(await screen.findByText("加载随机笔记失败，请重试。")).not.toBeNull();
+  expect(screen.queryByText("当前工作区未归档的笔记超过 20 条后，即可使用随机笔记。")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "重试" }));
+  const region = await screen.findByRole("region", { name: "随机笔记" });
+  await waitFor(() => expect(region.querySelectorAll("article")).toHaveLength(5));
+  for (const note of notes) expect(within(region).getByText(note.content)).not.toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "全部笔记" }));
+  await waitFor(() => expect(screen.queryByRole("heading", { name: "随机笔记" })).toBeNull());
+});

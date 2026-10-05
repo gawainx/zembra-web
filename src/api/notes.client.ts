@@ -27,6 +27,8 @@ type WorkspaceIdSource = string | (() => string | Promise<string>);
 
 /** Defines the frontend note data access boundary. */
 export interface NotesClient {
+  /** Draws five active workspace notes when more than twenty are eligible. */
+  getRandomNotes?: () => Promise<{ eligibleCount: number; notes: NoteDto[] }>;
   /** Optional lifecycle capabilities supplied by the Supabase client. */
   countArchivedNotes?: () => Promise<number>;
   listArchivedNotes?: (cursor?: ArchivedNotesCursor) => Promise<ArchivedNotesPage>;

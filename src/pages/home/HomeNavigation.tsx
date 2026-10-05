@@ -1,11 +1,12 @@
-import { Archive, Bot, List, User } from "lucide-react";
+import { Archive, Bot, List, User, Shuffle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FieldDto, NoteDto, TagDto } from "../../api/types";
 import { NavItem, SidebarSection, TagTreeItem } from "./HomeSidebar";
 import { buildTagTree, countFields, countRoles, countTags, findSelectedTagRootPath, noteMatchesTagPath } from "./homeUtils";
 
-export function HomeNavigation({ archived = false, archivedNoteCount, onArchiveSelect, notes, roleNavigationNotes, fields, tags, selectedRole, selectedField, selectedTag, handleAllNotesSelect, handleRoleSelect, handleFieldSelect, handleTagSelect, handleTagDeleteRequest }: {
+export function HomeNavigation({ random = false, onRandomSelect, archived = false, archivedNoteCount, onArchiveSelect, notes, roleNavigationNotes, fields, tags, selectedRole, selectedField, selectedTag, handleAllNotesSelect, handleRoleSelect, handleFieldSelect, handleTagSelect, handleTagDeleteRequest }: {
+  random?: boolean; onRandomSelect?: () => void;
   archivedNoteCount?: number;
   archived?: boolean; onArchiveSelect?: () => void;
   notes: NoteDto[]; roleNavigationNotes: NoteDto[]; fields: FieldDto[]; tags: TagDto[];
@@ -65,7 +66,7 @@ export function HomeNavigation({ archived = false, archivedNoteCount, onArchiveS
     <div className="min-h-0 flex-1 overflow-y-auto pb-4 pr-1 pt-4 lg:pb-44">
       <NavItem
         active={
-          !archived && selectedRole === undefined &&
+          !random && !archived && selectedRole === undefined &&
           selectedField === undefined &&
           selectedTag === undefined
         }
@@ -74,6 +75,8 @@ export function HomeNavigation({ archived = false, archivedNoteCount, onArchiveS
         prefix={<List className="size-4" aria-hidden="true" />}
         onClick={() => void handleAllNotesSelect()}
       />
+      {onRandomSelect ? <NavItem active={random} label={t("random.title")}
+        prefix={<Shuffle className="size-4" aria-hidden="true" />} onClick={onRandomSelect} /> : null}
       {onArchiveSelect ? <NavItem active={archived} count={archivedNoteCount} label={t("sidebar.archived")}
         prefix={<Archive className="size-4" aria-hidden="true" />} onClick={onArchiveSelect} /> : null}
       <SidebarSection className="mt-4" title={t("sidebar.roles")}>

@@ -20,7 +20,14 @@ import type {
 interface NotesState {
   scopeClient?: NotesClient;
   supportsArchiving: boolean;
-  noteView: "active" | "archived";
+  noteView: "active" | "archived" | "random";
+  randomNotes: NoteDto[];
+  randomSampleIds: string[];
+  randomEligibleCount?: number;
+  randomLoading: boolean;
+  randomError: boolean;
+  supportsRandomNotes: boolean;
+  loadRandomNotes: () => Promise<void>;
   archivedNotes: NoteDto[];
   archivedNoteCount?: number;
   loadArchivedNoteCount: () => Promise<void>;
@@ -28,7 +35,7 @@ interface NotesState {
   archiveError: boolean;
   archiveCursor?: ArchivedNotesCursor;
   connectWorkspace: () => void;
-  setNoteView: (view: "active" | "archived") => void;
+  setNoteView: (view: "active" | "archived" | "random") => void;
   loadArchivedNotes: (resume?: boolean) => Promise<void>;
   setNoteArchived: (noteId: string, archived: boolean) => Promise<void>;
   /** Recent notes currently visible in the home feed. */
@@ -83,6 +90,7 @@ interface NotesState {
   loadTags: () => Promise<void>;
 }
 
+let randomReadVersion = 0;
 let readVersion = 0;
 let archiveReadVersion = 0;
 let archiveCountReadVersion = 0;
@@ -94,6 +102,28 @@ const remoteMutationVersions = new Map<string, number>();
 
 /** Stores note list state for the card note interface. */
 export const useNotesStore = create<NotesState>((set, get) => ({
+  randomNotes: [], randomSampleIds: [], randomEligibleCount: undefined, randomLoading: false, randomError: false, supportsRandomNotes: false,
+  loadRandomNotes: async () => {
+    const client = getNotesClient();
+    if (!client.getRandomNotes) return;
+    const version = ++randomReadVersion;
+    const since = mutationEpoch;
+    set({ noteView: "random", keyword: "", selectedRole: undefined, selectedField: undefined, selectedTag: undefined,
+      randomLoading: true, randomError: false, randomNotes: [], randomSampleIds: [], randomEligibleCount: undefined });
+    try {
+      const result = await client.getRandomNotes();
+      if (!isActiveClient(client) || version !== randomReadVersion || get().noteView !== "random") return;
+      const notes = result.notes.map((note) => {
+        const mutation = noteMutations.get(client)?.get(note.id);
+        return mutation && (mutation.intents.length || mutation.epoch > since) ? projectedMutation(mutation) : note;
+      }).filter(isActiveNote);
+      set({ randomNotes: notes, randomSampleIds: result.notes.map((note) => note.id), randomEligibleCount: result.eligibleCount, randomLoading: false });
+    } catch (error) {
+      if (!isActiveClient(client) || version !== randomReadVersion || get().noteView !== "random") return;
+      console.warn("[zembra] Failed to load random notes", { error });
+      set({ randomLoading: false, randomError: true });
+    }
+  },
   scopeClient: undefined,
   supportsArchiving: false,
   noteView: "active",
@@ -105,6 +135,8 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   connectWorkspace: () => {
     const client = getNotesClient();
     if (get().scopeClient === client) return;
+    ++randomReadVersion;
+    set({ randomNotes: [], randomSampleIds: [], randomEligibleCount: undefined, randomLoading: false, randomError: false, supportsRandomNotes: Boolean(client.getRandomNotes) });
     if (get().scopeClient) {
       ++readVersion; ++archiveReadVersion; ++metadataReadVersion;
       set({ archivedNoteCount: undefined, notes: [], roleNavigationNotes: [], archivedNotes: [], notePreviewById: {}, fields: [], tags: [],
@@ -115,6 +147,8 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     void get().loadArchivedNoteCount();
   },
   setNoteView: (noteView) => {
+    ++randomReadVersion;
+    set({ randomLoading: false });
     if (noteView === "archived" && !get().supportsArchiving) return;
     if (get().noteView !== noteView) set({ noteView, keyword: "", selectedRole: undefined, selectedField: undefined, selectedTag: undefined });
     if (noteView === "archived") {
@@ -476,7 +510,7 @@ function hasPendingNotes(client: NotesClient): boolean {
   return [...(noteMutations.get(client)?.values() ?? [])].some((mutation) => mutation.intents.length > 0);
 }
 function findNote(state: NotesState, id: string): NoteDto | undefined {
-  return state.notes.find((note) => note.id === id) ?? state.archivedNotes.find((note) => note.id === id)
+  return state.randomNotes.find((note) => note.id === id) ?? state.notes.find((note) => note.id === id) ?? state.archivedNotes.find((note) => note.id === id)
     ?? state.roleNavigationNotes.find((note) => note.id === id) ?? state.notePreviewById[id];
 }
 

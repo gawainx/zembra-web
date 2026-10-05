@@ -1,4 +1,11 @@
 export const home = {
+  random: {
+    "title": "随机笔记",
+    "insufficient": "当前工作区未归档的笔记超过 20 条后，即可使用随机笔记。",
+    "loading": "正在抽取随机笔记…",
+    "failed": "加载随机笔记失败，请重试。",
+    "empty": "本批笔记已移除，请再次点击随机笔记。"
+  },
   actions: {
     sync: "同步",
     syncSummary: "已推送 {{pushed}} 条，已拉取 {{pulled}} 条",

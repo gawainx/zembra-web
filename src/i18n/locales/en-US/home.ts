@@ -1,4 +1,11 @@
 export const home = {
+  random: {
+    "title": "Random notes",
+    "insufficient": "Add more than 20 unarchived notes to this workspace to use random notes.",
+    "loading": "Drawing random notes…",
+    "failed": "Could not load random notes. Please try again.",
+    "empty": "This batch has been removed. Select Random notes again."
+  },
   actions: {
     sync: "Sync",
     syncSummary: "Pushed {{pushed}}, pulled {{pulled}}",

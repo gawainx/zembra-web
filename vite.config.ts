@@ -1,7 +1,7 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 /** Creates the Vite configuration for the Zembra web UI. */
 export default defineConfig(({ command, mode }) => {
@@ -90,6 +90,7 @@ export default defineConfig(({ command, mode }) => {
     },
   },
   test: {
+    exclude: [...configDefaults.exclude, "vendor/**"],
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],

@@ -192,3 +192,43 @@ test("deleting an archived note decrements the total and restores it on failure"
   await deletion;
   expect(state().archivedNoteCount).toBe(9);
 });
+
+test("random results ignore older draws and clear classification filters", async () => {
+  const first = deferred<{ eligibleCount: number; notes: NoteDto[] }>();
+  mocks.notes.getRandomNotes = vi.fn().mockReturnValueOnce(first.promise).mockResolvedValueOnce({ eligibleCount: 30, notes: [{ ...note, id: "latest" }] });
+  useNotesStore.setState({ selectedTag: "topic", selectedField: "field", selectedRole: "Agent", keyword: "search" });
+  const older = state().loadRandomNotes();
+  await state().loadRandomNotes();
+  first.resolve({ eligibleCount: 30, notes: [note] }); await older;
+  expect(state().randomNotes.map((n) => n.id)).toEqual(["latest"]);
+  expect(state()).toMatchObject({ noteView: "random", keyword: "", selectedTag: undefined, selectedField: undefined, selectedRole: undefined });
+});
+
+test("leaving random view or switching workspace discards pending results", async () => {
+  const pending = deferred<{ eligibleCount: number; notes: NoteDto[] }>();
+  mocks.notes.getRandomNotes = vi.fn(() => pending.promise);
+  const request = state().loadRandomNotes();
+  state().setNoteView("active");
+  pending.resolve({ eligibleCount: 25, notes: [note] }); await request;
+  expect(state().randomNotes).toEqual([]);
+  mocks.notes = { ...mocks.notes };
+  state().connectWorkspace();
+  expect(state()).toMatchObject({ randomNotes: [], randomEligibleCount: undefined, noteView: "active" });
+});
+
+test("random-only cards can be edited and failed removal restores sample position", async () => {
+  mocks.notes.getRandomNotes = vi.fn(async () => ({ eligibleCount: 21, notes: [note, { ...note, id: "n2" }] }));
+  await state().loadRandomNotes();
+  useNotesStore.setState({ notes: [], roleNavigationNotes: [] });
+  mocks.notes.updateNote = vi.fn(async () => ({ ...note, content: "edited" }));
+  await state().updateNote("n1", { content: "edited" });
+  expect(state().randomNotes[0].content).toBe("edited");
+  const pending = deferred<void>();
+  mocks.notes.deleteNote = vi.fn(() => pending.promise);
+  const deleting = state().deleteNote("n1");
+  expect(state().randomNotes.map((n) => n.id)).toEqual(["n2"]);
+  expect(state().randomEligibleCount).toBe(20);
+  pending.reject(new Error("offline")); await deleting;
+  expect(state().randomNotes.map((n) => n.id)).toEqual(["n1", "n2"]);
+  expect(state().randomEligibleCount).toBe(21);
+});
