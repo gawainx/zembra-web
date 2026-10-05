@@ -50,6 +50,13 @@ export const home = {
     title: "Recent activity",
   },
   note: {
+    backlinks: {
+      "count": "Referenced by {{count}} notes",
+      "count_one": "Referenced by {{count}} note",
+      "loading": "Loading references…",
+      "failed": "Could not load references",
+      "retry": "Retry"
+    },
     archive: "Archive",
     unarchive: "Unarchive",
     archiveEmpty: "No archived notes",

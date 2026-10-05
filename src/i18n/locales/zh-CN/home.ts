@@ -50,6 +50,13 @@ export const home = {
     title: "最近活跃",
   },
   note: {
+    backlinks: {
+      "count": "被 {{count}} 条笔记引用",
+      "count_one": "被 {{count}} 条笔记引用",
+      "loading": "正在加载引用…",
+      "failed": "无法加载被引用列表",
+      "retry": "重试"
+    },
     archive: "归档",
     unarchive: "取消归档",
     archiveEmpty: "暂无已归档笔记",
