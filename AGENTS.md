@@ -85,6 +85,7 @@
 - 批量推送：开发完成并完成commit后，必须 push 到 remote
 - 用户验收通过后，完成收尾流程后必须推送到remote。不允许出现任何只存在在本地的代码提交。
 - 当用户要求合并到 `deploy` 时，默认合入个人仓库的 `origin/deploy`
+- 完成 `deploy` 的合并和推送后，必须立即将本地分支切回 `master`。
 
 ### 共享数据库契约
 - 本项目群的数据表契约来自 `vendor/zembra-schema` submodule，远程仓库为 `https://github.com/gawainx/zembra-schema.git`。

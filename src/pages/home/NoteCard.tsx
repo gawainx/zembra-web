@@ -23,6 +23,7 @@ import { NoteEditor } from "./NoteEditor";
 import { NoteMarkdownContent } from "./NoteMarkdownContent";
 import type { ComposerTool } from "./homeTypes";
 import { formatNoteTimestamp, stripRenderedFieldMarker } from "./homeUtils";
+import { measureNoteCardPreview, type NoteCardPreviewDecision } from "./noteCardPreview";
 
 /** Renders one recent note in the home feed. */
 export function NoteCard({
@@ -71,7 +72,7 @@ export function NoteCard({
   const { t } = useTranslation("home");
   const archiveSelected = useRef(false);
   const [expanded, setExpanded] = useState(false);
-  const [hasOverflow, setHasOverflow] = useState(false);
+  const [preview, setPreview] = useState<NoteCardPreviewDecision>({ hasOverflow: false });
   const displayRole = note.role || t("sidebar.unknownRole");
   const displayContent = useMemo(
     () => stripRenderedFieldMarker(note.content, fieldName),
@@ -85,12 +86,32 @@ export function NoteCard({
       return;
     }
 
-    setHasOverflow(element.scrollHeight > element.clientHeight + 1);
+    const nextPreview = measureNoteCardPreview(element);
+    setPreview((current) =>
+      current.hasOverflow === nextPreview.hasOverflow &&
+      current.collapsedMaxHeight === nextPreview.collapsedMaxHeight
+        ? current
+        : nextPreview,
+    );
   }, []);
 
   useLayoutEffect(() => {
+    if (isEditing) {
+      return;
+    }
+
     measureOverflow();
-  }, [displayContent, fieldName, measureOverflow, note.tags]);
+    const element = contentRef.current;
+    const observed = element?.firstElementChild instanceof HTMLElement ? element.firstElementChild : element;
+
+    if (!observed) {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => measureOverflow());
+    observer.observe(observed);
+    return () => observer.disconnect();
+  }, [displayContent, fieldName, isEditing, measureOverflow, note.tags]);
 
   useEffect(() => {
     window.addEventListener("resize", measureOverflow);
@@ -251,7 +272,11 @@ export function NoteCard({
           <div
             className="overflow-hidden text-base leading-6 text-[var(--color-text-primary)]"
             ref={contentRef}
-            style={expanded ? undefined : { maxHeight: "5.25rem" }}
+            style={
+              expanded || preview.collapsedMaxHeight === undefined
+                ? undefined
+                : { maxHeight: `${preview.collapsedMaxHeight}px` }
+            }
           >
             <NoteMarkdownContent
               onTagSelect={onTagSelect}
@@ -259,7 +284,7 @@ export function NoteCard({
               onLoadNotePreview={onLoadNotePreview}
             />
           </div>
-          {hasOverflow || expanded ? (
+          {preview.hasOverflow || expanded ? (
             <Button
               variant="plain"
               size="content"
