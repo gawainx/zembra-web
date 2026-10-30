@@ -19,7 +19,7 @@ export function HomeNoteFeed({ random = false, randomEligibleCount, archived = f
   }, [visibleNotes]);
   return (
     <div ref={container} tabIndex={-1} role="region" aria-label={t(random ? "random.title" : archived ? "sidebar.archived" : "note.list")} className="min-h-0 flex-1 overflow-y-auto pb-44">
-      <div className="flex flex-col gap-[var(--space-3)]">
+      <div className="flex flex-col gap-[var(--space-1)]">
         {(visibleNotes.length === 0 || (random && randomEligibleCount !== undefined && randomEligibleCount <= 20)) && !((random || archived) && (loading || failed)) ? (
           <article className="rounded-[var(--radius-card)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-[var(--space-5)] text-[var(--color-text-muted)]">
             {t(random ? (randomEligibleCount !== undefined && randomEligibleCount <= 20 ? "random.insufficient" : "random.empty") : archived ? (hasKeyword ? "note.archiveNoMatch" : "note.archiveEmpty") : "note.empty")}
